@@ -424,43 +424,6 @@
        GRAFICADORA — styles scoped to #app-graficadora
     ══════════════════════════════════════════════════ */
 
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0
-    }
-
-    :root {
-      --bg: #0d0e12;
-      --s0: #13141a;
-      --s1: #1a1c24;
-      --s2: #22252f;
-      --border: #2a2d3a;
-      --border2: #363a4a;
-      --txt: #e4e6f0;
-      --txt2: #8b90a8;
-      --txt3: #52566a;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--txt);
-      font-family: 'Familjen Grotesk', sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 9999;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, .03) 2px, rgba(0, 0, 0, .03) 4px);
-    }
-
     #app-graficadora .app {
       max-width: 1200px;
       margin: 0 auto;
@@ -1252,7 +1215,7 @@
       flex-shrink: 0;
     }
 
-    .anl-sel,
+    #app-graficadora .anl-sel,
     #app-graficadora .anl-input {
       background: var(--s2);
       border: 1px solid var(--border);
@@ -1597,60 +1560,7 @@
        OPENLAB — styles scoped to #app-openlab
     ══════════════════════════════════════════════════ */
 
-    @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
-
-    :root {
-      --bg: #0d0e12;
-      --s0: #13141a;
-      --s1: #1a1c24;
-      --s2: #22252f;
-      --s3: #292c38;
-      --border: #2a2d3a;
-      --border2: #363a4a;
-      --txt: #e4e6f0;
-      --txt2: #8b90a8;
-      --txt3: #52566a;
-      --accent: #4ade80;
-      --accent2: #22c55e;
-      --blue: #60a5fa;
-      --violet: #a78bfa;
-      --amber: #fbbf24;
-      --red: #f87171;
-      --orange: #fb923c;
-      --r: 12px;
-      --rsm: 8px;
-    }
-
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html,
-    body {
-      height: 100%;
-      overflow: hidden;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--txt);
-      font-family: 'Familjen Grotesk', sans-serif;
-      font-size: 14px;
-      line-height: 1.55;
-    }
-
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 9999;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, .025) 2px, rgba(0, 0, 0, .025) 4px);
-    }
+    /* (font already loaded via <link> in <head> — @import removed: it must precede all rules) */
 
     #app-openlab a {
       color: var(--accent);
@@ -1665,7 +1575,7 @@
       font: inherit;
     }
 
-    input,
+    #app-openlab input,
     #app-openlab textarea {
       font: inherit;
       color: inherit;
@@ -2134,7 +2044,7 @@
       z-index: 5;
     }
 
-    .resize-handle:hover,
+    #app-openlab .resize-handle:hover,
     #app-openlab .resize-handle.dragging {
       background: var(--accent);
     }
@@ -2486,7 +2396,7 @@
       background: rgba(255, 255, 255, .02);
     }
 
-    .preview-wrap ul,
+    #app-openlab .preview-wrap ul,
     #app-openlab .preview-wrap ol {
       padding-left: 22px;
       color: var(--txt2);
@@ -4077,6 +3987,17 @@
     // ═══════════════════════════════════════════════════
     //  MULTI-VALUE DISPATCH
     // ═══════════════════════════════════════════════════
+    // setHeard: visual feedback per-series when voice dispatch lands
+    // Shows briefly what text/value was recognised for that series
+    function setHeard(sid, text, status) {
+      const el = document.getElementById('heard-' + sid);
+      if (!el) return;
+      el.textContent = text;
+      el.className = 'series-heard heard-' + status;
+      clearTimeout(el._t);
+      el._t = setTimeout(() => { el.textContent = ''; el.className = 'series-heard'; }, 2500);
+    }
+
     function onFinal(sid, text) {
       const nums = parseMulti(text);
       if (nums.length === 0) { setHeard(sid, text, 'miss'); showToast('No reconocí ningún número', 'warn'); return; }
@@ -5586,7 +5507,7 @@ $$\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\varepsilon_0}$$
         $('status-dot').className = 'status-dot ' + (status === 'connecting' ? 'connecting' : status === 'connected' ? 'connected' : 'disconnected')
         $('status-text').textContent = {
           connected: 'Conectado (WebRTC)',
-          error: 'Sin conexión — modo local',
+          local: 'Sin conexión — modo local',
           connecting: 'Conectando vía WebRTC...',
           disconnected: 'Desconectado',
           error: 'Error de conexión',
@@ -5848,6 +5769,9 @@ $$\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\varepsilon_0}$$
 
       return { toast, showApp, switchPanel, setDocHash, setRole, renderPRList, renderPeersBar }
     })()
+    // toast is defined inside UI's closure and returned — expose it at module scope
+    // so Yjs, Session, Export, Chat, etc. can call toast() directly
+    const toast = UI.toast
     const Crypto = (() => {
       let _key = null
       const init = async (password, roomId) => {

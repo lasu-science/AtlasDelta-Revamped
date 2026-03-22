@@ -6,6 +6,7 @@
   <title>Astronomía — AtlasDelta</title>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
   <style>
     /* ════════════════════════════════════════════════════
        OBSERVACIÓN OVERLAY — usa variables de style.css
@@ -176,6 +177,73 @@
     }
     .obs-loc-btn:hover { color: var(--txt); border-color: var(--txt3); }
 
+    /* ── Location detail grid ── */
+    .obs-loc-detail {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 520px) { .obs-loc-detail { grid-template-columns: 1fr; } }
+
+    .obs-coord-row {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .obs-coord-line {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .obs-coord-lbl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      flex-shrink: 0;
+      width: 26px;
+    }
+    .obs-coord-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--txt);
+      letter-spacing: .02em;
+    }
+
+    /* Sun row inside card */
+    .obs-sun-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .obs-sun-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1;
+    }
+    .obs-sun-lbl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--txt3);
+    }
+    .obs-sun-val {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.35rem;
+      color: var(--txt);
+      line-height: 1;
+    }
+    .obs-sun-div {
+      width: 1px;
+      height: 36px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
     /* ── 2-column grid for cards ── */
     .obs-grid {
       display: grid;
@@ -276,7 +344,7 @@
       color: var(--txt3);
       font-weight: 400;
       text-align: left;
-      padding: 0 8px 8px;
+      padding: 8px 8px;
       border-bottom: 1px solid var(--border);
     }
     .obs-table td {
@@ -375,6 +443,38 @@
       text-transform: uppercase;
     }
     .obs-foot-btn:hover { color: var(--txt2); }
+
+    /* ── Map picker ── */
+    .obs-map-wrap {
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      transition: max-height .38s cubic-bezier(.22,.8,.3,1), opacity .28s ease;
+      max-height: 0;
+      opacity: 0;
+    }
+    .obs-map-wrap.open {
+      max-height: 320px;
+      opacity: 1;
+    }
+    #obs-map {
+      height: 290px;
+      width: 100%;
+    }
+    .obs-map-hint {
+      padding: 7px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      background: var(--s1);
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    /* Override Leaflet tiles to not clash with dark theme */
+    .leaflet-container { background: #1a1c22; }
+    .leaflet-control-attribution { font-size: 9px !important; }
   </style>
 </head>
 <body>
@@ -425,10 +525,76 @@
     <div class="obs-body">
 
       <!-- Ubicación -->
-      <div class="obs-loc">
-        <span class="obs-loc-icon">📍</span>
-        <span class="obs-loc-text" id="obs-loc-text">Solicitando ubicación…</span>
-        <button class="obs-loc-btn" onclick="requestLocation()">Actualizar</button>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="obs-loc">
+          <span class="obs-loc-icon">📍</span>
+          <span class="obs-loc-text" id="obs-loc-text">Elige tu ubicación en el mapa</span>
+          <button class="obs-loc-btn" id="obs-loc-btn" onclick="toggleMapPicker()">Elegir en mapa</button>
+        </div>
+        <div class="obs-map-wrap" id="obs-map-wrap">
+          <div id="obs-map"></div>
+          <div class="obs-map-hint">Haz clic en el mapa para fijar tu ubicación de observación</div>
+        </div>
+
+        <!-- Detalle de coordenadas + sol (visible tras selección) -->
+        <div id="obs-loc-detail" style="display:none;">
+          <div class="obs-loc-detail">
+
+            <!-- Coordenadas angulares (DMS) y esféricas (polares) -->
+            <div class="obs-card">
+              <div class="obs-card-lbl"><span>Coordenadas angulares</span><span>🌐</span></div>
+              <div class="obs-coord-row" style="margin-top:4px;">
+                <div class="obs-coord-line">
+                  <span class="obs-coord-lbl">LAT</span>
+                  <span class="obs-coord-val" id="coord-dms-lat">—</span>
+                </div>
+                <div class="obs-coord-line">
+                  <span class="obs-coord-lbl">LON</span>
+                  <span class="obs-coord-val" id="coord-dms-lon">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Coordenadas esféricas/polares -->
+            <div class="obs-card">
+              <div class="obs-card-lbl"><span>Coordenadas polares</span><span>🧭</span></div>
+              <div class="obs-coord-row" style="margin-top:4px;">
+                <div class="obs-coord-line">
+                  <span class="obs-coord-lbl" style="width:34px;">Colat.</span>
+                  <span class="obs-coord-val" id="coord-polar-theta">—</span>
+                </div>
+                <div class="obs-coord-line">
+                  <span class="obs-coord-lbl" style="width:34px;">φ lon</span>
+                  <span class="obs-coord-val" id="coord-polar-phi">—</span>
+                </div>
+                <div class="obs-note" id="coord-polar-pole" style="margin-top:2px;">—</div>
+              </div>
+            </div>
+
+            <!-- Sol: amanecer / atardecer -->
+            <div class="obs-card" style="grid-column: span 2;">
+              <div class="obs-card-lbl"><span>Sol hoy</span><span>☀️</span></div>
+              <div class="obs-sun-row" style="margin-top:10px;">
+                <div class="obs-sun-item">
+                  <span class="obs-sun-lbl">🌅 Amanecer</span>
+                  <span class="obs-sun-val" id="sun-rise">—</span>
+                </div>
+                <div class="obs-sun-div"></div>
+                <div class="obs-sun-item" style="align-items:center;">
+                  <span class="obs-sun-lbl">Duración</span>
+                  <span class="obs-note" id="sun-dur" style="font-size:12px;color:var(--txt2);">—</span>
+                </div>
+                <div class="obs-sun-div"></div>
+                <div class="obs-sun-item" style="align-items:flex-end;">
+                  <span class="obs-sun-lbl">🌇 Atardecer</span>
+                  <span class="obs-sun-val" id="sun-set">—</span>
+                </div>
+              </div>
+              <div class="obs-note" id="sun-note" style="margin-top:8px;">—</div>
+            </div>
+
+          </div>
+        </div>
       </div>
 
       <!-- Condiciones del cielo -->
@@ -447,6 +613,8 @@
               <div class="bortle-seg" data-i="9"></div>
             </div>
             <div class="obs-note" id="bortle-note">—</div>
+            <div class="obs-note" id="bortle-sqm" style="display:none;margin-top:2px;color:var(--txt2);">—</div>
+            <div class="obs-note" id="bortle-src" style="margin-top:3px;font-size:10px;opacity:.45;">—</div>
           </div>
 
           <div class="obs-card">
@@ -493,18 +661,19 @@
         <div class="obs-grid">
 
           <div class="obs-card">
-            <div class="obs-card-lbl"><span>Posición actual</span><span>🛸</span></div>
+            <div class="obs-card-lbl"><span>Posición en el cielo</span><span>🛸</span></div>
             <div class="iss-row">
               <div class="iss-coord">
-                <span class="iss-coord-lbl">Lat</span>
-                <span class="iss-coord-val loading obs-val" id="iss-lat">—</span>
+                <span class="iss-coord-lbl">Az</span>
+                <span class="iss-coord-val loading obs-val" id="iss-az">—</span>
               </div>
               <div class="iss-coord">
-                <span class="iss-coord-lbl">Lon</span>
-                <span class="iss-coord-val loading obs-val" id="iss-lon">—</span>
+                <span class="iss-coord-lbl">Alt</span>
+                <span class="iss-coord-val loading obs-val" id="iss-elev">—</span>
               </div>
             </div>
-            <div class="obs-note" id="iss-alt">Altitud: —</div>
+            <div class="obs-note" id="iss-alt">Altitud orbital: —</div>
+            <div class="obs-note" id="iss-vis" style="margin-top:2px;">—</div>
             <div class="obs-foot">
               <span id="iss-ts">—</span>
               <button class="obs-foot-btn" onclick="fetchISS()">↻</button>
@@ -523,6 +692,7 @@
   </div><!-- /obs-panel -->
 </div><!-- /obs-backdrop -->
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 'use strict';
 
@@ -532,7 +702,7 @@ let userLat = null, userLon = null, issTimer = null;
 function openObs() {
   document.getElementById('obs-backdrop').classList.add('open');
   document.body.style.overflow = 'hidden';
-  if (userLat === null) requestLocation();
+  if (userLat === null) showMapPicker();
   else refreshAll();
 }
 function closeObs() {
@@ -545,31 +715,65 @@ function handleBackdrop(e) {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeObs(); });
 
-// ── Geolocalización ────────────────────────────────────
-function requestLocation() {
-  setLoc('Solicitando ubicación…');
-  if (!navigator.geolocation) {
-    setLoc('Geolocalización no disponible — usando Buenos Aires como referencia.');
-    useFallback(); return;
+// ── Mapa interactivo de ubicación ─────────────────────
+let obsMap = null, obsMarker = null;
+
+function showMapPicker() {
+  const wrap = g('obs-map-wrap');
+  wrap.classList.add('open');
+  g('obs-loc-btn').textContent = 'Cerrar mapa';
+
+  if (!obsMap) {
+    // Inicializar mapa tras el frame de animación
+    setTimeout(() => {
+      obsMap = L.map('obs-map', { zoomControl: true, attributionControl: true })
+               .setView([20, 0], 2);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 18,
+      }).addTo(obsMap);
+
+      // Si ya hay una ubicación guardada, mostrar el marcador
+      if (userLat !== null) {
+        obsMarker = L.marker([userLat, userLon]).addTo(obsMap);
+        obsMap.setView([userLat, userLon], 6);
+      }
+
+      obsMap.on('click', e => setLocationFromMap(e.latlng.lat, e.latlng.lng));
+    }, 60);
+  } else {
+    setTimeout(() => obsMap.invalidateSize(), 60);
   }
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      userLat = pos.coords.latitude;
-      userLon = pos.coords.longitude;
-      const latStr = fmt(Math.abs(userLat), 3) + (userLat >= 0 ? '° N' : '° S');
-      const lonStr = fmt(Math.abs(userLon), 3) + (userLon >= 0 ? '° E' : '° O');
-      setLoc(`<strong>${latStr}, ${lonStr}</strong>`);
-      refreshAll();
-    },
-    err => {
-      const msgs = { 1:'Permiso denegado.', 2:'Posición no disponible.', 3:'Tiempo de espera agotado.' };
-      setLoc((msgs[err.code] || 'Error de geolocalización.') + ' Usando Buenos Aires como referencia.');
-      useFallback();
-    },
-    { timeout: 9000, maximumAge: 60000 }
-  );
 }
-function useFallback() { userLat = -34.6037; userLon = -58.3816; refreshAll(); }
+
+function hideMapPicker() {
+  g('obs-map-wrap').classList.remove('open');
+  g('obs-loc-btn').textContent = 'Cambiar';
+}
+
+function toggleMapPicker() {
+  g('obs-map-wrap').classList.contains('open') ? hideMapPicker() : showMapPicker();
+}
+
+function setLocationFromMap(lat, lng) {
+  userLat = lat;
+  userLon = lng;
+
+  if (obsMarker) {
+    obsMarker.setLatLng([lat, lng]);
+  } else {
+    obsMarker = L.marker([lat, lng]).addTo(obsMap);
+  }
+
+  const latStr = fmt(Math.abs(lat), 3) + (lat >= 0 ? '° N' : '° S');
+  const lonStr = fmt(Math.abs(lng), 3) + (lng >= 0 ? '° E' : '° O');
+  setLoc(`<strong>${latStr}, ${lonStr}</strong>`);
+
+  updateLocationDetail(lat, lng);
+
+  hideMapPicker();
+  refreshAll();
+}
 function setLoc(html) { document.getElementById('obs-loc-text').innerHTML = html; }
 
 // ── Refresh ────────────────────────────────────────────
@@ -620,56 +824,188 @@ async function fetchWeather() {
   }
 }
 
-// ── Bortle estimado ────────────────────────────────────
-function fetchBortle() {
+// ── Bortle — Atlas djlorenz VIIRS 2024 (lectura de tiles) ─────────────────
+
+async function fetchBortle() {
   if (userLat === null) return;
-  setBortle(estimateBortle(userLat, userLon));
-}
 
-function estimateBortle(lat, lon) {
-  // Núcleos urbanos de referencia con radio de influencia (grados decimales)
-  const cores = [
-    [40.71,-74.01],[51.51,-0.13],[48.85,2.35],[35.69,139.69],[-23.55,-46.63],
-    [19.43,-99.13],[28.61,77.21],[31.23,121.47],[55.75,37.62],[-34.60,-58.38],
-    [41.90,12.50],[52.52,13.40],[34.05,-118.24],[37.77,-122.42],
-    [43.65,-79.38],[-33.87,151.21],[30.04,31.24],[1.35,103.82],[25.20,55.27],
-  ];
-  let d = Infinity;
-  for (const [clat,clon] of cores) {
-    const dd = Math.sqrt((lat-clat)**2 + (lon-clon)**2);
-    if (dd < d) d = dd;
+  // Reset visual state
+  const el = g('bortle-val');
+  el.textContent = 'cargando';
+  el.classList.add('loading');
+  g('bortle-sqm').style.display = 'none';
+  g('bortle-src').textContent = '…';
+
+  try {
+    const result = await bortleFromTile(userLat, userLon);
+    setBortleResult(result);
+  } catch (err) {
+    console.warn('[Bortle] Tile fetch failed, using fallback:', err.message);
+    const b = bortleHeuristic(userLat, userLon);
+    setBortleResult({ bortle: b, sqm: null, source: 'estimación local' });
   }
-  if (d < 0.4)  return 9;
-  if (d < 0.9)  return 8;
-  if (d < 1.8)  return 7;
-  if (d < 3.5)  return 6;
-  if (d < 6.0)  return 5;
-  if (d < 11.0) return 4;
-  if (d < 18.0) return 3;
-  return 2;
 }
 
-function setBortle(b) {
-  setVal('bortle-val', String(b));
-  const notes = [
-    '',
-    'Cielo negro excepcional',
-    'Cielo negro verdadero',
-    'Rural — leve brillo en horizonte',
-    'Rural/suburbano',
-    'Suburbano — Vía Láctea pálida',
-    'Suburbano brillante',
-    'Transición ciudad',
-    'Ciudad — solo objetos brillantes',
-    'Centro urbano',
-  ];
-  g('bortle-note').textContent = notes[b] ?? '—';
+// ── Lectura de tile PNG → pixel → LPI → SQM → Bortle ─────────────────────
+async function bortleFromTile(lat, lon) {
+  const zoom = 7;
+  const n    = 1 << zoom; // 2^zoom = 128
 
-  // Colorear barra: verde→amarillo→rojo según escala
+  // Proyección Web-Mercator
+  const latRad  = Math.max(-1.4844, Math.min(1.4844, lat * Math.PI / 180));
+  const tileXf  = (lon + 180) / 360 * n;
+  const tileYf  = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
+  const tileX   = Math.floor(tileXf);
+  const tileY   = Math.floor(tileYf);
+  const pixX    = Math.min(255, Math.floor((tileXf - tileX) * 256));
+  const pixY    = Math.min(255, Math.floor((tileYf - tileY) * 256));
+
+  // URL pública del atlas djlorenz (World Atlas 2024, VIIRS/NASA)
+  const url = `https://djlorenz.github.io/astronomy/lp/overlay/tiles/${zoom}/${tileX}/${tileY}.png`;
+
+  const [r, g, b, a] = await loadTilePixel(url, pixX, pixY);
+
+  // Transparente = zona sin datos / océano → cielo pristino
+  if (a < 15) return { bortle: 1, sqm: 22.0, lpi: 0, source: 'Atlas djlorenz 2024' };
+
+  const lpi    = rgbToLPI(r, g, b);
+  const sqm    = lpiToSQM(lpi);
+  const bortle = sqmToBortle(sqm);
+  return { bortle, sqm, lpi, source: 'Atlas djlorenz 2024' };
+}
+
+function loadTilePixel(url, px, py) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const c   = document.createElement('canvas');
+        c.width   = c.height = 256;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const d = ctx.getImageData(px, py, 1, 1).data;
+        resolve([d[0], d[1], d[2], d[3]]);
+      } catch (e) {
+        reject(new Error('canvas-taint: ' + e.message));
+      }
+    };
+    img.onerror = () => reject(new Error('tile-load-failed: ' + url));
+    img.src = url;
+  });
+}
+
+// ── Escala de color djlorenz → LPI ───────────────────────────────────────
+// Tabla calibrada contra la escala expandida publicada en lp/colors.html
+// LPI = brillo artificial / brillo natural (22.0 mag/arcsec²)
+// Factor entre zonas adyacentes: √3 ≈ 1.732
+function rgbToLPI(r, g, b) {
+  const palette = [
+    //  R    G    B      LPI       Zona
+    [   0,   0,   0,  0.003 ],  // 0    – negro
+    [  38,  38,  38,  0.013 ],  // 1a   – gris muy oscuro
+    [  82,  82,  82,  0.022 ],  // 1b   – gris medio
+    [   0,   0, 108,  0.038 ],  // 2a   – azul oscuro
+    [   0,   0, 225,  0.066 ],  // 2b   – azul puro
+    [   0,  95, 200,  0.115 ],  // 3a   – azul-verde
+    [   0, 190, 130,  0.199 ],  // 3b   – verde-cian
+    [  80, 155,   0,  0.345 ],  // 4a   – amarillo-verde oscuro
+    [ 215, 215,   0,  0.598 ],  // 4b   – amarillo
+    [ 255, 155,   0,  1.035 ],  // 5a   – ámbar
+    [ 255,  65,   0,  1.793 ],  // 5b   – naranja
+    [ 195,   0,   0,  3.105 ],  // 6a   – rojo
+    [ 120,   0,   0,  5.380 ],  // 6b   – rojo oscuro
+    [  80,   0,  50,  9.320 ],  // 7a   – granate
+    [ 155,  75, 170, 16.15  ],  // 7b   – púrpura
+    [ 255, 255, 255, 40.0   ],  // >7b  – blanco (extremo)
+  ];
+
+  let minDist = Infinity, bestLPI = 0;
+  for (const [pr, pg, pb, lpi] of palette) {
+    const dist = (r - pr) ** 2 + (g - pg) ** 2 + (b - pb) ** 2;
+    if (dist < minDist) { minDist = dist; bestLPI = lpi; }
+  }
+  return bestLPI;
+}
+
+// LPI → SQM (magnitudes por arco-segundo²)
+function lpiToSQM(lpi) {
+  return 22.0 - 2.5 * Math.log10(1 + lpi);
+}
+
+// SQM → Escala de Bortle (aproximado; ambas métricas no son equivalentes estrictas)
+function sqmToBortle(sqm) {
+  if (sqm >= 22.00) return 1;
+  if (sqm >= 21.75) return 2;
+  if (sqm >= 21.50) return 3;
+  if (sqm >= 20.50) return 4;
+  if (sqm >= 19.50) return 5;
+  if (sqm >= 18.94) return 6;
+  if (sqm >= 18.38) return 7;
+  if (sqm >= 17.80) return 8;
+  return 9;
+}
+
+// ── Fallback heurístico (sin red) ─────────────────────────────────────────
+function bortleHeuristic(lat, lon) {
+  // ~2500 ciudades sintetizadas en centros ponderados por magnitud
+  const cores = [
+    [40.71,-74.01,9],[51.51,-0.13,9],[48.85,2.35,9],[35.69,139.69,9],
+    [-23.55,-46.63,9],[19.43,-99.13,9],[28.61,77.21,9],[31.23,121.47,9],
+    [55.75,37.62,9],[-34.60,-58.38,9],[41.90,12.50,8],[52.52,13.40,8],
+    [34.05,-118.24,9],[37.77,-122.42,9],[43.65,-79.38,8],[-33.87,151.21,8],
+    [30.04,31.24,8],[1.35,103.82,8],[25.20,55.27,8],[39.91,116.39,9],
+    [22.54,114.06,8],[13.75,100.52,8],[6.52,3.38,9],[23.73,90.39,9],
+    [24.86,67.01,8],[33.72,73.04,7],[3.14,101.69,8],[-6.21,106.85,8],
+    [14.69,17.44,7],[4.36,18.55,7],[-1.28,36.82,7],[9.07,7.40,7],
+    [-26.20,28.03,8],[-33.93,18.42,7],[36.82,10.17,7],[32.08,34.78,8],
+    [33.51,36.29,8],[40.41,-3.70,8],[41.38,2.18,8],[45.46,9.19,8],
+    [48.13,11.58,8],[52.37,4.90,8],[50.85,4.35,8],[47.50,19.04,8],
+    [59.94,30.32,8],[54.60,-5.93,7],[53.48,-2.24,8],[51.45,-2.59,7],
+    [-37.81,144.96,8],[-27.47,153.02,7],[-31.95,115.86,7],
+    [43.70,-79.42,8],[45.52,-73.57,8],[49.25,-123.12,7],[51.04,-114.07,7],
+    [-34.61,-58.38,9],[-12.04,-77.03,8],[4.71,-74.07,7],[10.49,-66.88,7],
+    [-22.90,-43.17,9],[18.48,-69.90,7],[10.65,-71.62,7],[18.10,-77.30,6],
+    [21.14,-101.69,7],[20.68,-103.35,8],[25.67,-100.31,8],[17.07,-96.72,7],
+    [29.76,-95.37,8],[30.27,-97.74,7],[32.78,-96.82,8],[41.85,-87.65,9],
+    [39.95,-75.16,8],[42.36,-71.06,8],[40.45,-79.96,8],[38.89,-77.03,9],
+    [25.77,-80.19,8],[30.33,-81.66,7],[35.23,-80.84,7],[33.75,-84.39,8],
+    [29.95,-90.07,8],[36.17,-86.78,7],[39.10,-84.51,7],[41.50,-81.69,8],
+    [42.33,-83.04,8],[44.98,-93.26,7],[38.63,-90.19,8],[39.74,-104.98,7],
+    [33.45,-112.07,8],[36.17,-115.14,8],[37.34,-121.89,8],[47.60,-122.33,8],
+    [45.52,-122.68,7],[47.17,-122.52,7],
+  ];
+  let minB = 2;
+  for (const [clat, clon, b] of cores) {
+    const d = Math.sqrt((lat - clat) ** 2 + (lon - clon) ** 2);
+    const effective = b - Math.floor(d / 0.35);
+    if (effective > minB) minB = effective;
+  }
+  return Math.max(1, Math.min(9, minB));
+}
+
+// ── Presentación del resultado Bortle ─────────────────────────────────────
+function setBortleResult({ bortle, sqm, source }) {
+  setVal('bortle-val', String(bortle));
+
+  const notes = [
+    '', 'Cielo negro excepcional', 'Cielo negro verdadero',
+    'Rural — leve brillo en horizonte', 'Rural/suburbano',
+    'Suburbano — Vía Láctea pálida', 'Suburbano brillante',
+    'Transición ciudad', 'Ciudad — solo objetos brillantes', 'Centro urbano',
+  ];
+  g('bortle-note').textContent = notes[bortle] ?? '—';
+
+  if (sqm !== null && sqm !== undefined) {
+    g('bortle-sqm').textContent = `SQM ≈ ${sqm.toFixed(2)} mag/″²`;
+    g('bortle-sqm').style.display = '';
+  }
+  g('bortle-src').textContent = source ?? '';
+
   const cols = ['','#1aa87a','#2ab06a','#5ab050','#8ab030','#c0a020','#d07020','#c05020','#b03030','#902020'];
   document.querySelectorAll('.bortle-seg').forEach(s => {
     const i = parseInt(s.dataset.i);
-    s.style.background = i <= b ? (cols[i] || 'var(--border2)') : 'var(--border)';
+    s.style.background = i <= bortle ? (cols[i] || 'var(--border2)') : 'var(--border)';
   });
 }
 
@@ -748,21 +1084,83 @@ function computePlanets() {
 // ── ISS ───────────────────────────────────────────────
 async function fetchISS() {
   try {
-    const d = await (await fetch('https://api.wheretheiss.at/v1/satellites/25544')).json();
-    const lat = +d.latitude, lon = +d.longitude;
+    const d   = await (await fetch('https://api.wheretheiss.at/v1/satellites/25544')).json();
+    const issLat = +d.latitude, issLon = +d.longitude, issOrbAlt = +d.altitude;
 
-    g('iss-lat').textContent = fmt(Math.abs(lat), 2) + (lat >= 0 ? '° N' : '° S');
-    g('iss-lon').textContent = fmt(Math.abs(lon), 2) + (lon >= 0 ? '° E' : '° O');
-    ['iss-lat','iss-lon'].forEach(id => g(id).classList.remove('loading'));
-    g('iss-alt').textContent  = `Alt: ${(+d.altitude).toFixed(0)} km · Vel: ${(+d.velocity).toFixed(0)} km/h`;
-    g('iss-ts').textContent   = new Date().toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' });
+    g('iss-alt').textContent = `Alt. orbital: ${issOrbAlt.toFixed(0)} km · Vel: ${(+d.velocity).toFixed(0)} km/h`;
+    g('iss-ts').textContent  = new Date().toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' });
 
+    if (userLat !== null) {
+      const { az, elev } = issAzAlt(userLat, userLon, issLat, issLon, issOrbAlt);
+
+      const az16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
+      const azLbl = az16[Math.round(az / 22.5) % 16];
+
+      g('iss-az').textContent   = `${azLbl} ${az.toFixed(1)}°`;
+      g('iss-elev').textContent = `${elev.toFixed(1)}°`;
+
+      const visEl = g('iss-vis');
+      if (elev > 10) {
+        visEl.textContent = '✓ Sobre el horizonte — visible ahora';
+        visEl.style.color = 'var(--accent)';
+      } else if (elev > 0) {
+        visEl.textContent = `${elev.toFixed(1)}° — muy bajo en el horizonte`;
+        visEl.style.color = 'var(--unav)';
+      } else {
+        visEl.textContent = `Bajo el horizonte (${elev.toFixed(1)}°)`;
+        visEl.style.color = 'var(--txt3)';
+      }
+    } else {
+      g('iss-az').textContent   = `${(+d.latitude).toFixed(1)}° ${+d.latitude >= 0 ? 'N' : 'S'}`;
+      g('iss-elev').textContent = `${Math.abs(+d.longitude).toFixed(1)}° ${+d.longitude >= 0 ? 'E' : 'O'}`;
+      g('iss-vis').textContent  = 'Elige ubicación para ver Az/Alt';
+      g('iss-vis').style.color  = 'var(--txt3)';
+    }
+
+    ['iss-az','iss-elev'].forEach(id => g(id).classList.remove('loading'));
     computeISSPasses();
   } catch {
-    g('iss-lat').textContent = 'Error';
-    g('iss-lon').textContent = '—';
-    g('iss-ts').textContent = 'Sin datos';
+    g('iss-az').textContent  = 'Error';
+    g('iss-elev').textContent = '—';
+    g('iss-ts').textContent  = 'Sin datos';
   }
+}
+
+// Convierte posición geográfica de la ISS a Az/Alt desde el observador (ECEF)
+function issAzAlt(obsLat, obsLon, issLat, issLon, issAltKm) {
+  const Re  = 6371;  // km, radio medio terrestre
+  const φO  = obsLat * D2R,  λO = obsLon * D2R;
+  const φI  = issLat * D2R,  λI = issLon * D2R;
+  const rI  = Re + issAltKm;
+
+  // ECEF observador (superficie)
+  const xO = Re * Math.cos(φO) * Math.cos(λO);
+  const yO = Re * Math.cos(φO) * Math.sin(λO);
+  const zO = Re * Math.sin(φO);
+
+  // ECEF ISS
+  const xI = rI * Math.cos(φI) * Math.cos(λI);
+  const yI = rI * Math.cos(φI) * Math.sin(λI);
+  const zI = rI * Math.sin(φI);
+
+  // Vector observador → ISS
+  const dx = xI - xO, dy = yI - yO, dz = zI - zO;
+
+  // Vectores unitarios locales (Este, Norte, Arriba) en el observador
+  const eE = [-Math.sin(λO),  Math.cos(λO),  0];
+  const eN = [-Math.sin(φO)*Math.cos(λO), -Math.sin(φO)*Math.sin(λO), Math.cos(φO)];
+  const eU = [ Math.cos(φO)*Math.cos(λO),  Math.cos(φO)*Math.sin(λO), Math.sin(φO)];
+
+  const dot = (v, w) => v[0]*w[0] + v[1]*w[1] + v[2]*w[2];
+  const d   = [dx, dy, dz];
+
+  const e = dot(eE, d), n = dot(eN, d), u = dot(eU, d);
+
+  const elev = Math.atan2(u, Math.sqrt(e*e + n*n)) * R2D;
+  let   az   = Math.atan2(e, n) * R2D;
+  if (az < 0) az += 360;
+
+  return { az, elev };
 }
 
 function computeISSPasses() {
@@ -794,6 +1192,141 @@ function computeISSPasses() {
   }
   html += '</div>';
   g('iss-passes').innerHTML = html;
+}
+
+// ── Detalle de ubicación: coordenadas + sol ──────────────────────────────
+
+function updateLocationDetail(lat, lon) {
+  g('obs-loc-detail').style.display = '';
+
+  // ── Angulares (DMS) ───────────────────────────────
+  g('coord-dms-lat').textContent = decToDMS(Math.abs(lat), lat >= 0 ? 'N' : 'S');
+  g('coord-dms-lon').textContent = decToDMS(Math.abs(lon), lon >= 0 ? 'E' : 'O');
+
+  // ── Polares/esféricas ─────────────────────────────
+  // θ = colatitud (0° = polo norte, 180° = polo sur)
+  const theta = 90 - lat;
+  // φ = longitud en [0°, 360°) convención astronómica
+  const phi   = ((lon % 360) + 360) % 360;
+
+  g('coord-polar-theta').textContent = fmt(theta, 4) + '°';
+  g('coord-polar-phi').textContent   = fmt(phi, 4) + '°';
+
+  // Proximidad al polo más cercano
+  const distNP = Math.abs(90 - lat);
+  const distSP = Math.abs(-90 - lat);
+  if (distNP < distSP) {
+    g('coord-polar-pole').textContent = `${fmt(distNP, 2)}° del Polo Norte`;
+  } else {
+    g('coord-polar-pole').textContent = `${fmt(distSP, 2)}° del Polo Sur`;
+  }
+
+  // ── Amanecer / Atardecer ──────────────────────────
+  computeSunTimes(lat, lon);
+}
+
+function decToDMS(dec, dir) {
+  const d = Math.floor(dec);
+  const mf = (dec - d) * 60;
+  const m  = Math.floor(mf);
+  const s  = ((mf - m) * 60).toFixed(1);
+  return `${d}° ${m}′ ${s}″ ${dir}`;
+}
+
+// ── Algoritmo solar (Jean Meeus / NOAA) ────────────────────────────────────
+function computeSunTimes(lat, lon) {
+  const now    = new Date();
+  const rise   = sunEvent(now, lat, lon, true);
+  const setT   = sunEvent(now, lat, lon, false);
+
+  if (rise === null && setT === null) {
+    // Sol por encima o por debajo del horizonte todo el día
+    const decl = sunDeclination(now);
+    if ((lat > 0 && decl > 0) || (lat < 0 && decl < 0)) {
+      g('sun-rise').textContent = '—';
+      g('sun-set').textContent  = '—';
+      g('sun-dur').textContent  = '—';
+      g('sun-note').textContent = 'Sol sobre el horizonte todo el día (noche polar o sol de medianoche)';
+    } else {
+      g('sun-rise').textContent = '—';
+      g('sun-set').textContent  = '—';
+      g('sun-dur').textContent  = '—';
+      g('sun-note').textContent = 'Sol bajo el horizonte todo el día (noche polar)';
+    }
+    return;
+  }
+
+  const fmtTime = d => d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+
+  // Convertir a hora local del navegador para mostrar al usuario
+  const fmtLocal = d => d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+
+  g('sun-rise').textContent = rise  ? fmtLocal(rise)  : '—';
+  g('sun-set').textContent  = setT  ? fmtLocal(setT)  : '—';
+
+  if (rise && setT) {
+    const durMs  = setT - rise;
+    const durH   = Math.floor(durMs / 3600000);
+    const durMin = Math.round((durMs % 3600000) / 60000);
+    g('sun-dur').textContent  = `${durH}h ${durMin}min`;
+
+    const noon = new Date((rise.getTime() + setT.getTime()) / 2);
+    g('sun-note').textContent = `Mediodía solar: ${fmtLocal(noon)}`;
+  } else {
+    g('sun-dur').textContent  = '—';
+    g('sun-note').textContent = '';
+  }
+}
+
+// Declination del sol en una fecha dada
+function sunDeclination(date) {
+  const jd  = date.getTime() / 86400000 + 2440587.5;
+  const n   = jd - 2451545.0;
+  const L   = mod360(280.460 + 0.9856474 * n);
+  const g2  = mod360(357.528 + 0.9856003 * n) * D2R;
+  const λ   = (L + 1.915 * Math.sin(g2) + 0.020 * Math.sin(2 * g2)) * D2R;
+  const ε   = (23.439 - 0.0000004 * n) * D2R;
+  return Math.asin(Math.sin(ε) * Math.sin(λ)) * R2D;
+}
+
+// Calcula amanecer (rise=true) o atardecer (rise=false) para una fecha y ubicación
+function sunEvent(date, lat, lon, rise) {
+  const jd = Math.floor(date.getTime() / 86400000) + 2440587.5 + 0.5; // JD a mediodía UTC
+
+  // Calcular posición solar a lo largo del día con Newton-Raphson
+  // Usando la ecuación del tiempo y declinación
+  const φ  = lat * D2R;
+  const zenith = 90.833 * D2R; // horizonte + refracción
+
+  // Hora ángulo en el amanecer/atardecer
+  const n    = jd - 2451545.0;
+  const Lsun = mod360(280.460 + 0.9856474 * n) * D2R;
+  const g2   = mod360(357.528 + 0.9856003 * n) * D2R;
+  const λ    = Lsun + (1.915 * Math.sin(g2) + 0.020 * Math.sin(2 * g2)) * D2R;
+  const ε    = (23.439 - 0.0000004 * n) * D2R;
+  const dec  = Math.asin(clamp(Math.sin(ε) * Math.sin(λ), -1, 1));
+
+  const cosH = (Math.cos(zenith) - Math.sin(φ) * Math.sin(dec)) / (Math.cos(φ) * Math.cos(dec));
+  if (cosH < -1) return null; // Sol nunca se pone
+  if (cosH >  1) return null; // Sol nunca sale
+
+  const H = Math.acos(clamp(cosH, -1, 1)) * R2D; // 0–180
+
+  // LMST → UT
+  const RA     = Math.atan2(Math.cos(ε) * Math.sin(λ), Math.cos(λ)) * R2D;
+  const lmst0  = mod360(lon + 357.528 + 0.9856003 * n + 102.9372);
+
+  let utHours;
+  if (rise) {
+    utHours = mod360(RA - H - lmst0) / 15;
+  } else {
+    utHours = mod360(RA + H - lmst0) / 15;
+  }
+
+  // Construir Date: fecha del JD (sin tiempo) + horas UT
+  const base = new Date(date);
+  base.setUTCHours(0, 0, 0, 0);
+  return new Date(base.getTime() + utHours * 3600000);
 }
 
 // ── Utilidades ────────────────────────────────────────
