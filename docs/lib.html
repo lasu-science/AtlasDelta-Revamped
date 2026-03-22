@@ -265,7 +265,7 @@
   <!-- Stats -->
   <div class="lib-stats">
     <div class="stat-item">
-      <span class="stat-val" id="count-total">2</span>
+      <span class="stat-val" id="count-total">5</span>
       <span class="stat-lbl">Títulos</span>
     </div>
     <div class="stat-item">
@@ -288,15 +288,15 @@
       <input class="lib-search" type="text" id="lib-search" placeholder="Buscar título, autor, tema…" autocomplete="off">
     </div>
     <button class="filter-btn active" data-filter="all">Todos</button>
-    <button class="filter-btn" data-filter="electronica">Electrónica</button>
-    <button class="filter-btn" data-filter="biologia">Biología</button>
+    <button class="filter-btn" data-filter="teoria">Teoría</button>
+    <button class="filter-btn" data-filter="experimentales">Ciencias Experimentales</button>
   </div>
 
   <!-- Grid -->
   <div class="lib-grid" id="lib-grid">
 
     <!-- 1 · Boylestad -->
-    <a target="_blank" href="Electronica_Boylestad_10a_Ed.pdf" class="book-card" style="--stripe:#60a5fa" data-disc="electronica" data-text="electronica teoria circuitos dispositivos electronicos boylestad nashelsky">
+    <a target="_blank" href="Electronica_Boylestad_10a_Ed.pdf" class="book-card" style="--stripe:#60a5fa" data-disc="teoria" data-text="electronica teoria circuitos dispositivos electronicos boylestad nashelsky">
       <div class="book-cover">
         <!-- Circuit / sine wave art -->
         <svg viewBox="0 0 320 213" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
@@ -338,8 +338,8 @@
       </div>
     </a>
 
-    <!-- 3 · Audesirk -->
-    <a target="_blank" href="biologc3ada_la_vida_en_la_tierra_con_fisiologc3ada_9c2ba_edicic3b3n_.pdf" class="book-card" style="--stripe:#4ade80" data-disc="biologia" data-text="biologia la vida en la tierra con fisiologia novena edicion audesirk byers">
+    <!-- 2 · Audesirk -->
+    <a target="_blank" href="biologc3ada_la_vida_en_la_tierra_con_fisiologc3ada_9c2ba_edicic3b3n_.pdf" class="book-card" style="--stripe:#4ade80" data-disc="experimentales" data-text="biologia la vida en la tierra con fisiologia novena edicion audesirk byers">
       <div class="book-cover">
         <svg viewBox="0 0 320 213" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
           <rect width="320" height="213" fill="#13141a"/>
@@ -372,6 +372,182 @@
           <span class="book-tag">Células</span>
           <span class="book-tag">Fisiología</span>
           <span class="book-tag">Anatomía</span>
+          <span class="pdf-badge">PDF</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- 3 · Cálculo -->
+    <a target="_blank" href="Stewart. Cálculo de una variable..pdf" class="book-card" style="--stripe:#c084fc" data-disc="teoria" data-text="calculo de una variable stewart">
+      <div class="book-cover">
+        <svg viewBox="0 0 320 213" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="213" fill="#13141a"/>
+
+  <!-- Grid -->
+  <line x1="0" y1="106" x2="320" y2="106" stroke="#c084fc" stroke-width="1" opacity=".12"/>
+  <line x1="160" y1="0" x2="160" y2="213" stroke="#c084fc" stroke-width="1" opacity=".12"/>
+
+  <!-- Sine wave -->
+  <path d="M0,106 C40,40 80,40 120,106 S200,172 240,106 S280,40 320,106"
+        fill="none" stroke="#c084fc" stroke-width="1.5" opacity=".6"/>
+
+  <!-- Cosine wave -->
+  <path d="M0,60 C40,106 80,106 120,60 S200,14 240,60 S280,106 320,60"
+        fill="none" stroke="#c084fc" stroke-width="1" opacity=".35"/>
+
+  <!-- Unit circle -->
+  <circle cx="160" cy="106" r="60"
+          fill="none" stroke="#c084fc"
+          stroke-width="1" stroke-dasharray="4 3" opacity=".25"/>
+
+  <!-- Radius vector -->
+  <line x1="160" y1="106" x2="200" y2="70"
+        stroke="#c084fc" stroke-width="1.5" opacity=".7"/>
+
+  <!-- Projection lines -->
+  <line x1="200" y1="70" x2="200" y2="106"
+        stroke="#c084fc" stroke-width="1" opacity=".25"/>
+  <line x1="200" y1="70" x2="160" y2="70"
+        stroke="#c084fc" stroke-width="1" opacity=".25"/>
+
+  <!-- Angle arc -->
+  <path d="M180,106 A20,20 0 0 0 172,90"
+        fill="none" stroke="#c084fc" stroke-width="1" opacity=".5"/>
+
+  <!-- Highlight point -->
+  <circle cx="200" cy="70" r="3" fill="#c084fc" opacity=".8"/>
+
+</svg>
+      </div>
+      <div class="book-body">
+        <div class="book-discipline">Matemática</div>
+        <div class="book-title">Cálculo de una variable <span style="font-style:normal;font-size:.85em;color:var(--txt3)">(7ª ed.)</span></div>
+        <div class="book-author">James Stewart</div>
+        <div class="book-tags">
+          <span class="book-tag">Cálculo</span>
+          <span class="book-tag">Análisis</span>
+          <span class="pdf-badge">PDF</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- 4 · Química -->
+    <a target="_blank" href="Fundamentos_de_quimica_-_Chang.pdf" class="book-card" style="--stripe:#f59e0b" data-disc="experimentales" data-text="fundamentos de quimica chang">
+      <div class="book-cover">
+        <svg viewBox="0 0 320 213" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="213" fill="#13141a"/>
+
+  <!-- Grid -->
+  <line x1="0" y1="106" x2="320" y2="106" stroke="#f59e0b" stroke-width="1" opacity=".12"/>
+  <line x1="160" y1="0" x2="160" y2="213" stroke="#f59e0b" stroke-width="1" opacity=".12"/>
+
+  <!-- Hexagon (benzene-like ring) -->
+  <polygon points="160,60 190,80 190,120 160,140 130,120 130,80"
+           fill="none" stroke="#f59e0b" stroke-width="1.5" opacity=".6"/>
+
+  <!-- Inner circle (delocalized electrons hint) -->
+  <circle cx="160" cy="100" r="18"
+          fill="none" stroke="#f59e0b" stroke-width="1" opacity=".35"/>
+
+  <!-- Bonds extending -->
+  <line x1="160" y1="60" x2="160" y2="40"
+        stroke="#f59e0b" stroke-width="1.2" opacity=".5"/>
+  <line x1="190" y1="80" x2="210" y2="70"
+        stroke="#f59e0b" stroke-width="1.2" opacity=".5"/>
+  <line x1="190" y1="120" x2="210" y2="130"
+        stroke="#f59e0b" stroke-width="1.2" opacity=".5"/>
+
+  <!-- Molecule nodes -->
+  <circle cx="160" cy="40" r="3" fill="#f59e0b" opacity=".8"/>
+  <circle cx="210" cy="70" r="3" fill="#f59e0b" opacity=".8"/>
+  <circle cx="210" cy="130" r="3" fill="#f59e0b" opacity=".8"/>
+
+  <!-- Flask outline -->
+  <path d="M90,160 L110,110 L110,80 L120,80 L120,110 L140,160 Z"
+        fill="none" stroke="#f59e0b" stroke-width="1.2" opacity=".4"/>
+
+  <!-- Liquid inside -->
+  <path d="M95,150 Q115,140 135,150 L130,160 L100,160 Z"
+        fill="#f59e0b" opacity=".15"/>
+
+  <!-- Small bubbles -->
+  <circle cx="115" cy="140" r="2" fill="#f59e0b" opacity=".5"/>
+  <circle cx="120" cy="135" r="1.5" fill="#f59e0b" opacity=".4"/>
+
+  <!-- Reaction arrow -->
+  <line x1="180" y1="180" x2="260" y2="180"
+        stroke="#f59e0b" stroke-width="1.2" opacity=".5"/>
+  <polygon points="260,180 252,176 252,184"
+           fill="#f59e0b" opacity=".5"/>
+
+</svg>
+      </div>
+      <div class="book-body">
+        <div class="book-discipline">Química</div>
+        <div class="book-title">Fundamentos de Química</div>
+        <div class="book-author">Raymond Chang</div>
+        <div class="book-tags">
+          <span class="book-tag">Química</span>
+          <span class="book-tag">Experimentación</span>
+          <span class="pdf-badge">PDF</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- 5 · Física -->
+    <a target="_blank" href="fisica-general-libro-completo.pdf" class="book-card" style="--stripe:#ef4444" data-disc="experimentales" data-text="fundamentos de quimica chang">
+      <div class="book-cover">
+        <svg viewBox="0 0 320 213" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="213" fill="#13141a"/>
+
+  <!-- Grid -->
+  <line x1="0" y1="106" x2="320" y2="106" stroke="#ef4444" stroke-width="1" opacity=".12"/>
+  <line x1="160" y1="0" x2="160" y2="213" stroke="#ef4444" stroke-width="1" opacity=".12"/>
+
+  <!-- Wave (general physics / oscillation) -->
+  <path d="M0,106 C40,60 80,60 120,106 S200,152 240,106 S280,60 320,106"
+        fill="none" stroke="#ef4444" stroke-width="1.5" opacity=".6"/>
+
+  <!-- Orbit (atom / celestial hint) -->
+  <ellipse cx="160" cy="106" rx="70" ry="30"
+           fill="none" stroke="#ef4444" stroke-width="1" opacity=".3"/>
+
+  <!-- Rotated orbit -->
+  <ellipse cx="160" cy="106" rx="70" ry="30"
+           transform="rotate(60 160 106)"
+           fill="none" stroke="#ef4444" stroke-width="1" opacity=".25"/>
+
+  <!-- Central mass -->
+  <circle cx="160" cy="106" r="4" fill="#ef4444" opacity=".8"/>
+
+  <!-- Orbiting particle -->
+  <circle cx="230" cy="106" r="3" fill="#ef4444" opacity=".7"/>
+
+  <!-- Vector (force/velocity) -->
+  <line x1="160" y1="106" x2="200" y2="70"
+        stroke="#ef4444" stroke-width="1.5" opacity=".6"/>
+  <polygon points="200,70 193,72 197,78"
+           fill="#ef4444" opacity=".6"/>
+
+  <!-- Field lines -->
+  <path d="M120,60 Q160,40 200,60"
+        fill="none" stroke="#ef4444" stroke-width="1" opacity=".25"/>
+  <path d="M120,150 Q160,170 200,150"
+        fill="none" stroke="#ef4444" stroke-width="1" opacity=".25"/>
+
+  <!-- Small markers -->
+  <circle cx="120" cy="60" r="2" fill="#ef4444" opacity=".6"/>
+  <circle cx="200" cy="150" r="2" fill="#ef4444" opacity=".6"/>
+
+</svg>
+      </div>
+      <div class="book-body">
+        <div class="book-discipline">Física</div>
+        <div class="book-title">Física General</div>
+        <div class="book-author">Ignacio Martín Bragado</div>
+        <div class="book-tags">
+          <span class="book-tag">Física</span>
+          <span class="book-tag">Experimentación</span>
           <span class="pdf-badge">PDF</span>
         </div>
       </div>

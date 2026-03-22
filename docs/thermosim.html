@@ -34,9 +34,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .nav-tab:hover{color:var(--txt2);background:var(--s1)}
 .nav-tab.active{color:var(--cyan);background:rgba(34,211,238,.07);border-color:rgba(34,211,238,.2)}
 .nav-tab.active.t-stress{color:var(--amber);background:rgba(251,191,36,.07);border-color:rgba(251,191,36,.2)}
-.nav-tab.active.t-vectors{color:var(--violet);background:rgba(167,139,250,.07);border-color:rgba(167,139,250,.2)}
 .nav-tab.active.t-volumes{color:var(--orange);background:rgba(251,146,60,.07);border-color:rgba(251,146,60,.2)}
-.nav-tab.active.t-combustion{color:var(--red);background:rgba(248,113,113,.07);border-color:rgba(248,113,113,.2)}
 .tab-icon{font-size:13px}
 .hdr-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 .icon-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--border2);background:var(--s2);
@@ -123,6 +121,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   opacity:0;transition:opacity var(--tr)}
 .run-btn:hover::before{opacity:1}
 .run-btn.fluid{background:linear-gradient(135deg,#0e7490,#0891b2);color:#e0f9ff;box-shadow:0 4px 18px rgba(8,145,178,.3)}
+.run-btn.analysis{background:linear-gradient(135deg,#0e7490,#0891b2);color:#e0f9ff;box-shadow:0 4px 18px rgba(8,145,178,.3)}
 .run-btn.stress{background:linear-gradient(135deg,#92400e,#d97706);color:#fef3c7;box-shadow:0 4px 18px rgba(217,119,6,.3)}
 .run-btn.vectors{background:linear-gradient(135deg,#4c1d95,#7c3aed);color:#ede9fe;box-shadow:0 4px 18px rgba(124,58,237,.3)}
 .run-btn.volumes{background:linear-gradient(135deg,#7c2d12,#ea580c);color:#fff7ed;box-shadow:0 4px 18px rgba(234,88,12,.3)}
@@ -167,6 +166,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .hud-badge{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:20px;
   font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;pointer-events:none}
 .hud-badge.fluid{background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.25);color:var(--cyan)}
+.hud-badge.analysis{background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.25);color:var(--cyan)}
 .hud-badge.stress{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);color:var(--amber)}
 .hud-badge.vectors{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);color:var(--violet)}
 .hud-badge.volumes{background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.25);color:var(--orange)}
@@ -226,6 +226,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .mob-run{flex:1;padding:9px;border-radius:10px;border:none;font-family:'Syne',sans-serif;
   font-size:13px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#0e7490,#0891b2);color:#e0f9ff}
 .mob-run:disabled{opacity:.35}
+.mob-run.analysis{background:linear-gradient(135deg,#0e7490,#0891b2);color:#e0f9ff}
 .mob-run.stress{background:linear-gradient(135deg,#92400e,#d97706);color:#fef3c7}
 .mob-run.vectors{background:linear-gradient(135deg,#4c1d95,#7c3aed);color:#ede9fe}
 .mob-run.volumes{background:linear-gradient(135deg,#7c2d12,#ea580c);color:#fff7ed}
@@ -295,11 +296,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   <div class="logo">ThermoSim</div>
   <div class="logo-sep"></div>
   <div class="nav-tabs">
-    <button class="nav-tab active t-fluid" data-mode="fluid" onclick="switchMode('fluid')"><span class="tab-icon">🌊</span><span>Flujo</span></button>
-    <button class="nav-tab t-vectors" data-mode="vectors" onclick="switchMode('vectors')"><span class="tab-icon">🧲</span><span>Vectores</span></button>
-    <button class="nav-tab t-stress" data-mode="stress" onclick="switchMode('stress')"><span class="tab-icon">🔩</span><span>Estrés</span></button>
+    <button class="nav-tab active t-fluid" data-mode="analysis" onclick="switchMode('analysis')"><span class="tab-icon">🌊</span><span>Análisis</span></button>
     <button class="nav-tab t-volumes" data-mode="volumes" onclick="switchMode('volumes')"><span class="tab-icon">🛢️</span><span>Volúmenes</span></button>
-    <button class="nav-tab t-combustion" data-mode="combustion" onclick="switchMode('combustion')"><span class="tab-icon">🔥</span><span>Combustión</span></button>
   </div>
   <div class="hdr-right">
     <button class="icon-btn" onclick="openModal()">?</button>
@@ -327,7 +325,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
       <div class="sim2d-hint" id="sim2d-hint">Haz clic en el lienzo para colocar elementos</div>
     </div>
     <div class="hud-status" id="hud-status">Sin modelo — carga un STL o usa un demo</div>
-    <div class="hud-badge fluid" id="hud-badge">Flujo de Fluido</div>
+    <div class="hud-badge analysis" id="hud-badge">Flujo · Estrés</div>
     <div class="hud-ctrl">Arrastrar → rotar<br>Shift+drag → pan<br>Scroll → zoom</div>
     <div class="loading-ov" id="loading">
       <div class="loading-spin"></div>
@@ -363,11 +361,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
     <div class="modal-hdr"><div class="modal-title">Sobre ThermoSim</div><button class="modal-close" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
       <p><strong>ThermoSim es un simulador educativo heurístico</strong> — no reemplaza a OpenFOAM, ANSYS ni software CFD real. Los resultados son cualitativos.</p>
-      <p><strong>🌊 Flujo de Fluido:</strong> Streamlines 3D coloreados por velocidad. Carga un STL o usa los demos.</p>
-      <p><strong>🧲 Campo Vectorial:</strong> Flechas 3D mostrando dirección e intensidad del flujo.</p>
-      <p><strong>🔩 Estrés Estructural:</strong> Mapa de calor de estrés superficial, factor de seguridad y análisis de material.</p>
+      <p><strong>🌊 Análisis (Flujo + Estrés):</strong> Streamlines 3D coloreados por velocidad, con cálculo simultáneo de estrés estructural, coeficientes aerodinámicos y factor de seguridad del material.</p>
       <p><strong>🛢️ Volúmenes Cerrados:</strong> Diseña redes de tanques, tuberías y válvulas en 2D. Simula flujo entre recipientes con presión, temperatura y nivel de llenado.</p>
-      <p><strong>🔥 Combustión:</strong> Coloca puntos de ignición sobre una cámara, define el combustible y simula la propagación del frente de llama, temperatura y presión de combustión.</p>
     </div>
   </div>
 </div>
@@ -394,7 +389,7 @@ const V3 = {
 
 // ── App state ──────────────────────────────────────────────
 const APP = {
-  mode:'fluid', mesh:null,
+  mode:'analysis', mesh:null,
   flowDir:[0,0,-1], alpha:0, beta:0,
   V:30, rho:1.225, mu:1.81e-5, nSeeds:70,
   fluid:'air', material:'steel',
@@ -518,7 +513,7 @@ function onResize(){
   camera.aspect=p.clientWidth/p.clientHeight;
   camera.updateProjectionMatrix();
   if(APP.lastCoeffs) drawDragChart(APP.lastCoeffs);
-  if(APP.mode==='volumes'||APP.mode==='combustion') resize2d();
+  if(APP.mode==='volumes') resize2d();
 }
 window.addEventListener('resize',onResize); onResize();
 
@@ -1875,102 +1870,60 @@ async function runSimulation(){
   btn.disabled=true;mBtn.disabled=true;
   const dir=effectiveFlowDir();
   const V_inf=APP.V,rho=APP.rho,mu=APP.mu;
-  if(APP.mode==='fluid'||APP.mode==='vectors'){
+  if(APP.mode==='analysis'){
     showLoading('Calculando campo de velocidades...',0);
-    const field=await computeVelocityField(APP.mesh,dir,V_inf,22,1.5,p=>{setLoadProgress(p*.7);setLoadingTxt(`Campo de velocidades... ${(p*100).toFixed(0)}%`);});
-    if(APP.mode==='fluid'){
-      setLoadingTxt('Trazando streamlines...');await sleep(10);
-      const seeds=makeSeeds(dir,APP.nSeeds,1.35),streamlines=[];
-      let smin=Infinity,smax=-Infinity;
-      // dt=0.055: more responsive to speed changes; maxSteps=320 for longer traces
-      for(const seed of seeds){const sl=traceStreamline(...seed,field,320,.055);if(sl.pts.length>=6){streamlines.push(sl);for(const sp of sl.speeds){if(sp<smin)smin=sp;if(sp>smax)smax=sp;}}}
-      setLoadProgress(.9);await sleep(10);
-      buildFluidScene(APP.mesh,streamlines,dir,[smin,smax]);
-      const c=aeroCoeffs(APP.mesh,dir,V_inf,rho,mu);APP.lastCoeffs=c;
-      renderFluidResults(c,smin,smax);
-      setStatus(`${streamlines.length} streamlines · V∞=${V_inf} m/s`);
-    } else {
-      setLoadProgress(.85);setLoadingTxt('Vectores...');await sleep(10);
-      buildVectorScene(APP.mesh,field,dir);
-      const c=aeroCoeffs(APP.mesh,dir,V_inf,rho,mu);APP.lastCoeffs=c;
-      renderVectorResults(c);
-      setStatus(`Campo vectorial · V∞=${V_inf} m/s`);
-    }
-  } else if(APP.mode==='stress'){
-    showLoading('Calculando estrés...',0);await sleep(30);
-    setLoadProgress(.5);await sleep(30);
+    const field=await computeVelocityField(APP.mesh,dir,V_inf,22,1.5,p=>{setLoadProgress(p*.6);setLoadingTxt(`Campo de velocidades... ${(p*100).toFixed(0)}%`);});
+    setLoadingTxt('Trazando streamlines...');await sleep(10);
+    const seeds=makeSeeds(dir,APP.nSeeds,1.35),streamlines=[];
+    let smin=Infinity,smax=-Infinity;
+    for(const seed of seeds){const sl=traceStreamline(...seed,field,320,.055);if(sl.pts.length>=6){streamlines.push(sl);for(const sp of sl.speeds){if(sp<smin)smin=sp;if(sp>smax)smax=sp;}}}
+    setLoadProgress(.75);setLoadingTxt('Calculando estrés...');await sleep(10);
     const q=.5*rho*V_inf*V_inf;
     const sd=computeStress(APP.mesh,dir,q+APP.pressure);
-    setLoadProgress(.9);setLoadingTxt('Renderizando...');await sleep(20);
-    buildStressScene(APP.mesh,sd);
+    setLoadProgress(.9);setLoadingTxt('Renderizando...');await sleep(10);
+    buildFluidScene(APP.mesh,streamlines,dir,[smin,smax]);
+    // Overlay stress on top of fluid scene
     const mat=MATERIALS[APP.material];
     const sf=mat.sigma_y/(sd.smax+1e-10);
-    renderStressResults(sd,mat,sf,q);
-    setStatus(`σ máx: ${(sd.smax/1e6).toFixed(2)} MPa · SF: ${sf.toFixed(2)}`);
+    const c=aeroCoeffs(APP.mesh,dir,V_inf,rho,mu);APP.lastCoeffs=c;
+    renderAnalysisResults(c,smin,smax,sd,mat,sf,q);
+    setStatus(`${streamlines.length} streamlines · σ máx ${(sd.smax/1e6).toFixed(2)} MPa · SF ${sf.toFixed(1)}`);
   }
   setLoadProgress(1);await sleep(80);hideLoading();
   btn.disabled=false;mBtn.disabled=false;
 }
 
 // ── Results renderers ──────────────────────────────────────
-function renderFluidResults(c,smin,smax){
+function renderAnalysisResults(c,smin,smax,sd,mat,sf,q){
   const f=(n,d=4)=>isFinite(n)?n.toFixed(d):'—';
-  const rc=document.getElementById('results-content');
-  const _re=document.getElementById('results-empty');if(_re)_re.style.display='none';
-  rc.innerHTML=`
-    <div class="sec">Coeficientes</div>
-    <div class="metric-card"><div class="metric-grid">
-      <div class="mrow"><span class="mname">Área proj.</span><span class="mval">${f(c.A_proj,4)} m²</span></div>
-      <div class="mrow"><span class="mname">Reynolds Re</span><span class="mval violet">${isFinite(c.Re)?c.Re.toExponential(3):'—'}</span></div>
-      <div class="mrow"><span class="mname">q dinámica</span><span class="mval">${f(c.q,1)} Pa</span></div>
-      <div class="mrow"><span class="mname">Arrastre D</span><span class="mval green">${f(c.D,2)} N</span></div>
-      <div class="mrow"><span class="mname">Sustentación L</span><span class="mval">${f(c.L,2)} N</span></div>
-      <div class="mrow"><span class="mname">Potencia W</span><span class="mval amber">${f(c.W,1)} W</span></div>
-      <div class="mrow"><span class="mname">Cd</span><span class="mval amber">${f(c.Cd,4)}</span></div>
-      <div class="mrow"><span class="mname">Cl</span><span class="mval">${f(c.Cl,4)}</span></div>
-    </div></div>
-    <div class="cs"><div class="cs-title">Velocidad (m/s)</div><div class="cs-bar"></div>
-    <div class="cs-labels"><span class="cs-lbl">${smin.toFixed(1)}</span><span class="cs-lbl">${smax.toFixed(1)}</span></div></div>
-    <div class="chart-wrap"><div class="chart-title">Arrastre vs α</div><canvas id="drag-chart" height="88"></canvas></div>
-  `;
-  setTimeout(()=>drawDragChart(c),50);syncMobileResults();
-}
-function renderVectorResults(c){
-  const f=(n,d=4)=>isFinite(n)?n.toFixed(d):'—';
-  const rc=document.getElementById('results-content');
-  const _re=document.getElementById('results-empty');if(_re)_re.style.display='none';
-  rc.innerHTML=`
-    <div class="sec">Campo vectorial</div>
-    <div class="metric-card"><div class="metric-grid">
-      <div class="mrow"><span class="mname">V∞</span><span class="mval">${f(APP.V,1)} m/s</span></div>
-      <div class="mrow"><span class="mname">Reynolds</span><span class="mval violet">${isFinite(c.Re)?c.Re.toExponential(3):'—'}</span></div>
-      <div class="mrow"><span class="mname">q dinámica</span><span class="mval">${f(c.q,1)} Pa</span></div>
-      <div class="mrow"><span class="mname">Cd estimado</span><span class="mval amber">${f(c.Cd,4)}</span></div>
-    </div></div>
-    <div class="cs"><div class="cs-title">Magnitud</div><div class="cs-bar"></div>
-    <div class="cs-labels"><span class="cs-lbl">bajo</span><span class="cs-lbl">alto</span></div></div>
-  `;
-  syncMobileResults();
-}
-function renderStressResults(sd,mat,sf,q){
-  const f=(n,d=2)=>isFinite(n)?n.toFixed(d):'—';
   const rc=document.getElementById('results-content');
   const _re=document.getElementById('results-empty');if(_re)_re.style.display='none';
   const sfCls=sf>3?'green':sf>1.5?'amber':'red';
   rc.innerHTML=`
-    <div class="sec">Análisis estructural</div>
-    <div class="metric-card"><div class="metric-grid">
+    <div class="sec">Aerodinámica</div>
+    <div class="metric-card">
+      <div class="mrow"><span class="mname">Re</span><span class="mval violet">${isFinite(c.Re)?c.Re.toExponential(3):'—'}</span></div>
+      <div class="mrow"><span class="mname">q dinámica</span><span class="mval">${f(c.q,1)} Pa</span></div>
+      <div class="mrow"><span class="mname">Cd</span><span class="mval amber">${f(c.Cd,4)}</span></div>
+      <div class="mrow"><span class="mname">Cl</span><span class="mval">${f(c.Cl,4)}</span></div>
+      <div class="mrow"><span class="mname">Arrastre D</span><span class="mval green">${f(c.D,2)} N</span></div>
+      <div class="mrow"><span class="mname">Potencia W</span><span class="mval amber">${f(c.W,1)} W</span></div>
+    </div>
+    <div class="cs"><div class="cs-title">Velocidad (m/s)</div><div class="cs-bar"></div>
+    <div class="cs-labels"><span class="cs-lbl">${smin.toFixed(1)}</span><span class="cs-lbl">${smax.toFixed(1)}</span></div></div>
+    <div class="sec">Estrés estructural</div>
+    <div class="metric-card">
       <div class="mrow"><span class="mname">Material</span><span class="mval">${mat.name}</span></div>
-      <div class="mrow"><span class="mname">σ_y límite</span><span class="mval">${(mat.sigma_y/1e6).toFixed(0)} MPa</span></div>
       <div class="mrow"><span class="mname">σ máximo</span><span class="mval red">${(sd.smax/1e6).toFixed(3)} MPa</span></div>
-      <div class="mrow"><span class="mname">q dinámica</span><span class="mval">${f(q,1)} Pa</span></div>
+      <div class="mrow"><span class="mname">σ_y límite</span><span class="mval">${(mat.sigma_y/1e6).toFixed(0)} MPa</span></div>
       <div class="mrow"><span class="mname">Factor seg.</span><span class="mval ${sfCls}">${f(sf,2)}</span></div>
       <div class="mrow"><span class="mname">Estado</span><span class="mval ${sfCls}">${sf>1.5?'✓ Seguro':'⚠ Revisar'}</span></div>
-    </div></div>
+    </div>
     <div class="cs"><div class="cs-title">Nivel de estrés</div><div class="cs-bar stress-s"></div>
     <div class="cs-labels"><span class="cs-lbl">bajo</span><span class="cs-lbl">alto</span></div></div>
+    <div class="chart-wrap"><div class="chart-title">Arrastre vs α</div><canvas id="drag-chart" height="88"></canvas></div>
   `;
-  syncMobileResults();
+  setTimeout(()=>drawDragChart(c),50);syncMobileResults();
 }
 
 function drawDragChart(baseC){
@@ -2006,7 +1959,7 @@ function getModeControls(mode){
   }).join('');
   const fluidChips=()=>Object.entries(FLUIDS).map(([k,v])=>`<div class="fchip${APP.fluid===k?' active':''}" onclick="selectFluid('${k}')">${v.name}</div>`).join('');
 
-  if(mode==='fluid') return`
+  if(mode==='analysis') return`
     <div><div class="sec">Modelo 3D</div>
       <div class="upload-zone"><input type="file" id="stl-input" accept=".stl"><div class="upload-title">📁 Cargar STL</div><div class="upload-sub">o usa un demo</div></div>
       <div class="demo-grid" style="margin-top:7px">
@@ -2027,46 +1980,11 @@ function getModeControls(mode){
       <div class="fg"><label class="fl">V∞ (m/s)</label><input class="fi" type="number" value="${APP.V}" min="1" max="340" oninput="APP.V=parseFloat(this.value)||30"></div>
       <div class="fg"><label class="fl">Altitud</label><div class="rw"><input type="range" min="0" max="40" value="0" step="0.5" oninput="setAltitude(this.value)"><span class="rv" id="v-alt">0 km</span></div><span class="fs">ρ = <span id="rho-val">${APP.rho.toFixed(4)}</span> kg/m³</span></div>
       <div class="fg"><label class="fl">Streamlines</label><div class="rw"><input type="range" min="30" max="180" value="${APP.nSeeds}" step="10" oninput="APP.nSeeds=parseInt(this.value);this.nextElementSibling.textContent=this.value"><span class="rv">${APP.nSeeds}</span></div></div>
+    </div>
+    <div><div class="sec">Estructura</div>
+      <div class="fg"><label class="fl">Material</label><select class="fsel" onchange="APP.material=this.value">${Object.entries(MATERIALS).map(([k,v])=>`<option value="${k}"${APP.material===k?' selected':''}>${v.name}</option>`).join('')}</select></div>
+      <div class="fg"><label class="fl">Presión interna (Pa)</label><input class="fi" type="number" value="${APP.pressure}" min="0" oninput="APP.pressure=parseFloat(this.value)||0"></div>
     </div>`;
-
-  if(mode==='vectors') return`
-    <div><div class="sec">Modelo 3D</div>
-      <div class="upload-zone"><input type="file" id="stl-input" accept=".stl"><div class="upload-title">📁 Cargar STL</div><div class="upload-sub">o usa un demo</div></div>
-      <div class="demo-grid" style="margin-top:7px">
-        <button class="demo-btn" onclick="loadDemo('rocket')"><span class="demo-icon">🚀</span><span class="demo-name">Cohete</span></button>
-        <button class="demo-btn" onclick="loadDemo('sphere')"><span class="demo-icon">⚽</span><span class="demo-name">Esfera</span></button>
-      </div>
-      <div class="model-info" id="model-info" style="display:none"><div class="model-dot"></div><span id="model-info-text"></span></div>
-    </div>
-    <div><div class="sec">Fluido</div><div class="fluid-chips">${fluidChips()}</div></div>
-    <div><div class="sec">Dirección</div>
-      <div class="dir-grid">${dirBtns()}</div>
-      <div class="fg" style="margin-top:8px"><label class="fl">Ángulo α</label><div class="rw"><input type="range" min="-45" max="45" value="${APP.alpha}" oninput="setAlpha(this.value)"><span class="rv" id="v-alpha">${APP.alpha}°</span></div></div>
-    </div>
-    <div><div class="sec">Condiciones</div>
-      <div class="fg"><label class="fl">V∞ (m/s)</label><input class="fi" type="number" value="${APP.V}" min="1" max="340" oninput="APP.V=parseFloat(this.value)||30"></div>
-      <div class="fg"><label class="fl">Altitud</label><div class="rw"><input type="range" min="0" max="40" value="0" step="0.5" oninput="setAltitude(this.value)"><span class="rv" id="v-alt">0 km</span></div><span class="fs">ρ = <span id="rho-val">${APP.rho.toFixed(4)}</span> kg/m³</span></div>
-    </div>`;
-
-  if(mode==='stress') return`
-    <div><div class="sec">Modelo 3D</div>
-      <div class="upload-zone"><input type="file" id="stl-input" accept=".stl"><div class="upload-title">📁 Cargar STL</div></div>
-      <div class="demo-grid" style="margin-top:7px">
-        <button class="demo-btn" onclick="loadDemo('rocket')"><span class="demo-icon">🚀</span><span class="demo-name">Cohete</span></button>
-        <button class="demo-btn" onclick="loadDemo('cube')"><span class="demo-icon">📦</span><span class="demo-name">Cubo</span></button>
-      </div>
-      <div class="model-info" id="model-info" style="display:none"><div class="model-dot"></div><span id="model-info-text"></span></div>
-    </div>
-    <div><div class="sec">Visualización</div>
-      <div class="fg"><label class="fl">Transparencia del modelo</label><div class="rw"><input type="range" class="amber" min="0" max="1" step="0.05" value="${APP.stressOpacity!==undefined?APP.stressOpacity:1.0}" oninput="setStressOpacity(parseFloat(this.value));this.nextElementSibling.textContent=Math.round(this.value*100)+'%'"><span class="rv amber">${Math.round((APP.stressOpacity!==undefined?APP.stressOpacity:1.0)*100)}%</span></div><span class="fs">0% = totalmente transparente</span></div>
-    </div>
-    <div><div class="sec">Material</div><select class="fsel" onchange="APP.material=this.value">${Object.entries(MATERIALS).map(([k,v])=>`<option value="${k}"${APP.material===k?' selected':''}>${v.name}</option>`).join('')}</select></div>
-    <div><div class="sec">Carga</div>
-      <div class="fg"><label class="fl">Presión interna (Pa)</label><input class="fi" type="number" value="${APP.pressure}" min="0" oninput="APP.pressure=parseFloat(this.value)||0"><span class="fs">+ presión dinámica del flujo</span></div>
-      <div class="fg"><label class="fl">V∞ (m/s)</label><input class="fi" type="number" value="${APP.V}" min="1" max="340" oninput="APP.V=parseFloat(this.value)||30"></div>
-      <div class="fg"><label class="fl">ρ fluido (kg/m³)</label><input class="fi" type="number" value="${APP.rho.toFixed(4)}" step="0.001" oninput="APP.rho=parseFloat(this.value)||1.225"></div>
-    </div>
-    <div><div class="sec">Dirección de carga</div><div class="dir-grid">${dirBtns()}</div></div>`;
 
   if(mode==='volumes'){
     const vol=APP.vol;
@@ -2229,7 +2147,7 @@ function setAlpha(val){APP.alpha=parseInt(val);document.querySelectorAll('#v-alp
 function setBeta(val){APP.beta=parseInt(val);document.querySelectorAll('#v-beta').forEach(e=>e.textContent=val+'°');if(APP.mesh)previewMesh(APP.mesh);}
 function setStressOpacity(val){
   APP.stressOpacity=val;
-  if(APP.mode==='stress'){
+  if(APP.mode==='analysis'){
     simGroup.traverse(obj=>{
       if(obj.isMesh&&obj.material&&obj.material.vertexColors){
         obj.material.opacity=val;
@@ -2292,7 +2210,6 @@ function switchMode(mode){
   APP.mode=mode;
   // Stop any running 2D sims
   if(mode!=='volumes')stopVolSim();
-  if(mode!=='combustion')stopCombSim();
 
   document.querySelectorAll('.nav-tab').forEach(t=>{t.classList.remove('active');});
   const tab=document.querySelector(`[data-mode="${mode}"]`);
@@ -2300,26 +2217,25 @@ function switchMode(mode){
 
   const badge=document.getElementById('hud-badge');
   badge.className=`hud-badge ${mode}`;
-  const labels={fluid:'Flujo de Fluido',vectors:'Campo Vectorial',stress:'Estrés Estructural',volumes:'Volúmenes Cerrados',combustion:'Combustión'};
+  const labels={analysis:'Flujo · Estrés',volumes:'Volúmenes Cerrados'};
   badge.textContent=labels[mode];
 
   const runBtn=document.getElementById('run-btn');
   const mRunBtn=document.getElementById('mob-run');
-  runBtn.className=`run-btn ${mode}`;
-  mRunBtn.className=`mob-run ${mode}`;
+  runBtn.className=`run-btn ${mode==='analysis'?'analysis':mode}`;
+  mRunBtn.className=`mob-run ${mode==='analysis'?'analysis':mode}`;
 
-  const is2D=mode==='volumes'||mode==='combustion';
+  const is2D=mode==='volumes';
   document.getElementById('main-canvas').style.display=is2D?'none':'block';
   document.getElementById('sim2d-area').classList.toggle('active',is2D);
   document.querySelector('.hud-ctrl').style.display=is2D?'none':'block';
 
   if(is2D){
-    setTimeout(()=>{resize2d();if(mode==='volumes')drawVolumes();else drawCombustion();},50);
+    setTimeout(()=>{resize2d();if(mode==='volumes')drawVolumes();},50);
   }
 
   // Update run button text
   if(mode==='volumes')runBtn.textContent=APP.vol.running?'⏹ Pausar':'▶ Iniciar Flujo';
-  else if(mode==='combustion')runBtn.textContent=APP.comb.running?'⏹ Pausar':'🔥 Iniciar Combustión';
   else runBtn.textContent='▶ Simular';
 
   // Disable run btn for modes that don't need mesh but always enable for 2D
@@ -2338,7 +2254,6 @@ function renderModeControls(){
   // Update run btn label dynamically
   const rb=document.getElementById('run-btn');
   if(APP.mode==='volumes'){rb.textContent=APP.vol.running?'⏹ Pausar':'▶ Iniciar Flujo';}
-  else if(APP.mode==='combustion'){rb.textContent=APP.comb.running?'⏹ Pausar':'🔥 Iniciar Combustión';}
 }
 
 function bindStlInput(){
@@ -2357,10 +2272,6 @@ const origRunSim=runSimulation;
 window.runSimulation=function(){
   if(APP.mode==='volumes'){
     if(APP.vol.running){stopVolSim();}else{startVolSim();}
-    renderModeControls();return;
-  }
-  if(APP.mode==='combustion'){
-    if(APP.comb.running){stopCombSim();}else{startCombSim();}
     renderModeControls();return;
   }
   origRunSim();
@@ -2415,7 +2326,6 @@ bindStlInput();
 setTimeout(()=>{
   resize2d();
   drawVolumes();
-  drawCombustion();
 },200);
 </script>
 </body>

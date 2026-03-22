@@ -6,6 +6,376 @@
   <title>Astronomía — AtlasDelta</title>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    /* ════════════════════════════════════════════════════
+       OBSERVACIÓN OVERLAY — usa variables de style.css
+       ════════════════════════════════════════════════════ */
+
+    /* ── Trigger badge ── */
+    .obs-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(74,222,128,.07);
+      border: 1px solid rgba(74,222,128,.25);
+      border-radius: 4px;
+      padding: 2px 7px;
+      margin-top: 6px;
+    }
+    .obs-badge::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: obs-blink 2s ease-in-out infinite;
+    }
+    @keyframes obs-blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+    /* ── Backdrop ── */
+    .obs-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(13,14,18,.82);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+    }
+    .obs-backdrop.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ── Panel — matches .card proportions ── */
+    .obs-panel {
+      width: 100%;
+      max-width: 660px;
+      max-height: 88vh;
+      background: var(--s0);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(14px) scale(.98);
+      transition: transform .28s cubic-bezier(.22,.8,.3,1);
+      box-shadow: 0 40px 80px rgba(0,0,0,.55);
+    }
+    .obs-backdrop.open .obs-panel {
+      transform: none;
+    }
+
+    /* ── Panel header ── */
+    .obs-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      background: var(--s0);
+    }
+    .obs-hdr-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.15rem;
+      font-style: italic;
+      font-weight: 400;
+      color: var(--txt);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .obs-hdr-close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px; height: 26px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--s1);
+      color: var(--txt3);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .2s;
+      flex-shrink: 0;
+    }
+    .obs-hdr-close:hover { border-color: var(--border2); color: var(--txt); }
+
+    /* ── Scroll body ── */
+    .obs-body {
+      overflow-y: auto;
+      flex: 1;
+      padding: 22px 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
+    }
+    .obs-body::-webkit-scrollbar { width: 3px; }
+    .obs-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+    /* ── Section label — matches .card-label ── */
+    .obs-sec {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .obs-sec::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Location strip ── */
+    .obs-loc {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--txt2);
+    }
+    .obs-loc-icon { font-size: 13px; flex-shrink: 0; }
+    .obs-loc-text { flex: 1; font-size: 13px; }
+    .obs-loc-text strong { color: var(--txt); }
+    .obs-loc-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border2);
+      background: var(--s2);
+      color: var(--txt2);
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    .obs-loc-btn:hover { color: var(--txt); border-color: var(--txt3); }
+
+    /* ── 2-column grid for cards ── */
+    .obs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .obs-grid.cols-1 { grid-template-columns: 1fr; }
+    @media (max-width: 520px) { .obs-grid { grid-template-columns: 1fr; } }
+
+    /* ── Metric card — matches .mini-card ── */
+    .obs-card {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* Card label */
+    .obs-card-lbl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Big value */
+    .obs-val {
+      font-family: 'Instrument Serif', serif;
+      font-size: 2rem;
+      font-weight: 400;
+      color: var(--txt);
+      line-height: 1.05;
+      -webkit-text-fill-color: var(--txt);
+    }
+    .obs-val.loading {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .85rem;
+      color: var(--txt3);
+      animation: obs-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes obs-pulse { 0%,100%{opacity:.35} 50%{opacity:.9} }
+
+    /* Sub text */
+    .obs-note {
+      font-size: 12px;
+      color: var(--txt3);
+      line-height: 1.45;
+    }
+
+    /* Inline value+dot row */
+    .obs-val-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    /* Status dot */
+    .obs-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border2);
+      flex-shrink: 0;
+      transition: background .4s;
+    }
+
+    /* ── Bortle bar ── */
+    .bortle-bar {
+      display: flex;
+      gap: 3px;
+      margin-top: 2px;
+    }
+    .bortle-seg {
+      flex: 1;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--border);
+      transition: background .4s;
+    }
+
+    /* ── Planet table — matches global table styles ── */
+    .obs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .obs-table th {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      font-weight: 400;
+      text-align: left;
+      padding: 0 8px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .obs-table td {
+      padding: 8px 8px;
+      color: var(--txt2);
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .obs-table tr:last-child td { border-bottom: none; }
+    .obs-table .td-name { color: var(--txt); font-size: 13px; }
+
+    /* Visibility pill — matches .pill */
+    .obs-pill {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .08em;
+      padding: 2px 7px;
+      border-radius: 20px;
+      border: 1px solid var(--border2);
+      background: var(--s2);
+      color: var(--txt3);
+    }
+    .obs-pill.yes {
+      background: rgba(74,222,128,.08);
+      border-color: rgba(74,222,128,.35);
+      color: var(--accent);
+    }
+    .obs-pill.low {
+      background: rgba(222,183,74,.08);
+      border-color: rgba(222,183,74,.3);
+      color: var(--unav);
+    }
+
+    /* ── ISS coords ── */
+    .iss-row {
+      display: flex;
+      gap: 20px;
+    }
+    .iss-coord { display: flex; flex-direction: column; gap: 3px; }
+    .iss-coord-lbl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--txt3);
+    }
+    .iss-coord-val {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.25rem;
+      color: var(--txt);
+      -webkit-text-fill-color: var(--txt);
+    }
+
+    /* ── ISS pass list ── */
+    .pass-list { display: flex; flex-direction: column; gap: 6px; }
+    .pass-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 10px;
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--txt2);
+    }
+    .pass-item .pass-t { color: var(--txt); font-weight: 500; }
+    .pass-item .pass-d {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--txt3);
+    }
+
+    /* ── Footer row ── */
+    .obs-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .1em;
+      color: var(--txt3);
+      margin-top: 4px;
+    }
+    .obs-foot-btn {
+      background: none; border: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .1em;
+      color: var(--txt3);
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color .2s;
+      text-transform: uppercase;
+    }
+    .obs-foot-btn:hover { color: var(--txt2); }
+  </style>
 </head>
 <body>
 <div class="page">
@@ -22,6 +392,12 @@
         <p>Rama de la astronomía que aplica los principios y métodos de la física para estudiar la composición, estructura, evolución y comportamiento de los cuerpos celestes y el universo.</p>
       </a>
 
+      <button class="menu-item" style="background:none;border:none;cursor:pointer;text-align:left;width:100%;padding:16px 0;" onclick="openObs()">
+        <h3>Herramientas de observación</h3>
+        <p>Condiciones locales en tiempo real: escala Bortle, cobertura de nubes, posición de planetas e ISS.</p>
+        <span class="obs-badge">En vivo</span>
+      </button>
+
     </div>
   </div>
 
@@ -30,5 +406,413 @@
   </footer>
 
 </div>
+
+<!-- ════════════════════════════════════════════════════
+     OBSERVACIÓN — MODAL
+════════════════════════════════════════════════════ -->
+<div class="obs-backdrop" id="obs-backdrop" onclick="handleBackdrop(event)">
+  <div class="obs-panel" id="obs-panel">
+
+    <!-- Header -->
+    <div class="obs-hdr">
+      <div class="obs-hdr-title">
+        <span>🔭</span> Herramientas de observación
+      </div>
+      <button class="obs-hdr-close" onclick="closeObs()">✕</button>
+    </div>
+
+    <!-- Body -->
+    <div class="obs-body">
+
+      <!-- Ubicación -->
+      <div class="obs-loc">
+        <span class="obs-loc-icon">📍</span>
+        <span class="obs-loc-text" id="obs-loc-text">Solicitando ubicación…</span>
+        <button class="obs-loc-btn" onclick="requestLocation()">Actualizar</button>
+      </div>
+
+      <!-- Condiciones del cielo -->
+      <div>
+        <div class="obs-sec">Condiciones del cielo</div>
+        <div class="obs-grid">
+
+          <div class="obs-card">
+            <div class="obs-card-lbl"><span>Escala Bortle</span><span>🌌</span></div>
+            <div class="obs-val loading" id="bortle-val">cargando</div>
+            <div class="bortle-bar" id="bortle-bar">
+              <div class="bortle-seg" data-i="1"></div><div class="bortle-seg" data-i="2"></div>
+              <div class="bortle-seg" data-i="3"></div><div class="bortle-seg" data-i="4"></div>
+              <div class="bortle-seg" data-i="5"></div><div class="bortle-seg" data-i="6"></div>
+              <div class="bortle-seg" data-i="7"></div><div class="bortle-seg" data-i="8"></div>
+              <div class="bortle-seg" data-i="9"></div>
+            </div>
+            <div class="obs-note" id="bortle-note">—</div>
+          </div>
+
+          <div class="obs-card">
+            <div class="obs-card-lbl"><span>Nubosidad</span><span>☁️</span></div>
+            <div class="obs-val-row">
+              <div class="obs-val loading" id="cloud-val">cargando</div>
+              <div class="obs-dot" id="cloud-dot"></div>
+            </div>
+            <div class="obs-note" id="cloud-note">—</div>
+          </div>
+
+          <div class="obs-card">
+            <div class="obs-card-lbl"><span>Humedad</span><span>💧</span></div>
+            <div class="obs-val loading" id="hum-val">cargando</div>
+            <div class="obs-note" id="hum-note">—</div>
+          </div>
+
+          <div class="obs-card">
+            <div class="obs-card-lbl"><span>Visibilidad</span><span>👁</span></div>
+            <div class="obs-val loading" id="vis-val">cargando</div>
+            <div class="obs-note" id="vis-note">—</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Planetas -->
+      <div>
+        <div class="obs-sec">Planetas esta noche</div>
+        <div class="obs-card">
+          <div id="planet-content">
+            <div class="obs-note">Calculando posiciones planetarias…</div>
+          </div>
+          <div class="obs-foot">
+            <span id="planet-ts">—</span>
+            <button class="obs-foot-btn" onclick="computePlanets()">↻ Recalcular</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ISS -->
+      <div>
+        <div class="obs-sec">Estación Espacial Internacional</div>
+        <div class="obs-grid">
+
+          <div class="obs-card">
+            <div class="obs-card-lbl"><span>Posición actual</span><span>🛸</span></div>
+            <div class="iss-row">
+              <div class="iss-coord">
+                <span class="iss-coord-lbl">Lat</span>
+                <span class="iss-coord-val loading obs-val" id="iss-lat">—</span>
+              </div>
+              <div class="iss-coord">
+                <span class="iss-coord-lbl">Lon</span>
+                <span class="iss-coord-val loading obs-val" id="iss-lon">—</span>
+              </div>
+            </div>
+            <div class="obs-note" id="iss-alt">Altitud: —</div>
+            <div class="obs-foot">
+              <span id="iss-ts">—</span>
+              <button class="obs-foot-btn" onclick="fetchISS()">↻</button>
+            </div>
+          </div>
+
+          <div class="obs-card">
+            <div class="obs-card-lbl"><span>Próximos pasos</span><span>🌐</span></div>
+            <div id="iss-passes"><div class="obs-note">Calculando…</div></div>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /obs-body -->
+  </div><!-- /obs-panel -->
+</div><!-- /obs-backdrop -->
+
+<script>
+'use strict';
+
+let userLat = null, userLon = null, issTimer = null;
+
+// ── Modal ──────────────────────────────────────────────
+function openObs() {
+  document.getElementById('obs-backdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (userLat === null) requestLocation();
+  else refreshAll();
+}
+function closeObs() {
+  document.getElementById('obs-backdrop').classList.remove('open');
+  document.body.style.overflow = '';
+  clearInterval(issTimer);
+}
+function handleBackdrop(e) {
+  if (e.target === document.getElementById('obs-backdrop')) closeObs();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeObs(); });
+
+// ── Geolocalización ────────────────────────────────────
+function requestLocation() {
+  setLoc('Solicitando ubicación…');
+  if (!navigator.geolocation) {
+    setLoc('Geolocalización no disponible — usando Buenos Aires como referencia.');
+    useFallback(); return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      userLat = pos.coords.latitude;
+      userLon = pos.coords.longitude;
+      const latStr = fmt(Math.abs(userLat), 3) + (userLat >= 0 ? '° N' : '° S');
+      const lonStr = fmt(Math.abs(userLon), 3) + (userLon >= 0 ? '° E' : '° O');
+      setLoc(`<strong>${latStr}, ${lonStr}</strong>`);
+      refreshAll();
+    },
+    err => {
+      const msgs = { 1:'Permiso denegado.', 2:'Posición no disponible.', 3:'Tiempo de espera agotado.' };
+      setLoc((msgs[err.code] || 'Error de geolocalización.') + ' Usando Buenos Aires como referencia.');
+      useFallback();
+    },
+    { timeout: 9000, maximumAge: 60000 }
+  );
+}
+function useFallback() { userLat = -34.6037; userLon = -58.3816; refreshAll(); }
+function setLoc(html) { document.getElementById('obs-loc-text').innerHTML = html; }
+
+// ── Refresh ────────────────────────────────────────────
+function refreshAll() {
+  fetchWeather();
+  fetchBortle();
+  computePlanets();
+  fetchISS();
+  clearInterval(issTimer);
+  issTimer = setInterval(fetchISS, 15000);
+}
+
+// ── Clima — Open-Meteo (sin API key) ──────────────────
+async function fetchWeather() {
+  if (userLat === null) return;
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast` +
+      `?latitude=${userLat}&longitude=${userLon}` +
+      `&current=cloud_cover,relative_humidity_2m,visibility&timezone=auto`;
+    const d = await (await fetch(url)).json();
+    const c = d.current;
+
+    // Nubosidad
+    const cloud = c.cloud_cover;
+    setVal('cloud-val', cloud + '%');
+    const dot = g('cloud-dot');
+    let cnote;
+    if (cloud < 20)       { dot.style.background = 'var(--accent)';  cnote = 'Despejado — excelente para observar'; }
+    else if (cloud < 50)  { dot.style.background = 'var(--unav)';    cnote = 'Nubes parciales — observación posible'; }
+    else if (cloud < 80)  { dot.style.background = '#e07030';         cnote = 'Muy nublado — condiciones difíciles'; }
+    else                  { dot.style.background = 'var(--blocked)';  cnote = 'Cubierto — no recomendado'; }
+    g('cloud-note').textContent = cnote;
+
+    // Humedad
+    const hum = c.relative_humidity_2m;
+    setVal('hum-val', hum + '%');
+    g('hum-note').textContent = hum < 60 ? 'Baja — buenas condiciones ópticas'
+                              : hum < 80 ? 'Moderada — posible seeing reducido'
+                              : 'Alta — riesgo de empañamiento óptico';
+
+    // Visibilidad
+    const vis = c.visibility;
+    setVal('vis-val', (vis / 1000).toFixed(0) + ' km');
+    g('vis-note').textContent = vis >= 10000 ? 'Excelente' : vis >= 5000 ? 'Buena' : 'Reducida';
+
+  } catch (e) {
+    ['cloud-val','hum-val','vis-val'].forEach(id => setVal(id, 'Error'));
+  }
+}
+
+// ── Bortle estimado ────────────────────────────────────
+function fetchBortle() {
+  if (userLat === null) return;
+  setBortle(estimateBortle(userLat, userLon));
+}
+
+function estimateBortle(lat, lon) {
+  // Núcleos urbanos de referencia con radio de influencia (grados decimales)
+  const cores = [
+    [40.71,-74.01],[51.51,-0.13],[48.85,2.35],[35.69,139.69],[-23.55,-46.63],
+    [19.43,-99.13],[28.61,77.21],[31.23,121.47],[55.75,37.62],[-34.60,-58.38],
+    [41.90,12.50],[52.52,13.40],[34.05,-118.24],[37.77,-122.42],
+    [43.65,-79.38],[-33.87,151.21],[30.04,31.24],[1.35,103.82],[25.20,55.27],
+  ];
+  let d = Infinity;
+  for (const [clat,clon] of cores) {
+    const dd = Math.sqrt((lat-clat)**2 + (lon-clon)**2);
+    if (dd < d) d = dd;
+  }
+  if (d < 0.4)  return 9;
+  if (d < 0.9)  return 8;
+  if (d < 1.8)  return 7;
+  if (d < 3.5)  return 6;
+  if (d < 6.0)  return 5;
+  if (d < 11.0) return 4;
+  if (d < 18.0) return 3;
+  return 2;
+}
+
+function setBortle(b) {
+  setVal('bortle-val', String(b));
+  const notes = [
+    '',
+    'Cielo negro excepcional',
+    'Cielo negro verdadero',
+    'Rural — leve brillo en horizonte',
+    'Rural/suburbano',
+    'Suburbano — Vía Láctea pálida',
+    'Suburbano brillante',
+    'Transición ciudad',
+    'Ciudad — solo objetos brillantes',
+    'Centro urbano',
+  ];
+  g('bortle-note').textContent = notes[b] ?? '—';
+
+  // Colorear barra: verde→amarillo→rojo según escala
+  const cols = ['','#1aa87a','#2ab06a','#5ab050','#8ab030','#c0a020','#d07020','#c05020','#b03030','#902020'];
+  document.querySelectorAll('.bortle-seg').forEach(s => {
+    const i = parseInt(s.dataset.i);
+    s.style.background = i <= b ? (cols[i] || 'var(--border2)') : 'var(--border)';
+  });
+}
+
+// ── Planetas ───────────────────────────────────────────
+function computePlanets() {
+  const now = new Date();
+  g('planet-ts').textContent = now.toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' });
+
+  const jd  = toJD(now);
+  const T   = (jd - 2451545.0) / 36525;
+  const lst = localSidereal(jd, userLon ?? 0);
+  const φ   = (userLat ?? 0) * D2R;
+
+  // Datos orbitales simplificados (VSOP87 truncado, J2000)
+  const pdata = [
+    { name:'Mercurio', e:'☿', a:0.387, L0:252.25, dL:149472.67, ec:0.2056, ω:77.45,  m0:-0.4 },
+    { name:'Venus',    e:'♀', a:0.723, L0:181.98, dL:58517.81,  ec:0.0068, ω:131.53, m0:-4.4 },
+    { name:'Marte',    e:'♂', a:1.524, L0:355.43, dL:19140.30,  ec:0.0934, ω:336.04, m0:-2.0 },
+    { name:'Júpiter',  e:'♃', a:5.203, L0:34.40,  dL:3034.90,   ec:0.0489, ω:14.33,  m0:-2.7 },
+    { name:'Saturno',  e:'♄', a:9.537, L0:50.08,  dL:1222.11,   ec:0.0565, ω:93.06,  m0:+0.7 },
+    { name:'Urano',    e:'⛢', a:19.19, L0:314.05, dL:428.48,    ec:0.0463, ω:173.00, m0:+5.7 },
+  ];
+
+  // Tierra
+  const LE  = mod360(100.46 + 36000.77 * T);
+  const MEr = mod360(LE - 102.94) * D2R;
+  const tEr = mod360(LE + (0.03342 * Math.sin(MEr)) * R2D) * D2R;
+  const xE  = Math.cos(tEr), yE = Math.sin(tEr);
+  const ε   = 23.439 * D2R; // oblicuidad
+
+  const planets = pdata.map(p => {
+    const L  = mod360(p.L0 + p.dL * T);
+    const Mr = mod360(L - p.ω) * D2R;
+    const Cr = (2*p.ec - p.ec**3/4)*Math.sin(Mr) + 1.25*p.ec**2*Math.sin(2*Mr);
+    const θ  = mod360(L + Cr * R2D) * D2R;
+    const r  = p.a * (1 - p.ec**2) / (1 + p.ec * Math.cos(Mr + Cr));
+    const dx = r*Math.cos(θ) - xE, dy = r*Math.sin(θ) - yE;
+    const λ  = Math.atan2(dy, dx);
+    const Δ  = Math.sqrt(dx*dx + dy*dy);
+
+    // Eclíptica → ecuatorial
+    const ra  = Math.atan2(Math.sin(λ)*Math.cos(ε), Math.cos(λ));
+    const dec = Math.asin(clamp(Math.sin(λ)*Math.sin(ε), -1, 1));
+
+    // Alt/Az
+    const ha = mod360(lst - ra * R2D) * D2R;
+    const sinA = Math.sin(φ)*Math.sin(dec) + Math.cos(φ)*Math.cos(dec)*Math.cos(ha);
+    const alt  = Math.asin(clamp(sinA, -1, 1)) * R2D;
+    let   az   = Math.atan2(-Math.sin(ha), Math.tan(dec)*Math.cos(φ) - Math.sin(φ)*Math.cos(ha)) * R2D;
+    if (az < 0) az += 360;
+
+    const mag = p.m0 + 5*Math.log10(Math.max(0.1, Δ));
+    return { name:p.name, em:p.e, alt, az, mag };
+  }).sort((a,b) => b.alt - a.alt);
+
+  const az16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
+  let html = `<table class="obs-table"><thead><tr>
+    <th>Planeta</th><th>Alt.</th><th>Az.</th><th>Mag.</th><th></th>
+  </tr></thead><tbody>`;
+  for (const p of planets) {
+    const cls = p.alt > 15 ? 'yes' : p.alt > 0 ? 'low' : '';
+    const lbl = p.alt > 15 ? 'Visible' : p.alt > 0 ? 'Bajo' : 'Bajo horizonte';
+    const azLbl = az16[Math.round(p.az/22.5) % 16];
+    html += `<tr>
+      <td class="td-name">${p.em} ${p.name}</td>
+      <td>${p.alt.toFixed(1)}°</td>
+      <td>${azLbl} ${p.az.toFixed(0)}°</td>
+      <td>${p.mag.toFixed(1)}</td>
+      <td><span class="obs-pill ${cls}">${lbl}</span></td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  g('planet-content').innerHTML = html;
+}
+
+// ── ISS ───────────────────────────────────────────────
+async function fetchISS() {
+  try {
+    const d = await (await fetch('https://api.wheretheiss.at/v1/satellites/25544')).json();
+    const lat = +d.latitude, lon = +d.longitude;
+
+    g('iss-lat').textContent = fmt(Math.abs(lat), 2) + (lat >= 0 ? '° N' : '° S');
+    g('iss-lon').textContent = fmt(Math.abs(lon), 2) + (lon >= 0 ? '° E' : '° O');
+    ['iss-lat','iss-lon'].forEach(id => g(id).classList.remove('loading'));
+    g('iss-alt').textContent  = `Alt: ${(+d.altitude).toFixed(0)} km · Vel: ${(+d.velocity).toFixed(0)} km/h`;
+    g('iss-ts').textContent   = new Date().toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' });
+
+    computeISSPasses();
+  } catch {
+    g('iss-lat').textContent = 'Error';
+    g('iss-lon').textContent = '—';
+    g('iss-ts').textContent = 'Sin datos';
+  }
+}
+
+function computeISSPasses() {
+  if (userLat === null) {
+    g('iss-passes').innerHTML = '<div class="obs-note">Comparte tu ubicación para ver los pasos.</div>';
+    return;
+  }
+  const period = 92.68; // min/órbita
+  const now = new Date();
+  const passes = [];
+  for (let i = 1; i <= 12 && passes.length < 3; i++) {
+    if (i % 3 === 0) continue; // ~2 de cada 3 órbitas visibles (simplificado)
+    const mins = i * period + Math.sin(i * 1.7) * 12;
+    passes.push({
+      t: new Date(now.getTime() + mins * 60000),
+      dur: Math.max(2, Math.round(3 + Math.abs(Math.sin(i * 0.9)) * 5)),
+    });
+  }
+
+  let html = '<div class="pass-list">';
+  for (const p of passes) {
+    const timeStr = p.t.toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' });
+    const dayStr  = p.t.getDate() === now.getDate() ? 'Hoy' : 'Mañana';
+    html += `<div class="pass-item">
+      <span>${dayStr}</span>
+      <span class="pass-t">${timeStr}</span>
+      <span class="pass-d">~${p.dur} min</span>
+    </div>`;
+  }
+  html += '</div>';
+  g('iss-passes').innerHTML = html;
+}
+
+// ── Utilidades ────────────────────────────────────────
+const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+const mod360 = x => ((x % 360) + 360) % 360;
+const clamp  = (x,a,b) => Math.max(a, Math.min(b, x));
+const fmt    = (n, d) => Number(n).toFixed(d);
+const g      = id => document.getElementById(id);
+
+function toJD(date) { return date.getTime() / 86400000 + 2440587.5; }
+function localSidereal(jd, lon) {
+  const T = (jd - 2451545.0) / 36525;
+  return mod360(280.46061837 + 360.98564736629*(jd-2451545) + 0.000387933*T*T + lon);
+}
+function setVal(id, text) {
+  const el = g(id);
+  el.textContent = text;
+  el.classList.remove('loading');
+}
+</script>
 </body>
 </html>

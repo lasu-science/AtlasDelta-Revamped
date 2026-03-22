@@ -4,12 +4,426 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Graficadora — AtlasDelta</title>
+  <title>Lab — AtlasDelta</title>
   <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <link
-    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap"
     rel="stylesheet">
   <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0d0e12;
+      --s0: #13141a;
+      --s1: #1a1c24;
+      --s2: #22252f;
+      --s3: #292c38;
+      --border: #2a2d3a;
+      --border2: #363a4a;
+      --txt: #e4e6f0;
+      --txt2: #8b90a8;
+      --txt3: #52566a;
+      --accent: #4ade80;
+      --accent2: #22c55e;
+      --blue: #60a5fa;
+      --violet: #a78bfa;
+      --amber: #fbbf24;
+      --red: #f87171;
+      --orange: #fb923c;
+      --r: 12px;
+      --rsm: 8px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--txt);
+      font-family: 'Familjen Grotesk', sans-serif;
+      font-size: 14px;
+      line-height: 1.55;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px,
+          rgba(0, 0, 0, .025) 2px, rgba(0, 0, 0, .025) 4px);
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: inherit;
+      font: inherit;
+    }
+
+    input,
+    textarea {
+      font: inherit;
+      color: inherit;
+    }
+
+    /* Shared toast */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--s2);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 10px 22px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--txt);
+      z-index: 10000;
+      white-space: nowrap;
+      transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .4);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.ok {
+      border-color: #4ade80;
+      color: #4ade80;
+    }
+
+    .toast.warn {
+      border-color: #fbbf24;
+      color: #fbbf24;
+    }
+
+    .toast.err {
+      border-color: #f87171;
+      color: #f87171;
+    }
+
+    /* Shared captcha */
+    #captcha-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: rgba(13, 14, 18, .92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      transition: opacity .4s ease;
+    }
+
+    #captcha-overlay.hiding {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #captcha-box {
+      background: var(--s0);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      width: min(380px, 92vw);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: captchaIn .35s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    @keyframes captchaIn {
+      from {
+        transform: translateY(24px) scale(.96);
+        opacity: 0;
+      }
+
+      to {
+        transform: none;
+        opacity: 1;
+      }
+    }
+
+    #captcha-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      line-height: 1;
+    }
+
+    #captcha-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.7rem;
+      font-weight: 400;
+      background: linear-gradient(135deg, #e4e6f0 30%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    #captcha-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    #captcha-challenge {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 24px;
+      text-align: center;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    #captcha-question {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      letter-spacing: .04em;
+      color: var(--txt);
+      margin-bottom: 4px;
+    }
+
+    #captcha-hint {
+      font-size: 11px;
+      color: var(--txt3);
+    }
+
+    #captcha-input {
+      width: 100%;
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      letter-spacing: .1em;
+      color: var(--txt);
+      text-align: center;
+      outline: none;
+      transition: border-color .2s;
+      margin-bottom: 14px;
+    }
+
+    #captcha-input:focus {
+      border-color: var(--border2);
+    }
+
+    #captcha-input.error {
+      border-color: #f87171;
+      animation: captchaShake .3s ease;
+    }
+
+    #captcha-input.ok {
+      border-color: var(--accent);
+    }
+
+    @keyframes captchaShake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-6px);
+      }
+
+      75% {
+        transform: translateX(6px);
+      }
+    }
+
+    #captcha-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #0d0e12;
+      border-radius: 10px;
+      padding: 12px;
+      font-family: 'Familjen Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: .02em;
+      border: none;
+      cursor: pointer;
+      transition: background .2s, transform .15s;
+    }
+
+    #captcha-btn:hover {
+      background: var(--accent2);
+    }
+
+    #captcha-error {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #f87171;
+      text-align: center;
+      margin-top: 8px;
+      min-height: 16px;
+      letter-spacing: .04em;
+    }
+
+    #captcha-refresh {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--txt3);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: color .2s;
+      padding: 4px;
+    }
+
+    #captcha-refresh:hover {
+      color: var(--txt2);
+    }
+
+
+    /* ── MODE SWITCHER ─────────────────────────────────── */
+    #mode-switcher {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 42px;
+      background: var(--s0);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      gap: 10px;
+      z-index: 800;
+    }
+
+    #mode-switcher .sw-logo {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.05rem;
+      font-style: italic;
+      background: linear-gradient(120deg, #e4e6f0 40%, #52566a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-right: 6px;
+      flex-shrink: 0;
+    }
+
+    #mode-switcher .sw-sep {
+      width: 1px;
+      height: 16px;
+      background: var(--border2);
+      flex-shrink: 0;
+    }
+
+    #mode-switcher .sw-tab {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: none;
+      color: var(--txt3);
+      cursor: pointer;
+      transition: all .18s;
+      white-space: nowrap;
+    }
+
+    #mode-switcher .sw-tab:hover {
+      color: var(--txt2);
+      background: var(--s1);
+    }
+
+    #mode-switcher .sw-tab.active {
+      color: var(--accent);
+      background: rgba(74, 222, 128, .07);
+      border-color: rgba(74, 222, 128, .22);
+    }
+
+    #mode-switcher .sw-back {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      text-decoration: none;
+      margin-right: 4px;
+      transition: color .2s;
+    }
+
+    #mode-switcher .sw-back:hover {
+      color: var(--txt2);
+    }
+
+    /* Push content below switcher */
+    #app-graficadora {
+      padding-top: 42px;
+    }
+
+    #app-openlab {
+      padding-top: 0;
+    }
+
+    /* openlab has its own topbar */
+    /* Hide inactive mode */
+    .hidden-mode {
+      display: none !important;
+    }
+
+    /* Body scroll mode */
+    body.mode-graficadora {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    body.mode-openlab {
+      overflow: hidden;
+    }
+
+    /* Openlab fullscreen compensation */
+    #app-openlab #app {
+      height: calc(100vh - 42px);
+    }
+
+    #app-openlab .topbar {
+      padding-left: 8px;
+    }
+
+    /* ══════════════════════════════════════════════════
+       GRAFICADORA — styles scoped to #app-graficadora
+    ══════════════════════════════════════════════════ */
+
     *,
     *::before,
     *::after {
@@ -47,7 +461,7 @@
       background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, .03) 2px, rgba(0, 0, 0, .03) 4px);
     }
 
-    .app {
+    #app-graficadora .app {
       max-width: 1200px;
       margin: 0 auto;
       padding: 32px 20px 80px;
@@ -56,7 +470,7 @@
     }
 
     /* ── HEADER ── */
-    .hdr {
+    #app-graficadora .hdr {
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
@@ -65,7 +479,7 @@
       flex-wrap: wrap;
     }
 
-    .hdr-kicker {
+    #app-graficadora .hdr-kicker {
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       letter-spacing: .22em;
@@ -74,7 +488,7 @@
       margin-bottom: 6px;
     }
 
-    .hdr-title {
+    #app-graficadora .hdr-title {
       font-family: 'Instrument Serif', serif;
       font-size: 3.4rem;
       line-height: 1;
@@ -84,18 +498,18 @@
       letter-spacing: -.02em;
     }
 
-    .hdr-title em {
+    #app-graficadora .hdr-title em {
       font-style: italic;
     }
 
-    .hdr-pills {
+    #app-graficadora .hdr-pills {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
       align-items: center;
     }
 
-    .pill {
+    #app-graficadora .pill {
       display: flex;
       align-items: center;
       gap: 7px;
@@ -108,7 +522,7 @@
       color: var(--txt2);
     }
 
-    .pdot {
+    #app-graficadora .pdot {
       width: 7px;
       height: 7px;
       border-radius: 50%;
@@ -117,7 +531,7 @@
       flex-shrink: 0;
     }
 
-    .pdot.live {
+    #app-graficadora .pdot.live {
       background: #4ade80;
       box-shadow: 0 0 0 3px rgba(74, 222, 128, .2);
       animation: blink 1.4s ease-in-out infinite;
@@ -136,27 +550,27 @@
     }
 
     /* ── LAYOUT ── */
-    .layout {
+    #app-graficadora .layout {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
     }
 
     @media(max-width:900px) {
-      .layout {
+      #app-graficadora .layout {
         grid-template-columns: 1fr
       }
     }
 
     /* ── CARD ── */
-    .card {
+    #app-graficadora .card {
       background: var(--s0);
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 22px;
     }
 
-    .card-label {
+    #app-graficadora .card-label {
       font-family: 'JetBrains Mono', monospace;
       font-size: 9px;
       letter-spacing: .22em;
@@ -168,7 +582,7 @@
       gap: 8px;
     }
 
-    .card-label::after {
+    #app-graficadora .card-label::after {
       content: '';
       flex: 1;
       height: 1px;
@@ -176,13 +590,13 @@
     }
 
     /* ── NEW SERIES FORM ── */
-    .nsform {
+    #app-graficadora .nsform {
       display: flex;
       gap: 8px;
       margin-bottom: 14px;
     }
 
-    .nsinput {
+    #app-graficadora .nsinput {
       flex: 1;
       min-width: 0;
       background: var(--s2);
@@ -197,16 +611,16 @@
       transition: border-color .2s;
     }
 
-    .nsinput::placeholder {
+    #app-graficadora .nsinput::placeholder {
       color: var(--txt3);
       font-weight: 400;
     }
 
-    .nsinput:focus {
+    #app-graficadora .nsinput:focus {
       border-color: var(--border2);
     }
 
-    .clrbtn {
+    #app-graficadora .clrbtn {
       width: 36px;
       height: 36px;
       border-radius: 9px;
@@ -218,11 +632,11 @@
       transition: transform .15s;
     }
 
-    .clrbtn:hover {
+    #app-graficadora .clrbtn:hover {
       transform: scale(1.08);
     }
 
-    .clrbtn input[type=color] {
+    #app-graficadora .clrbtn input[type=color] {
       position: absolute;
       inset: 0;
       opacity: 0;
@@ -232,7 +646,7 @@
       border: none;
     }
 
-    .addbtn {
+    #app-graficadora .addbtn {
       width: 36px;
       height: 36px;
       border-radius: 9px;
@@ -248,19 +662,19 @@
       transition: background .2s, transform .15s;
     }
 
-    .addbtn:hover {
+    #app-graficadora .addbtn:hover {
       background: #c0c4d8;
       transform: scale(1.06);
     }
 
     /* ── SERIES GRID ── */
-    .sgrid {
+    #app-graficadora .sgrid {
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
 
-    .nohint {
+    #app-graficadora .nohint {
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       color: var(--txt3);
@@ -269,7 +683,7 @@
     }
 
     /* ── SERIES CARD ── */
-    .sc {
+    #app-graficadora .sc {
       background: var(--s1);
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -277,13 +691,13 @@
       transition: border-color .25s, box-shadow .25s;
     }
 
-    .sc.active {
+    #app-graficadora .sc.active {
       border-color: var(--c, #4ade80);
       box-shadow: 0 0 0 1px color-mix(in srgb, var(--c, #4ade80) 20%, transparent),
         inset 0 0 32px color-mix(in srgb, var(--c, #4ade80) 4%, transparent);
     }
 
-    .sc-top {
+    #app-graficadora .sc-top {
       display: flex;
       align-items: center;
       gap: 10px;
@@ -292,7 +706,7 @@
       user-select: none;
     }
 
-    .sc-dot {
+    #app-graficadora .sc-dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
@@ -300,17 +714,17 @@
       transition: box-shadow .3s;
     }
 
-    .sc.active .sc-dot {
+    #app-graficadora .sc.active .sc-dot {
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--c, #4ade80) 30%, transparent);
     }
 
-    .sc-name {
+    #app-graficadora .sc-name {
       font-weight: 700;
       font-size: 13px;
       flex: 1;
     }
 
-    .sc-badge {
+    #app-graficadora .sc-badge {
       font-family: 'JetBrains Mono', monospace;
       font-size: 9px;
       letter-spacing: .1em;
@@ -321,11 +735,11 @@
       display: none;
     }
 
-    .sc.active .sc-badge {
+    #app-graficadora .sc.active .sc-badge {
       display: block;
     }
 
-    .sc-order {
+    #app-graficadora .sc-order {
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       color: var(--txt3);
@@ -335,11 +749,11 @@
       display: none;
     }
 
-    .sc.active .sc-order {
+    #app-graficadora .sc.active .sc-order {
       display: block;
     }
 
-    .sc-timer {
+    #app-graficadora .sc-timer {
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
       color: var(--c, var(--txt2));
@@ -347,13 +761,13 @@
       text-align: right;
     }
 
-    .sc-pts {
+    #app-graficadora .sc-pts {
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       color: var(--txt3);
     }
 
-    .sc-del {
+    #app-graficadora .sc-del {
       width: 22px;
       height: 22px;
       border-radius: 6px;
@@ -369,13 +783,13 @@
       flex-shrink: 0;
     }
 
-    .sc-del:hover {
+    #app-graficadora .sc-del:hover {
       color: #f87171;
       background: rgba(248, 113, 113, .12);
     }
 
     /* ── SERIES DETAILS ── */
-    .sc-det {
+    #app-graficadora .sc-det {
       padding: 0 14px 12px;
       border-top: 1px solid var(--border);
       display: none;
@@ -383,19 +797,19 @@
       gap: 8px;
     }
 
-    .sc.active .sc-det {
+    #app-graficadora .sc.active .sc-det {
       display: flex;
     }
 
     /* mic row */
-    .mic-row {
+    #app-graficadora .mic-row {
       display: flex;
       align-items: center;
       gap: 8px;
       padding-top: 10px;
     }
 
-    .mic-row label {
+    #app-graficadora .mic-row label {
       font-family: 'JetBrains Mono', monospace;
       font-size: 9px;
       letter-spacing: .14em;
@@ -404,7 +818,7 @@
       flex-shrink: 0;
     }
 
-    .mic-sel {
+    #app-graficadora .mic-sel {
       flex: 1;
       min-width: 0;
       background: var(--s2);
@@ -419,23 +833,23 @@
       transition: border-color .2s;
     }
 
-    .mic-sel:focus {
+    #app-graficadora .mic-sel:focus {
       border-color: var(--border2);
     }
 
-    .mic-row.hidden {
+    #app-graficadora .mic-row.hidden {
       display: none;
     }
 
     /* rec + action buttons row */
-    .sc-btmrow {
+    #app-graficadora .sc-btmrow {
       display: flex;
       align-items: center;
       gap: 6px;
       flex-wrap: wrap;
     }
 
-    .recbtn {
+    #app-graficadora .recbtn {
       display: flex;
       align-items: center;
       gap: 6px;
@@ -451,19 +865,19 @@
       transition: all .2s;
     }
 
-    .recbtn:hover {
+    #app-graficadora .recbtn:hover {
       border-color: var(--c, #4ade80);
       color: var(--c, #4ade80);
     }
 
-    .recbtn.on {
+    #app-graficadora .recbtn.on {
       border-color: var(--c, #4ade80);
       background: color-mix(in srgb, var(--c, #4ade80) 10%, transparent);
       color: var(--c, #4ade80);
     }
 
     /* small icon-only buttons for per-series actions */
-    .sc-action {
+    #app-graficadora .sc-action {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -478,28 +892,28 @@
       flex-shrink: 0;
     }
 
-    .sc-action:hover {
+    #app-graficadora .sc-action:hover {
       border-color: var(--border2);
       color: var(--txt2);
     }
 
-    .sc-action.danger:hover {
+    #app-graficadora .sc-action.danger:hover {
       border-color: rgba(248, 113, 113, .4);
       color: #f87171;
       background: rgba(248, 113, 113, .08);
     }
 
-    .sc-action.export:hover {
+    #app-graficadora .sc-action.export:hover {
       border-color: rgba(74, 222, 128, .4);
       color: #4ade80;
       background: rgba(74, 222, 128, .06);
     }
 
-    .sc-action[title] {
+    #app-graficadora .sc-action[title] {
       position: relative;
     }
 
-    .mbars {
+    #app-graficadora .mbars {
       display: flex;
       align-items: center;
       gap: 2px;
@@ -509,11 +923,11 @@
       margin-left: 2px;
     }
 
-    .mbars.on {
+    #app-graficadora .mbars.on {
       opacity: 1;
     }
 
-    .mb {
+    #app-graficadora .mb {
       width: 3px;
       border-radius: 3px;
       height: 4px;
@@ -521,27 +935,27 @@
       animation: mbw .65s ease-in-out infinite;
     }
 
-    .mb:nth-child(1) {
+    #app-graficadora .mb:nth-child(1) {
       animation-delay: .0s
     }
 
-    .mb:nth-child(2) {
+    #app-graficadora .mb:nth-child(2) {
       animation-delay: .1s
     }
 
-    .mb:nth-child(3) {
+    #app-graficadora .mb:nth-child(3) {
       animation-delay: .2s
     }
 
-    .mb:nth-child(4) {
+    #app-graficadora .mb:nth-child(4) {
       animation-delay: .3s
     }
 
-    .mb:nth-child(5) {
+    #app-graficadora .mb:nth-child(5) {
       animation-delay: .2s
     }
 
-    .mb:nth-child(6) {
+    #app-graficadora .mb:nth-child(6) {
       animation-delay: .1s
     }
 
@@ -557,44 +971,39 @@
       }
     }
 
-    .sc-heard {
+    #app-graficadora .sc-numInput {
+      flex: 1;
+      min-width: 0;
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
-      color: var(--txt3);
-      background: var(--s2);
-      border-radius: 8px;
-      padding: 7px 11px;
-      min-height: 32px;
-      line-height: 1.5;
-      border-left: 2px solid transparent;
-      transition: border-color .2s, color .2s;
-    }
-
-    .sc-heard.interim {
-      border-color: #a78bfa;
-      color: var(--txt2);
-      font-style: italic;
-    }
-
-    .sc-heard.ok {
-      border-color: var(--c, #4ade80);
       color: var(--txt);
+      outline: none;
+      transition: border-color .2s;
+      -moz-appearance: textfield;
     }
 
-    .sc-heard.miss {
-      border-color: #f87171;
-      color: #f87171;
+    #app-graficadora .sc-numInput::-webkit-outer-spin-button,
+    #app-graficadora .sc-numInput::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+    }
+
+    #app-graficadora .sc-numInput:focus {
+      border-color: var(--c, var(--border2));
     }
 
     /* ── HINT CARD ── */
-    .hintcard {
+    #app-graficadora .hintcard {
       background: var(--s1);
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 16px 20px;
     }
 
-    .hinttitle {
+    #app-graficadora .hinttitle {
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       letter-spacing: .18em;
@@ -603,36 +1012,36 @@
       margin-bottom: 12px;
     }
 
-    .hintgrid {
+    #app-graficadora .hintgrid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
 
-    .hintitem {
+    #app-graficadora .hintitem {
       background: var(--s2);
       border-radius: 10px;
       padding: 10px 12px;
     }
 
-    .hintitem .ex {
+    #app-graficadora .hintitem .ex {
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
       color: var(--txt);
       margin-bottom: 4px;
     }
 
-    .hintitem .ex span {
+    #app-graficadora .hintitem .ex span {
       color: #4ade80;
     }
 
-    .hintitem .desc {
+    #app-graficadora .hintitem .desc {
       font-size: 11px;
       color: var(--txt3);
     }
 
     /* ── LOG ── */
-    .log-scroll {
+    #app-graficadora .log-scroll {
       max-height: 160px;
       overflow-y: auto;
       display: flex;
@@ -640,16 +1049,16 @@
       gap: 5px;
     }
 
-    .log-scroll::-webkit-scrollbar {
+    #app-graficadora .log-scroll::-webkit-scrollbar {
       width: 3px;
     }
 
-    .log-scroll::-webkit-scrollbar-thumb {
+    #app-graficadora .log-scroll::-webkit-scrollbar-thumb {
       background: var(--border);
       border-radius: 3px;
     }
 
-    .lrow {
+    #app-graficadora .lrow {
       display: flex;
       align-items: center;
       gap: 9px;
@@ -660,7 +1069,7 @@
       border-left: 2px solid transparent;
     }
 
-    .lrow.fresh {
+    #app-graficadora .lrow.fresh {
       border-left-color: var(--lc, var(--txt));
     }
 
@@ -676,33 +1085,33 @@
       }
     }
 
-    .lt {
+    #app-graficadora .lt {
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       color: var(--txt3);
       min-width: 42px;
     }
 
-    .lname {
+    #app-graficadora .lname {
       font-size: 12px;
       font-weight: 700;
       flex: 1;
     }
 
-    .ltimer {
+    #app-graficadora .ltimer {
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       color: var(--txt3);
       min-width: 38px;
     }
 
-    .lval {
+    #app-graficadora .lval {
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
       font-weight: 500;
     }
 
-    .lempty {
+    #app-graficadora .lempty {
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       color: var(--txt3);
@@ -711,11 +1120,11 @@
     }
 
     /* ── CHART ── */
-    .chart-wrap {
+    #app-graficadora .chart-wrap {
       grid-column: 1/-1;
     }
 
-    .chart-top {
+    #app-graficadora .chart-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -724,27 +1133,27 @@
       gap: 10px;
     }
 
-    .chart-title {
+    #app-graficadora .chart-title {
       font-family: 'Instrument Serif', serif;
       font-size: 1.35rem;
       font-style: italic;
     }
 
-    .chart-meta {
+    #app-graficadora .chart-meta {
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       color: var(--txt3);
     }
 
     /* tension slider */
-    .tension-row {
+    #app-graficadora .tension-row {
       display: flex;
       align-items: center;
       gap: 10px;
       margin-bottom: 12px;
     }
 
-    .tension-row label {
+    #app-graficadora .tension-row label {
       font-family: 'JetBrains Mono', monospace;
       font-size: 9px;
       letter-spacing: .18em;
@@ -753,7 +1162,7 @@
       white-space: nowrap;
     }
 
-    .tension-row input[type=range] {
+    #app-graficadora .tension-row input[type=range] {
       flex: 1;
       -webkit-appearance: none;
       appearance: none;
@@ -764,7 +1173,7 @@
       cursor: pointer;
     }
 
-    .tension-row input[type=range]::-webkit-slider-thumb {
+    #app-graficadora .tension-row input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: 14px;
       height: 14px;
@@ -775,11 +1184,11 @@
       transition: transform .15s;
     }
 
-    .tension-row input[type=range]::-webkit-slider-thumb:hover {
+    #app-graficadora .tension-row input[type=range]::-webkit-slider-thumb:hover {
       transform: scale(1.2);
     }
 
-    .tension-val {
+    #app-graficadora .tension-val {
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       color: var(--txt2);
@@ -787,14 +1196,14 @@
       text-align: right;
     }
 
-    .legend {
+    #app-graficadora .legend {
       display: flex;
       flex-wrap: wrap;
       gap: 7px;
       margin-bottom: 14px;
     }
 
-    .lpill {
+    #app-graficadora .lpill {
       display: flex;
       align-items: center;
       gap: 6px;
@@ -807,21 +1216,21 @@
       color: var(--txt2);
     }
 
-    .ldot {
+    #app-graficadora .ldot {
       width: 7px;
       height: 7px;
       border-radius: 50%;
       flex-shrink: 0;
     }
 
-    canvas#chart {
+    #app-graficadora canvas#chart {
       display: block;
       width: 100%;
       height: 420px;
       border-radius: 10px;
     }
 
-    .chart-empty {
+    #app-graficadora .chart-empty {
       height: 420px;
       display: flex;
       flex-direction: column;
@@ -831,28 +1240,28 @@
       color: var(--txt3);
     }
 
-    .chart-empty svg {
+    #app-graficadora .chart-empty svg {
       opacity: .25;
     }
 
-    .chart-empty p {
+    #app-graficadora .chart-empty p {
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
     }
 
     /* ── GLOBAL CONTROLS ── */
-    .controls-card {
+    #app-graficadora .controls-card {
       grid-column: 1/-1;
     }
 
-    .ctrlrow {
+    #app-graficadora .ctrlrow {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
       align-items: center;
     }
 
-    .btn {
+    #app-graficadora .btn {
       display: flex;
       align-items: center;
       gap: 7px;
@@ -868,50 +1277,50 @@
       transition: all .2s;
     }
 
-    .btn:hover {
+    #app-graficadora .btn:hover {
       border-color: var(--border2);
       color: var(--txt);
       background: var(--s2);
     }
 
-    .btn:disabled {
+    #app-graficadora .btn:disabled {
       opacity: .3;
       cursor: not-allowed;
       pointer-events: none;
     }
 
-    .btn-g {
+    #app-graficadora .btn-g {
       border-color: rgba(74, 222, 128, .4);
       color: #4ade80;
       background: rgba(74, 222, 128, .06);
     }
 
-    .btn-g:hover {
+    #app-graficadora .btn-g:hover {
       background: rgba(74, 222, 128, .14);
     }
 
-    .btn-r {
+    #app-graficadora .btn-r {
       border-color: rgba(248, 113, 113, .3);
       color: #f87171;
       background: rgba(248, 113, 113, .05);
     }
 
-    .btn-r:hover {
+    #app-graficadora .btn-r:hover {
       background: rgba(248, 113, 113, .12);
     }
 
-    .btn-b {
+    #app-graficadora .btn-b {
       border-color: rgba(56, 189, 248, .3);
       color: #38bdf8;
       background: rgba(56, 189, 248, .05);
     }
 
-    .btn-b:hover {
+    #app-graficadora .btn-b:hover {
       background: rgba(56, 189, 248, .12);
     }
 
     /* ── MODAL ── */
-    .mbg {
+    #app-graficadora .mbg {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, .5);
@@ -925,12 +1334,12 @@
       backdrop-filter: blur(6px);
     }
 
-    .mbg.show {
+    #app-graficadora .mbg.show {
       opacity: 1;
       pointer-events: all;
     }
 
-    .modal {
+    #app-graficadora .modal {
       background: var(--s1);
       border: 1px solid var(--border2);
       border-radius: 18px;
@@ -942,32 +1351,32 @@
       box-shadow: 0 32px 80px rgba(0, 0, 0, .5);
     }
 
-    .mbg.show .modal {
+    #app-graficadora .mbg.show .modal {
       transform: scale(1);
     }
 
-    .modal h2 {
+    #app-graficadora .modal h2 {
       font-family: 'Instrument Serif', serif;
       font-size: 1.35rem;
       font-style: italic;
       margin-bottom: 8px;
     }
 
-    .modal p {
+    #app-graficadora .modal p {
       font-size: 13px;
       color: var(--txt2);
       margin-bottom: 22px;
       line-height: 1.6;
     }
 
-    .modal-btns {
+    #app-graficadora .modal-btns {
       display: flex;
       gap: 10px;
       justify-content: flex-end;
     }
 
     /* ── TOAST ── */
-    .toast {
+    #app-graficadora .toast {
       position: fixed;
       bottom: 28px;
       left: 50%;
@@ -985,43 +1394,43 @@
       box-shadow: 0 8px 32px rgba(0, 0, 0, .4);
     }
 
-    .toast.show {
+    #app-graficadora .toast.show {
       transform: translateX(-50%) translateY(0);
     }
 
-    .toast.ok {
+    #app-graficadora .toast.ok {
       border-color: #4ade80;
       color: #4ade80;
     }
 
-    .toast.warn {
+    #app-graficadora .toast.warn {
       border-color: #fbbf24;
       color: #fbbf24;
     }
 
-    .toast.err {
+    #app-graficadora .toast.err {
       border-color: #f87171;
       color: #f87171;
     }
 
     /* hidden file input */
-    #csvImport {
+    #app-graficadora #csvImport {
       display: none;
     }
 
     /* ── ANALYSIS PANEL ── */
-    .analysis-card {
+    #app-graficadora .analysis-card {
       grid-column: 1/-1;
     }
 
-    .anl-tabs {
+    #app-graficadora .anl-tabs {
       display: flex;
       gap: 6px;
       margin-bottom: 18px;
       flex-wrap: wrap;
     }
 
-    .anl-tab {
+    #app-graficadora .anl-tab {
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       letter-spacing: .14em;
@@ -1035,35 +1444,35 @@
       transition: all .2s;
     }
 
-    .anl-tab:hover {
+    #app-graficadora .anl-tab:hover {
       border-color: var(--border2);
       color: var(--txt2);
     }
 
-    .anl-tab.sel {
+    #app-graficadora .anl-tab.sel {
       border-color: #38bdf8;
       background: rgba(56, 189, 248, .08);
       color: #38bdf8;
     }
 
-    .anl-pane {
+    #app-graficadora .anl-pane {
       display: none;
       flex-direction: column;
       gap: 14px;
     }
 
-    .anl-pane.vis {
+    #app-graficadora .anl-pane.vis {
       display: flex;
     }
 
-    .anl-row {
+    #app-graficadora .anl-row {
       display: flex;
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
     }
 
-    .anl-label {
+    #app-graficadora .anl-label {
       font-family: 'JetBrains Mono', monospace;
       font-size: 9px;
       letter-spacing: .18em;
@@ -1074,7 +1483,7 @@
     }
 
     .anl-sel,
-    .anl-input {
+    #app-graficadora .anl-input {
       background: var(--s2);
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -1088,16 +1497,16 @@
     }
 
     .anl-sel:focus,
-    .anl-input:focus {
+    #app-graficadora .anl-input:focus {
       border-color: var(--border2);
     }
 
-    .anl-input {
+    #app-graficadora .anl-input {
       width: 110px;
       cursor: text;
     }
 
-    .anl-btn {
+    #app-graficadora .anl-btn {
       padding: 7px 16px;
       border-radius: 8px;
       border: 1px solid rgba(56, 189, 248, .4);
@@ -1111,11 +1520,11 @@
       white-space: nowrap;
     }
 
-    .anl-btn:hover {
+    #app-graficadora .anl-btn:hover {
       background: rgba(56, 189, 248, .16);
     }
 
-    .anl-results {
+    #app-graficadora .anl-results {
       background: var(--s1);
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -1125,11 +1534,11 @@
       gap: 10px;
     }
 
-    .anl-results.vis {
+    #app-graficadora .anl-results.vis {
       display: flex;
     }
 
-    .anl-eq {
+    #app-graficadora .anl-eq {
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
       color: var(--txt);
@@ -1141,13 +1550,13 @@
       word-break: break-all;
     }
 
-    .anl-metrics {
+    #app-graficadora .anl-metrics {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
     }
 
-    .anl-metric {
+    #app-graficadora .anl-metric {
       background: var(--s2);
       border-radius: 8px;
       padding: 8px 12px;
@@ -1156,7 +1565,7 @@
       gap: 3px;
     }
 
-    .anl-metric-lbl {
+    #app-graficadora .anl-metric-lbl {
       font-family: 'JetBrains Mono', monospace;
       font-size: 8px;
       letter-spacing: .2em;
@@ -1164,20 +1573,20 @@
       text-transform: uppercase;
     }
 
-    .anl-metric-val {
+    #app-graficadora .anl-metric-val {
       font-family: 'JetBrains Mono', monospace;
       font-size: 14px;
       font-weight: 500;
       color: var(--txt);
     }
 
-    .anl-pts-note {
+    #app-graficadora .anl-pts-note {
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       color: var(--txt3);
     }
 
-    .lagrange-eval {
+    #app-graficadora .lagrange-eval {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -1185,7 +1594,7 @@
       padding-top: 4px;
     }
 
-    .lagrange-eval-result {
+    #app-graficadora .lagrange-eval-result {
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
       color: #a78bfa;
@@ -1196,12 +1605,12 @@
       display: none;
     }
 
-    .lagrange-eval-result.vis {
+    #app-graficadora .lagrange-eval-result.vis {
       display: block;
     }
 
     canvas#anlChart,
-    canvas#lagChart {
+    #app-graficadora canvas#lagChart {
       display: block;
       width: 100%;
       height: 340px;
@@ -1209,7 +1618,7 @@
       margin-top: 4px;
     }
 
-    .back-link {
+    #app-graficadora .back-link {
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -1222,7 +1631,7 @@
       transition: color .2s;
     }
 
-    .back-link:hover {
+    #app-graficadora .back-link:hover {
       color: var(--txt2);
     }
 
@@ -1413,225 +1822,2414 @@
     #captcha-refresh:hover {
       color: var(--txt2);
     }
+
+    /* ══════════════════════════════════════════════════
+       OPENLAB — styles scoped to #app-openlab
+    ══════════════════════════════════════════════════ */
+
+    @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+
+    :root {
+      --bg: #0d0e12;
+      --s0: #13141a;
+      --s1: #1a1c24;
+      --s2: #22252f;
+      --s3: #292c38;
+      --border: #2a2d3a;
+      --border2: #363a4a;
+      --txt: #e4e6f0;
+      --txt2: #8b90a8;
+      --txt3: #52566a;
+      --accent: #4ade80;
+      --accent2: #22c55e;
+      --blue: #60a5fa;
+      --violet: #a78bfa;
+      --amber: #fbbf24;
+      --red: #f87171;
+      --orange: #fb923c;
+      --r: 12px;
+      --rsm: 8px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--txt);
+      font-family: 'Familjen Grotesk', sans-serif;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, .025) 2px, rgba(0, 0, 0, .025) 4px);
+    }
+
+    #app-openlab a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    #app-openlab button {
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: inherit;
+      font: inherit;
+    }
+
+    input,
+    #app-openlab textarea {
+      font: inherit;
+      color: inherit;
+    }
+
+    /* ── MODALS ── */
+    #app-openlab .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .7);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s;
+    }
+
+    #app-openlab .modal-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #app-openlab .modal {
+      background: var(--s0);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px;
+      width: min(460px, 94vw);
+      animation: modalIn .3s ease;
+    }
+
+    @keyframes modalIn {
+      from {
+        transform: translateY(20px) scale(.96);
+        opacity: 0;
+      }
+
+      to {
+        transform: none;
+        opacity: 1;
+      }
+    }
+
+    #app-openlab .modal-logo {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+
+    #app-openlab .modal-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 2rem;
+      font-weight: 400;
+      text-align: center;
+      background: linear-gradient(135deg, var(--txt) 30%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+
+    #app-openlab .modal-sub {
+      text-align: center;
+      color: var(--txt3);
+      font-size: 13px;
+      margin-bottom: 28px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: .05em;
+    }
+
+    #app-openlab .modal-tabs {
+      display: flex;
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      padding: 3px;
+      gap: 2px;
+      margin-bottom: 22px;
+    }
+
+    #app-openlab .modal-tab {
+      flex: 1;
+      padding: 7px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--txt3);
+      transition: all .2s;
+    }
+
+    #app-openlab .modal-tab.active {
+      background: var(--s2);
+      color: var(--txt);
+    }
+
+    #app-openlab .modal-panel {
+      display: none;
+    }
+
+    #app-openlab .modal-panel.active {
+      display: block;
+    }
+
+    #app-openlab .form-group {
+      margin-bottom: 14px;
+    }
+
+    #app-openlab .form-group label {
+      display: block;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      margin-bottom: 6px;
+    }
+
+    #app-openlab .form-group input {
+      width: 100%;
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      padding: 10px 14px;
+      font-size: 14px;
+      color: var(--txt);
+      transition: border-color .2s;
+      outline: none;
+    }
+
+    #app-openlab .form-group input:focus {
+      border-color: var(--accent);
+    }
+
+    #app-openlab .btn-primary {
+      width: 100%;
+      background: var(--accent);
+      color: #0d0e12;
+      border-radius: var(--rsm);
+      padding: 11px;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: .02em;
+      transition: all .2s;
+      margin-top: 4px;
+    }
+
+    #app-openlab .btn-primary:hover {
+      background: var(--accent2);
+    }
+
+    #app-openlab .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    #app-openlab .modal-header h3 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.4rem;
+      font-weight: 400;
+    }
+
+    #app-openlab .modal-close {
+      font-size: 18px;
+      color: var(--txt3);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s;
+    }
+
+    #app-openlab .modal-close:hover {
+      background: var(--s2);
+      color: var(--txt);
+    }
+
+    /* ── COMPAT WARNING MODAL ── */
+    #app-openlab #compat-modal {
+      z-index: 1100;
+    }
+
+    #app-openlab .compat-issue {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px 14px;
+      border-radius: var(--rsm);
+      border: 1px solid var(--border);
+    }
+
+    #app-openlab .compat-issue.compat-error {
+      background: rgba(248, 113, 113, .07);
+      border-color: rgba(248, 113, 113, .3);
+    }
+
+    #app-openlab .compat-issue.compat-warning {
+      background: rgba(251, 191, 36, .07);
+      border-color: rgba(251, 191, 36, .3);
+    }
+
+    #app-openlab .compat-icon {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    #app-openlab .compat-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--txt);
+      margin-bottom: 3px;
+    }
+
+    #app-openlab .compat-msg {
+      font-size: 12px;
+      color: var(--txt2);
+      line-height: 1.5;
+    }
+
+    #app-openlab .compat-issues {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    #app-openlab #compat-modal .modal {
+      border-color: rgba(251, 191, 36, .4);
+    }
+
+    #app-openlab #compat-modal .modal-header h3 {
+      color: var(--amber);
+    }
+
+    /* ── APP LAYOUT ── */
+    #app-openlab .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    #app-openlab .app.visible {
+      opacity: 1;
+    }
+
+    /* ── TOPBAR ── */
+    #app-openlab .topbar {
+      height: 48px;
+      background: var(--s0);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 14px;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    #app-openlab .topbar-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: 4px;
+    }
+
+    #app-openlab .topbar-logo span {
+      color: var(--txt);
+      font-size: 13px;
+      font-weight: 400;
+    }
+
+    #app-openlab .room-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+    }
+
+    #app-openlab .room-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--txt3);
+    }
+
+    #app-openlab .room-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--txt);
+      letter-spacing: .08em;
+    }
+
+    #app-openlab .btn-icon {
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--txt2);
+      transition: all .15s;
+    }
+
+    #app-openlab .btn-icon:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    #app-openlab .peers-bar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 2px;
+    }
+
+    #app-openlab .peer-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      border: 2px solid var(--bg);
+      font-family: 'JetBrains Mono', monospace;
+      cursor: default;
+      position: relative;
+    }
+
+    #app-openlab .peer-avatar[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: -26px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 8px;
+      white-space: nowrap;
+      font-size: 11px;
+      color: var(--txt);
+      font-family: 'Familjen Grotesk', sans-serif;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    #app-openlab .topbar-sep {
+      height: 20px;
+      width: 1px;
+      background: var(--border);
+      margin: 0 2px;
+    }
+
+    #app-openlab .topbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #app-openlab .btn-small {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: var(--txt2);
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    #app-openlab .btn-small:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    #app-openlab .role-chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid;
+    }
+
+    #app-openlab .role-host {
+      color: var(--accent);
+      border-color: rgba(74, 222, 128, .25);
+      background: rgba(74, 222, 128, .07);
+    }
+
+    #app-openlab .role-editor {
+      color: var(--blue);
+      border-color: rgba(96, 165, 250, .25);
+      background: rgba(96, 165, 250, .07);
+    }
+
+    #app-openlab .role-co-host {
+      color: var(--amber);
+      border-color: rgba(251, 191, 36, .3);
+      background: rgba(251, 191, 36, .07);
+    }
+
+    #app-openlab .role-observer {
+      color: var(--txt3);
+      border-color: var(--border);
+      background: transparent;
+    }
+
+    /* ── MAIN AREA ── */
+    #app-openlab .main-area {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    #app-openlab .panel-left {
+      display: flex;
+      flex-direction: column;
+      width: 50%;
+      min-width: 280px;
+      border-right: 1px solid var(--border);
+    }
+
+    #app-openlab .panel-right {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    #app-openlab .resize-handle {
+      width: 4px;
+      cursor: col-resize;
+      background: transparent;
+      transition: background .2s;
+      flex-shrink: 0;
+      z-index: 5;
+    }
+
+    .resize-handle:hover,
+    #app-openlab .resize-handle.dragging {
+      background: var(--accent);
+    }
+
+    /* ── PANEL TABS ── */
+    #app-openlab .panel-tabs {
+      display: flex;
+      align-items: center;
+      background: var(--s0);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      padding: 0 8px;
+      gap: 2px;
+      height: 38px;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    #app-openlab .panel-tabs::-webkit-scrollbar {
+      height: 0;
+    }
+
+    #app-openlab .ptab {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--txt3);
+      transition: all .2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    #app-openlab .ptab.active {
+      background: var(--s2);
+      color: var(--txt);
+    }
+
+    #app-openlab .ptab:hover:not(.active) {
+      color: var(--txt2);
+    }
+
+    #app-openlab .tab-spacer {
+      flex: 1;
+    }
+
+    #app-openlab .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent);
+      color: #0d0e12;
+      border-radius: 8px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      font-size: 9px;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    #app-openlab .badge.badge-amber {
+      background: var(--amber);
+    }
+
+    #app-openlab .hidden {
+      display: none !important;
+    }
+
+    /* ── EDITOR TOOLBAR ── */
+    #app-openlab .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 0 4px;
+    }
+
+    .tool-btn,
+    #app-openlab .btool {
+      user-select: none;
+    }
+
+    #app-openlab .tool-btn {
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      padding: 3px 7px;
+      font-size: 11px;
+      color: var(--txt3);
+      font-family: 'JetBrains Mono', monospace;
+      transition: all .15s;
+    }
+
+    #app-openlab .tool-btn:hover {
+      background: var(--s2);
+      border-color: var(--border);
+      color: var(--txt);
+    }
+
+    #app-openlab .tool-sep {
+      width: 1px;
+      height: 16px;
+      background: var(--border);
+      margin: 0 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── BOARD TOOLBAR ── */
+    #app-openlab .board-tools {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 0 4px;
+    }
+
+    #app-openlab .btool {
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-size: 13px;
+      color: var(--txt3);
+      transition: all .15s;
+    }
+
+    #app-openlab .btool:hover {
+      background: var(--s2);
+      border-color: var(--border);
+      color: var(--txt);
+    }
+
+    #app-openlab .btool.active {
+      background: var(--s2);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    #app-openlab .color-picker {
+      width: 26px;
+      height: 26px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 1px;
+      cursor: pointer;
+      background: none;
+    }
+
+    #app-openlab .width-slider {
+      width: 60px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    /* ── VIEW CONTENT ── */
+    #app-openlab .view-content {
+      flex: 1;
+      overflow: auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #app-openlab .view-content.hidden {
+      display: none;
+    }
+
+    /* ── EDITOR ── */
+    #app-openlab .editor-wrap {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #app-openlab .editor-textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--txt);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13.5px;
+      line-height: 1.75;
+      padding: 22px 24px;
+      resize: none;
+      tab-size: 2;
+      width: 100%;
+    }
+
+    #app-openlab .editor-textarea::placeholder {
+      color: var(--txt3);
+      font-style: italic;
+    }
+
+    #app-openlab .editor-textarea:read-only {
+      color: var(--txt2);
+      cursor: default;
+    }
+
+    /* ── AUTOSAVE INDICATOR ── */
+    #app-openlab .autosave-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-right: 4px;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    #app-openlab .autosave-dot.saving {
+      opacity: 1;
+      animation: pulse .6s ease infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.4);
+      }
+    }
+
+    /* ── PREVIEW ── */
+    #app-openlab .preview-wrap {
+      padding: 22px 26px;
+      flex: 1;
+    }
+
+    #app-openlab .preview-empty {
+      color: var(--txt3);
+      font-size: 13px;
+      font-style: italic;
+      font-family: 'Instrument Serif', serif;
+    }
+
+    #app-openlab .preview-wrap h1 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.9rem;
+      font-weight: 400;
+      color: var(--txt);
+      margin: 0 0 14px;
+      line-height: 1.15;
+      letter-spacing: -.02em;
+    }
+
+    #app-openlab .preview-wrap h2 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.4rem;
+      font-weight: 400;
+      color: var(--txt);
+      margin: 22px 0 10px;
+      font-style: italic;
+    }
+
+    #app-openlab .preview-wrap h3 {
+      font-family: 'Familjen Grotesk', sans-serif;
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--txt);
+      margin: 18px 0 8px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    #app-openlab .preview-wrap p {
+      color: var(--txt2);
+      font-size: 14.5px;
+      margin-bottom: 10px;
+      line-height: 1.7;
+    }
+
+    #app-openlab .preview-wrap strong {
+      color: var(--txt);
+      font-weight: 700;
+    }
+
+    #app-openlab .preview-wrap em {
+      color: var(--txt);
+      font-style: italic;
+    }
+
+    #app-openlab .preview-wrap code {
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent);
+    }
+
+    #app-openlab .preview-wrap pre {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      padding: 14px 16px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+
+    #app-openlab .preview-wrap pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 12.5px;
+      color: var(--txt2);
+    }
+
+    #app-openlab .preview-wrap blockquote {
+      border-left: 3px solid var(--border2);
+      padding-left: 16px;
+      margin: 12px 0;
+      color: var(--txt2);
+      font-style: italic;
+    }
+
+    #app-openlab .preview-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      margin: 12px 0;
+    }
+
+    #app-openlab .preview-wrap th {
+      background: var(--s2);
+      padding: 8px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+
+    #app-openlab .preview-wrap td {
+      padding: 8px 12px;
+      color: var(--txt2);
+      border: 1px solid var(--border);
+    }
+
+    #app-openlab .preview-wrap tr:hover td {
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .preview-wrap ul,
+    #app-openlab .preview-wrap ol {
+      padding-left: 22px;
+      color: var(--txt2);
+      font-size: 14px;
+      margin: 8px 0;
+    }
+
+    #app-openlab .preview-wrap li {
+      margin-bottom: 4px;
+    }
+
+    #app-openlab .preview-wrap hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+
+    #app-openlab .preview-wrap .math-error {
+      color: var(--red);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+
+    #app-openlab .preview-wrap .katex-display {
+      margin: 16px 0;
+      overflow-x: auto;
+    }
+
+    #app-openlab .preview-wrap .katex {
+      color: var(--txt);
+    }
+
+    /* ── WHITEBOARD ── */
+    #app-openlab .board-wrap {
+      position: relative;
+      flex: 1;
+      background: var(--bg);
+      overflow: hidden;
+      cursor: crosshair;
+    }
+
+    #app-openlab .board-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #app-openlab .board-text-input {
+      position: absolute;
+      background: rgba(13, 14, 18, .85);
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      padding: 4px 8px;
+      color: var(--txt);
+      font-family: 'Familjen Grotesk', sans-serif;
+      font-size: 14px;
+      min-width: 120px;
+      outline: none;
+      display: none;
+    }
+
+    /* ── CHAT ── */
+    #app-openlab .chat-wrap {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    #app-openlab .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #app-openlab .chat-messages::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #app-openlab .chat-messages::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 2px;
+    }
+
+    #app-openlab .chat-msg {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-width: 90%;
+    }
+
+    #app-openlab .chat-msg.own {
+      align-self: flex-end;
+    }
+
+    #app-openlab .msg-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--txt3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #app-openlab .msg-author {
+      font-weight: 600;
+    }
+
+    #app-openlab .msg-bubble {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      border-top-left-radius: 2px;
+      padding: 8px 12px;
+      font-size: 13.5px;
+      color: var(--txt2);
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    #app-openlab .chat-msg.own .msg-bubble {
+      background: rgba(74, 222, 128, .08);
+      border-color: rgba(74, 222, 128, .2);
+      border-radius: 10px;
+      border-top-right-radius: 2px;
+      color: var(--txt);
+    }
+
+    #app-openlab .chat-sys {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--txt3);
+      padding: 4px 0;
+    }
+
+    #app-openlab .chat-input-area {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    #app-openlab .chat-input {
+      flex: 1;
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    #app-openlab .chat-input:focus {
+      border-color: var(--accent);
+    }
+
+    #app-openlab .btn-send {
+      background: var(--accent);
+      color: #0d0e12;
+      border-radius: 8px;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      flex-shrink: 0;
+      transition: background .2s;
+    }
+
+    #app-openlab .btn-send:hover {
+      background: var(--accent2);
+    }
+
+    #app-openlab .typing-indicator {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--txt3);
+      padding: 2px 16px;
+      height: 18px;
+    }
+
+    /* ── PEERS ── */
+    #app-openlab .peers-wrap {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    #app-openlab .peer-item {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: border-color .2s;
+    }
+
+    #app-openlab .peer-item:hover {
+      border-color: var(--border2);
+    }
+
+    #app-openlab .peer-item.peer-colead {
+      border-color: rgba(251, 191, 36, .3);
+    }
+
+    #app-openlab .peer-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    #app-openlab .peer-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    #app-openlab .peer-name {
+      font-weight: 600;
+      font-size: 13.5px;
+      color: var(--txt);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #app-openlab .peer-role-tag {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid;
+      margin-left: 5px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    #app-openlab .peer-status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--txt3);
+      letter-spacing: .08em;
+    }
+
+    #app-openlab .peer-actions {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    #app-openlab .peer-action-btn {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      color: var(--txt2);
+      background: var(--s2);
+      font-family: 'JetBrains Mono', monospace;
+      transition: all .15s;
+    }
+
+    #app-openlab .peer-action-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    #app-openlab .peer-action-btn.colead-active {
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+
+    /* ── HOST POLICY ── */
+    #app-openlab .host-policy {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--s1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #app-openlab .host-policy label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--txt2);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #app-openlab .host-policy input[type=checkbox] {
+      accent-color: var(--amber);
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+
+    #app-openlab .host-policy-note {
+      font-size: 10px;
+      color: var(--txt3);
+      font-family: 'JetBrains Mono', monospace;
+      margin-left: 22px;
+    }
+
+    /* ── PULL REQUESTS ── */
+    #app-openlab .pr-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #app-openlab .pr-empty {
+      color: var(--txt3);
+      font-size: 13px;
+      font-style: italic;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    #app-openlab .pr-item {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color .2s;
+    }
+
+    #app-openlab .pr-item.pr-pending {
+      border-left: 3px solid var(--amber);
+    }
+
+    #app-openlab .pr-item.pr-accepted {
+      border-left: 3px solid var(--accent);
+      opacity: .7;
+    }
+
+    #app-openlab .pr-item.pr-rejected {
+      border-left: 3px solid var(--red);
+      opacity: .6;
+    }
+
+    #app-openlab .pr-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    #app-openlab .pr-author {
+      font-weight: 700;
+    }
+
+    #app-openlab .pr-ts {
+      color: var(--txt3);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      margin-left: auto;
+    }
+
+    #app-openlab .pr-status-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      padding: 1px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    #app-openlab .pr-status-badge.s-pending {
+      background: rgba(251, 191, 36, .12);
+      color: var(--amber);
+      border: 1px solid rgba(251, 191, 36, .3);
+    }
+
+    #app-openlab .pr-status-badge.s-accepted {
+      background: rgba(74, 222, 128, .1);
+      color: var(--accent);
+      border: 1px solid rgba(74, 222, 128, .25);
+    }
+
+    #app-openlab .pr-status-badge.s-rejected {
+      background: rgba(248, 113, 113, .1);
+      color: var(--red);
+      border: 1px solid rgba(248, 113, 113, .25);
+    }
+
+    #app-openlab .pr-summary {
+      font-size: 13px;
+      color: var(--txt);
+      font-weight: 600;
+    }
+
+    #app-openlab .pr-text-preview {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--txt2);
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      white-space: pre-wrap;
+      max-height: 120px;
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+
+    #app-openlab .pr-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    #app-openlab .pr-btn {
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 5px;
+      border: 1px solid;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      transition: all .15s;
+      cursor: pointer;
+    }
+
+    #app-openlab .pr-btn-accept {
+      background: rgba(74, 222, 128, .1);
+      color: var(--accent);
+      border-color: rgba(74, 222, 128, .3);
+    }
+
+    #app-openlab .pr-btn-accept:hover {
+      background: rgba(74, 222, 128, .2);
+    }
+
+    #app-openlab .pr-btn-reject {
+      background: rgba(248, 113, 113, .08);
+      color: var(--red);
+      border-color: rgba(248, 113, 113, .25);
+    }
+
+    #app-openlab .pr-btn-reject:hover {
+      background: rgba(248, 113, 113, .18);
+    }
+
+    #app-openlab .pr-own {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--txt3);
+      margin-left: auto;
+    }
+
+    #app-openlab .pr-compose-panel {
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    #app-openlab .pr-compose-panel.hidden {
+      display: none;
+    }
+
+    #app-openlab .pr-textarea {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--txt);
+      resize: vertical;
+      min-height: 80px;
+      outline: none;
+      transition: border-color .2s;
+      width: 100%;
+    }
+
+    #app-openlab .pr-textarea:focus {
+      border-color: var(--accent);
+    }
+
+    #app-openlab .pr-summary-input {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--txt);
+      outline: none;
+      transition: border-color .2s;
+      width: 100%;
+    }
+
+    #app-openlab .pr-summary-input:focus {
+      border-color: var(--accent);
+    }
+
+    #app-openlab .pr-compose-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #app-openlab .pr-new-bar {
+      padding: 8px 16px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    /* ── STATUS BAR ── */
+    #app-openlab .status-bar {
+      height: 26px;
+      background: var(--s0);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 10px;
+      flex-shrink: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--txt3);
+    }
+
+    #app-openlab .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: background .3s;
+    }
+
+    #app-openlab .status-dot.connected {
+      background: var(--accent);
+    }
+
+    #app-openlab .status-dot.connecting {
+      background: var(--amber);
+      animation: blink .8s infinite;
+    }
+
+    #app-openlab .status-dot.disconnected {
+      background: var(--red);
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .3;
+      }
+    }
+
+    #app-openlab .status-sep {
+      color: var(--border2);
+    }
+
+    #app-openlab .status-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #app-openlab .status-hash {
+      color: var(--txt3);
+      font-size: 9px;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #app-openlab .word-count {
+      color: var(--txt3);
+    }
+
+    /* ── EXPORT MODAL ── */
+    #app-openlab .export-opts {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    #app-openlab .export-btn {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      padding: 12px 16px;
+      font-size: 13.5px;
+      color: var(--txt2);
+      text-align: left;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #app-openlab .export-btn:hover {
+      border-color: var(--accent);
+      color: var(--txt);
+    }
+
+    #app-openlab .hash-box {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      padding: 14px 16px;
+    }
+
+    #app-openlab .hash-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      margin-bottom: 6px;
+    }
+
+    #app-openlab .hash-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      word-break: break-all;
+      line-height: 1.6;
+    }
+
+    /* ── TOAST ── */
+    #app-openlab .toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--rsm);
+      padding: 10px 18px;
+      font-size: 13px;
+      color: var(--txt);
+      z-index: 2000;
+      opacity: 0;
+      transition: all .3s;
+      pointer-events: none;
+      white-space: nowrap;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: .04em;
+    }
+
+    #app-openlab .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── SCROLL ── */
+    #app-openlab ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+
+    #app-openlab ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #app-openlab ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px;
+    }
+
+    #app-openlab ::-webkit-scrollbar-thumb:hover {
+      background: var(--txt3);
+    }
+
+    /* ── PRINT ── */
+    @media print {
+
+      .topbar,
+      .status-bar,
+      .panel-left,
+      .resize-handle,
+      #app-openlab .panel-tabs {
+        display: none !important;
+      }
+
+      .main-area,
+      .panel-right,
+      #app-openlab .app {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+
+      #app-openlab .preview-wrap {
+        padding: 20mm;
+        font-size: 11pt;
+        line-height: 1.6;
+      }
+
+      body {
+        background: white;
+        color: black;
+      }
+
+      .preview-wrap h1,
+      .preview-wrap h2,
+      #app-openlab .preview-wrap h3 {
+        color: black;
+      }
+
+      .preview-wrap p,
+      .preview-wrap li,
+      #app-openlab .preview-wrap td {
+        color: #333;
+      }
+
+      #app-openlab .view-content {
+        overflow: visible !important;
+      }
+
+      #app-openlab #preview-view {
+        display: block !important;
+      }
+
+      #app-openlab .katex {
+        color: black !important;
+      }
+    }
+
+    /* ── REMOTE CURSORS ── */
+    #app-openlab .remote-cursor-line {
+      position: absolute;
+      width: 2px;
+      pointer-events: none;
+      transition: left .05s, top .05s;
+      z-index: 10;
+    }
+
+    #app-openlab .remote-cursor-label {
+      position: absolute;
+      top: -20px;
+      left: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      white-space: nowrap;
+      color: #0d0e12;
+      font-weight: 700;
+    }
+
+    /* ── NARROW SCREEN WARNING ── */
+    @media (max-width:600px) {
+      #app-openlab .panel-left {
+        min-width: 100%;
+        border-right: none;
+      }
+
+      #app-openlab .resize-handle {
+        display: none;
+      }
+    }
+
+    /* ── CAPTCHA OVERLAY ── */
+    #captcha-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: rgba(13, 14, 18, .92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      transition: opacity .4s ease;
+    }
+
+    #captcha-overlay.hiding {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #captcha-box {
+      background: var(--s0);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      width: min(380px, 92vw);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: captchaIn .35s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    @keyframes captchaIn {
+      from {
+        transform: translateY(24px) scale(.96);
+        opacity: 0;
+      }
+
+      to {
+        transform: none;
+        opacity: 1;
+      }
+    }
+
+    #captcha-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      line-height: 1;
+    }
+
+    #captcha-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.7rem;
+      font-weight: 400;
+      background: linear-gradient(135deg, #e4e6f0 30%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    #captcha-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    #captcha-challenge {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 24px;
+      text-align: center;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    #captcha-question {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      letter-spacing: .04em;
+      color: var(--txt);
+      margin-bottom: 4px;
+    }
+
+    #captcha-hint {
+      font-size: 11px;
+      color: var(--txt3);
+    }
+
+    #captcha-input {
+      width: 100%;
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      letter-spacing: .1em;
+      color: var(--txt);
+      text-align: center;
+      outline: none;
+      transition: border-color .2s;
+      margin-bottom: 14px;
+    }
+
+    #captcha-input:focus {
+      border-color: var(--border2);
+    }
+
+    #captcha-input.error {
+      border-color: #f87171;
+      animation: shake .3s ease;
+    }
+
+    #captcha-input.ok {
+      border-color: var(--accent);
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0)
+      }
+
+      25% {
+        transform: translateX(-6px)
+      }
+
+      75% {
+        transform: translateX(6px)
+      }
+    }
+
+    #captcha-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #0d0e12;
+      border-radius: 10px;
+      padding: 12px;
+      font-family: 'Familjen Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: .02em;
+      border: none;
+      cursor: pointer;
+      transition: background .2s, transform .15s;
+    }
+
+    #captcha-btn:hover {
+      background: var(--accent2);
+    }
+
+    #captcha-error {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #f87171;
+      text-align: center;
+      margin-top: 8px;
+      min-height: 16px;
+      letter-spacing: .04em;
+    }
+
+    #captcha-refresh {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--txt3);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: color .2s;
+      padding: 4px;
+    }
+
+    #captcha-refresh:hover {
+      color: var(--txt2);
+    }
+
+    #app-openlab .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      text-decoration: none;
+      transition: color .2s;
+    }
+
+    #app-openlab .back-link:hover {
+      color: var(--txt2);
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- ── CAPTCHA OVERLAY ── -->
+  <!-- ── SHARED CAPTCHA ── -->
   <div id="captcha-overlay">
     <div id="captcha-box">
-      <div id="captcha-icon">⬡</div>
+      <div id="captcha-icon">&#x2B21;</div>
       <div id="captcha-title">Atlas<em style="-webkit-text-fill-color:inherit;font-style:italic;">Delta</em></div>
-      <div id="captcha-sub">Verificación de acceso</div>
+      <div id="captcha-sub">Verificaci&#xF3;n de acceso</div>
       <div id="captcha-challenge">
-        <div id="captcha-question">…</div>
+        <div id="captcha-question">&hellip;</div>
         <div id="captcha-hint">Resuelve el problema para continuar</div>
       </div>
       <input id="captcha-input" type="number" placeholder="tu respuesta" autocomplete="off">
-      <button id="captcha-btn">Verificar →</button>
+      <button id="captcha-btn">Verificar &rarr;</button>
       <div id="captcha-error"></div>
-      <button id="captcha-refresh">↻ &nbsp;otro problema</button>
+      <button id="captcha-refresh">&#x21BB; &nbsp;otro problema</button>
     </div>
   </div>
 
-  <div class="app">
-
-    <header class="hdr">
-      <a href="index.html" class="back-link">← inicio</a>
-      <div>
-        <div class="hdr-kicker">// registrador de voz multicanal</div>
-        <div class="hdr-title">Graficadora</div>
-      </div>
-      <div class="hdr-pills">
-        <div class="pill">
-          <div class="pdot" id="hdot"></div><span id="hstatus">inactivo</span>
-        </div>
-        <div class="pill" id="apill" style="display:none;"><span id="acnt">0</span>&nbsp;activa(s)</div>
-      </div>
-    </header>
-
-    <div class="layout">
-
-      <!-- LEFT: series manager + hints -->
-      <div style="display:flex;flex-direction:column;gap:14px;">
-        <div class="card">
-          <div class="card-label">Series de datos</div>
-          <div class="nsform">
-            <input class="nsinput" id="nsname" type="text" placeholder="Nombre de la serie…" maxlength="22"
-              onkeydown="if(event.key==='Enter')addSeries()">
-            <div class="clrbtn" id="clrbtn">
-              <input type="color" id="nscolor" value="#4ade80">
-            </div>
-            <button class="addbtn" onclick="addSeries()">+</button>
-          </div>
-          <div class="sgrid" id="sgrid"></div>
-          <div class="nohint" id="nohint">Añade al menos una serie para comenzar</div>
-        </div>
-
-        <div class="hintcard">
-          <div class="hinttitle">Modo de entrada</div>
-          <div class="hintgrid">
-            <div class="hintitem">
-              <div class="ex"><span>"cuarenta y dos"</span></div>
-              <div class="desc">1 serie activa → 1 valor</div>
-            </div>
-            <div class="hintitem">
-              <div class="ex"><span>"veinte, quince"</span></div>
-              <div class="desc">2 series → por orden de activación</div>
-            </div>
-            <div class="hintitem">
-              <div class="ex"><span>"3 punto 5"</span></div>
-              <div class="desc">Decimales en español</div>
-            </div>
-            <div class="hintitem">
-              <div class="ex"><span>Mic independiente</span></div>
-              <div class="desc">Visible si hay varios micros</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RIGHT: log -->
-      <div style="display:flex;flex-direction:column;gap:14px;">
-        <div class="card" style="flex:1;">
-          <div class="card-label">Historial <span id="lcnt"
-              style="color:var(--txt2);font-weight:700;margin-left:4px;"></span></div>
-          <div class="log-scroll" id="logscroll">
-            <div class="lempty">Sin datos todavía</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- CHART -->
-      <div class="card chart-wrap">
-        <div class="chart-top">
-          <span class="chart-title">Gráfica temporal</span>
-          <span class="chart-meta" id="cmeta">0 puntos</span>
-        </div>
-        <div class="tension-row">
-          <label>Suavidad</label>
-          <input type="range" id="tension" min="0" max="1" step="0.05" value="0.4">
-          <span class="tension-val" id="tensionVal">0.4</span>
-        </div>
-        <div class="legend" id="legend" style="display:none;"></div>
-        <div id="cempty" class="chart-empty">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-          </svg>
-          <p>Los datos aparecerán aquí en tiempo real</p>
-        </div>
-        <canvas id="chart" style="display:none;"></canvas>
-      </div>
-
-      <!-- GLOBAL CONTROLS -->
-      <div class="card controls-card">
-        <div class="ctrlrow">
-          <button class="btn btn-g" id="ebtn" onclick="exportCSV(null)" disabled>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>Exportar todo
-          </button>
-          <button class="btn btn-b" onclick="document.getElementById('csvImport').click()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" transform="rotate(180 12 12)" />
-            </svg>Importar CSV
-          </button>
-          <button class="btn" id="ubtn" onclick="undoLast(null)" disabled>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M3 10h10a8 8 0 0 1 0 16H3" />
-              <polyline points="3 10 7 6 3 2" />
-            </svg>Deshacer
-          </button>
-          <button class="btn btn-r" id="cbtn" onclick="askClear(null)" disabled>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-            </svg>Limpiar todo
-          </button>
-          <button class="btn" id="stopbtn" onclick="stopAll()" disabled>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <rect x="6" y="6" width="12" height="12" rx="2" />
-            </svg>Detener todo
-          </button>
-        </div>
-      </div>
-
-      <!-- ANALYSIS -->
-      <div class="card analysis-card">
-        <div class="card-label">Análisis matemático</div>
-        <div class="anl-tabs">
-          <button class="anl-tab sel" onclick="anlTab('reg')" id="tab-reg">Regresión</button>
-          <button class="anl-tab" onclick="anlTab('lagrange')" id="tab-lagrange">Interpolación de Lagrange</button>
-        </div>
-
-        <!-- REGRESSION -->
-        <div class="anl-pane vis" id="pane-reg">
-          <div class="anl-row">
-            <span class="anl-label">Serie</span>
-            <select class="anl-sel" id="reg-series"></select>
-            <span class="anl-label">Tipo</span>
-            <select class="anl-sel" id="reg-type">
-              <option value="linear">Lineal y = a·x + b</option>
-              <option value="poly2">Polinomial grado 2</option>
-              <option value="poly3">Polinomial grado 3</option>
-              <option value="exp">Exponencial y = a·eᵇˣ</option>
-              <option value="log">Logarítmica y = a·ln(x) + b</option>
-              <option value="power">Potencial y = a·xᵇ</option>
-            </select>
-            <button class="anl-btn" onclick="runRegression()">Calcular</button>
-          </div>
-          <div class="anl-results" id="reg-results">
-            <div class="anl-eq" id="reg-eq"></div>
-            <div class="anl-metrics" id="reg-metrics"></div>
-            <div class="anl-pts-note" id="reg-note"></div>
-            <canvas id="anlChart"></canvas>
-          </div>
-        </div>
-
-        <!-- LAGRANGE -->
-        <div class="anl-pane" id="pane-lagrange">
-          <div class="anl-row">
-            <span class="anl-label">Serie</span>
-            <select class="anl-sel" id="lag-series"></select>
-            <button class="anl-btn" onclick="runLagrange()">Calcular polinomio</button>
-          </div>
-          <div class="anl-results" id="lag-results">
-            <div class="anl-eq" id="lag-eq"></div>
-            <div class="anl-metrics" id="lag-metrics"></div>
-            <div class="lagrange-eval">
-              <span class="anl-label">Evaluar en x =</span>
-              <input class="anl-input" type="number" id="lag-x" placeholder="valor de x" step="any">
-              <button class="anl-btn" onclick="evalLagrange()">→ f(x)</button>
-              <div class="lagrange-eval-result" id="lag-result"></div>
-            </div>
-            <canvas id="lagChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-    </div>
+  <!-- ── MODE SWITCHER ── -->
+  <div id="mode-switcher">
+    <a href="index.html" class="sw-back">&#x2190; Inicio</a>
+    <div class="sw-sep"></div>
+    <div class="sw-logo">AtlasDelta</div>
+    <button class="sw-tab active" id="sw-graficadora" onclick="switchMode('graficadora')">Graficadora</button>
+    <button class="sw-tab" id="sw-openlab" onclick="switchMode('openlab')">OpenLab</button>
   </div>
 
-  <!-- Confirm modal -->
-  <div class="mbg" id="mbg" onclick="if(event.target===this)closeModal()">
-    <div class="modal">
-      <h2 id="modal-title">¿Borrar todo?</h2>
-      <p id="modal-body">Se eliminarán todos los puntos. Los cronómetros se reiniciarán. Las series se conservan.</p>
-      <div class="modal-btns">
-        <button class="btn" onclick="closeModal()">Cancelar</button>
-        <button class="btn btn-r" id="modal-confirm" onclick="modalConfirmCb&&modalConfirmCb()">Sí, borrar</button>
+  <!-- ══════════════════════════════════════════════
+       GRAFICADORA
+  ══════════════════════════════════════════════ -->
+  <div id="app-graficadora">
+    <div class="app">
+
+
+
+      <div class="layout">
+
+        <!-- LEFT: series manager + hints -->
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="card">
+            <div class="card-label">Series de datos</div>
+            <div class="nsform">
+              <input class="nsinput" id="nsname" type="text" placeholder="Nombre de la serie…" maxlength="22"
+                onkeydown="if(event.key==='Enter')addSeries()">
+              <div class="clrbtn" id="clrbtn">
+                <input type="color" id="nscolor" value="#4ade80">
+              </div>
+              <button class="addbtn" onclick="addSeries()">+</button>
+            </div>
+            <div class="sgrid" id="sgrid"></div>
+            <div class="nohint" id="nohint">Añade al menos una serie para comenzar</div>
+          </div>
+
+
+        </div>
+
+        <!-- RIGHT: log -->
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="card" style="flex:1;">
+            <div class="card-label">Historial <span id="lcnt"
+                style="color:var(--txt2);font-weight:700;margin-left:4px;"></span></div>
+            <div class="log-scroll" id="logscroll">
+              <div class="lempty">Sin datos todavía</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHART -->
+        <div class="card chart-wrap">
+          <div class="chart-top">
+            <span class="chart-title">Gráfica temporal</span>
+            <span class="chart-meta" id="cmeta">0 puntos</span>
+          </div>
+          <div class="tension-row">
+            <label>Suavidad</label>
+            <input type="range" id="tension" min="0" max="1" step="0.05" value="0.4">
+            <span class="tension-val" id="tensionVal">0.4</span>
+          </div>
+          <div class="legend" id="legend" style="display:none;"></div>
+          <div id="cempty" class="chart-empty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+            <p>Los datos aparecerán aquí en tiempo real</p>
+          </div>
+          <canvas id="chart" style="display:none;"></canvas>
+        </div>
+
+        <!-- GLOBAL CONTROLS -->
+        <div class="card controls-card">
+          <div class="ctrlrow">
+            <button class="btn btn-g" id="ebtn" onclick="exportCSV(null)" disabled>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>Exportar todo
+            </button>
+            <button class="btn btn-b" onclick="document.getElementById('csvImport').click()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" transform="rotate(180 12 12)" />
+              </svg>Importar CSV
+            </button>
+            <button class="btn" id="ubtn" onclick="undoLast(null)" disabled>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M3 10h10a8 8 0 0 1 0 16H3" />
+                <polyline points="3 10 7 6 3 2" />
+              </svg>Deshacer
+            </button>
+            <button class="btn btn-r" id="cbtn" onclick="askClear(null)" disabled>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              </svg>Limpiar todo
+            </button>
+            <button class="btn" id="stopbtn" onclick="stopAll()" disabled>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>Detener todo
+            </button>
+          </div>
+        </div>
+
+        <!-- ANALYSIS -->
+        <div class="card analysis-card">
+          <div class="card-label">Análisis matemático</div>
+          <div class="anl-tabs">
+            <button class="anl-tab sel" onclick="anlTab('reg')" id="tab-reg">Regresión</button>
+            <button class="anl-tab" onclick="anlTab('lagrange')" id="tab-lagrange">Interpolación de Lagrange</button>
+          </div>
+
+          <!-- REGRESSION -->
+          <div class="anl-pane vis" id="pane-reg">
+            <div class="anl-row">
+              <span class="anl-label">Serie</span>
+              <select class="anl-sel" id="reg-series"></select>
+              <span class="anl-label">Tipo</span>
+              <select class="anl-sel" id="reg-type">
+                <option value="linear">Lineal y = a·x + b</option>
+                <option value="poly2">Polinomial grado 2</option>
+                <option value="poly3">Polinomial grado 3</option>
+                <option value="exp">Exponencial y = a·eᵇˣ</option>
+                <option value="log">Logarítmica y = a·ln(x) + b</option>
+                <option value="power">Potencial y = a·xᵇ</option>
+              </select>
+              <button class="anl-btn" onclick="runRegression()">Calcular</button>
+            </div>
+            <div class="anl-results" id="reg-results">
+              <div class="anl-eq" id="reg-eq"></div>
+              <div class="anl-metrics" id="reg-metrics"></div>
+              <div class="anl-pts-note" id="reg-note"></div>
+              <canvas id="anlChart"></canvas>
+            </div>
+          </div>
+
+          <!-- LAGRANGE -->
+          <div class="anl-pane" id="pane-lagrange">
+            <div class="anl-row">
+              <span class="anl-label">Serie</span>
+              <select class="anl-sel" id="lag-series"></select>
+              <button class="anl-btn" onclick="runLagrange()">Calcular polinomio</button>
+            </div>
+            <div class="anl-results" id="lag-results">
+              <div class="anl-eq" id="lag-eq"></div>
+              <div class="anl-metrics" id="lag-metrics"></div>
+              <div class="lagrange-eval">
+                <span class="anl-label">Evaluar en x =</span>
+                <input class="anl-input" type="number" id="lag-x" placeholder="valor de x" step="any">
+                <button class="anl-btn" onclick="evalLagrange()">→ f(x)</button>
+                <div class="lagrange-eval-result" id="lag-result"></div>
+              </div>
+              <canvas id="lagChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Confirm modal -->
+    <div class="mbg" id="mbg" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <h2 id="modal-title">¿Borrar todo?</h2>
+        <p id="modal-body">Se eliminarán todos los puntos. Los cronómetros se reiniciarán. Las series se conservan.</p>
+        <div class="modal-btns">
+          <button class="btn" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-r" id="modal-confirm" onclick="modalConfirmCb&&modalConfirmCb()">Sí, borrar</button>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- ══════════════════════════════════════════════
+       OPENLAB
+  ══════════════════════════════════════════════ -->
+  <div id="app-openlab" class="hidden-mode">
+    <!-- ── COMPAT WARNING (shown before session modal if issues found) ── -->
+    <div id="compat-modal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>⚠ Advertencias de compatibilidad</h3>
+        </div>
+        <div id="compat-issues" class="compat-issues"></div>
+        <button class="btn-primary" id="compat-continue" style="background:var(--amber);color:#0d0e12;">
+          Entendido, continuar →
+        </button>
+      </div>
+    </div>
+
+    <!-- ── SESSION MODAL ── -->
+    <div id="modal-overlay" class="modal-overlay active">
+      <div class="modal">
+        <div class="modal-logo">⬡</div>
+        <h2 class="modal-title">OpenLab</h2>
+        <p class="modal-sub">// EDITOR CIENTÍFICO</p>
+        <div class="modal-tabs">
+          <button class="modal-tab active" id="tab-btn-create">Crear sala</button>
+          <button class="modal-tab" id="tab-btn-join">Unirse</button>
+        </div>
+        <div id="tab-create" class="modal-panel active">
+          <div class="form-group">
+            <label>Tu nombre</label>
+            <input type="text" id="create-name" placeholder="Investigador A" maxlength="32" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Contraseña (cifra el contenido)</label>
+            <input type="password" id="create-pass" placeholder="Opcional" autocomplete="new-password">
+          </div>
+          <button class="btn-primary" id="btn-create">Crear sala →</button>
+        </div>
+        <div id="tab-join" class="modal-panel">
+          <div class="form-group">
+            <label>Tu nombre</label>
+            <input type="text" id="join-name" placeholder="Investigador B" maxlength="32" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Código de sala</label>
+            <input type="text" id="join-room" placeholder="ABC123" maxlength="8"
+              style="text-transform:uppercase;letter-spacing:.1em;" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="join-pass" placeholder="Si se configuró" autocomplete="current-password">
+          </div>
+          <button class="btn-primary" id="btn-join">Unirse →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EXPORT MODAL ── -->
+    <div id="export-modal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Exportar documento</h3>
+          <button class="modal-close" id="close-export">✕</button>
+        </div>
+        <div class="export-opts">
+          <button class="export-btn" id="exp-md">📄 Descargar Markdown (.md)</button>
+          <button class="export-btn" id="exp-html">🌐 Descargar HTML renderizado</button>
+          <button class="export-btn" id="exp-print">🖨 Imprimir / Guardar como PDF</button>
+        </div>
+        <div class="hash-box">
+          <div class="hash-label">SHA-256 del documento</div>
+          <div id="doc-hash" class="hash-value">calculando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MAIN APP ── -->
+    <div id="app" class="app" style="display:none;">
+      <header class="topbar">
+        <div class="topbar-logo">⬡ <span>OpenLab</span></div>
+        <div class="topbar-sep"></div>
+        <div class="room-badge">
+          <span class="room-label">sala</span>
+          <span id="room-code-display" class="room-code">——</span>
+        </div>
+        <button id="btn-copy-room" class="btn-icon" title="Copiar enlace de sala">⎘</button>
+        <div class="topbar-sep"></div>
+        <div id="peers-bar" class="peers-bar"></div>
+        <div class="topbar-right">
+          <button id="btn-export-open" class="btn-small">↓ Exportar</button>
+          <div id="role-chip" class="role-chip role-observer">observer</div>
+        </div>
+      </header>
+
+      <div class="main-area">
+        <!-- LEFT PANEL -->
+        <div class="panel-left" id="panel-left">
+          <div class="panel-tabs" id="left-tabs">
+            <button class="ptab active" data-panel="editor-view">✏ Texto</button>
+            <button class="ptab" data-panel="board-view">◻ Pizarra</button>
+            <div class="tab-spacer"></div>
+            <div class="toolbar" id="editor-toolbar">
+              <button class="tool-btn" data-action="bold" onmousedown="event.preventDefault()"><b>B</b></button>
+              <button class="tool-btn" data-action="italic" onmousedown="event.preventDefault()"><i>I</i></button>
+              <button class="tool-btn" data-action="code" onmousedown="event.preventDefault()">`</button>
+              <div class="tool-sep"></div>
+              <button class="tool-btn" data-action="h1" onmousedown="event.preventDefault()">H1</button>
+              <button class="tool-btn" data-action="h2" onmousedown="event.preventDefault()">H2</button>
+              <button class="tool-btn" data-action="h3" onmousedown="event.preventDefault()">H3</button>
+              <div class="tool-sep"></div>
+              <button class="tool-btn" data-action="math-inline" onmousedown="event.preventDefault()">$</button>
+              <button class="tool-btn" data-action="math-block" onmousedown="event.preventDefault()">$$</button>
+              <div class="tool-sep"></div>
+              <button class="tool-btn" data-action="table" onmousedown="event.preventDefault()">⊞</button>
+              <button class="tool-btn" data-action="ul" onmousedown="event.preventDefault()">≡</button>
+              <button class="tool-btn" data-action="hr" onmousedown="event.preventDefault()">—</button>
+            </div>
+            <div class="board-tools hidden" id="board-toolbar">
+              <button class="btool active" data-btool="pen">✒</button>
+              <button class="btool" data-btool="line">╱</button>
+              <button class="btool" data-btool="rect">▭</button>
+              <button class="btool" data-btool="circle">○</button>
+              <button class="btool" data-btool="arrow">→</button>
+              <button class="btool" data-btool="text">T</button>
+              <button class="btool" data-btool="eraser">⌫</button>
+              <div class="tool-sep"></div>
+              <input type="color" id="board-color" value="#4ade80" class="color-picker">
+              <input type="range" id="board-width" min="1" max="20" value="2" class="width-slider">
+              <div class="tool-sep"></div>
+              <button class="btool" id="btn-clear-board">✕ Limpiar</button>
+            </div>
+          </div>
+
+          <div id="editor-view" class="view-content">
+            <div class="editor-wrap">
+              <textarea id="editor-textarea" class="editor-textarea" spellcheck="false"
+                placeholder="# Título&#10;&#10;Escribe en **Markdown** + LaTeX: $E = mc^2$"></textarea>
+              <div id="remote-cursors" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
+            </div>
+          </div>
+
+          <div id="board-view" class="view-content hidden">
+            <div class="board-wrap" id="board-wrap">
+              <canvas id="board-canvas" class="board-canvas"></canvas>
+              <input type="text" id="board-text-input" class="board-text-input" placeholder="Escribir...">
+            </div>
+          </div>
+        </div>
+
+        <div id="resize-handle" class="resize-handle"></div>
+
+        <!-- RIGHT PANEL -->
+        <div class="panel-right" id="panel-right">
+          <div class="panel-tabs">
+            <button class="ptab active" data-panel="preview-view">👁 Vista previa</button>
+            <button class="ptab" data-panel="chat-view">
+              💬 Chat <span id="chat-badge" class="badge hidden">0</span>
+            </button>
+            <button class="ptab" data-panel="peers-view">👥 Peers</button>
+            <button class="ptab" data-panel="pr-view">
+              ⤵ Propuestas <span id="pr-badge" class="badge badge-amber hidden">0</span>
+            </button>
+          </div>
+
+          <!-- Preview -->
+          <div id="preview-view" class="view-content">
+            <div class="preview-wrap">
+              <div id="preview-content">
+                <p class="preview-empty">La vista previa aparecerá mientras escribes...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat -->
+          <div id="chat-view" class="view-content hidden">
+            <div class="chat-wrap">
+              <div id="chat-messages" class="chat-messages"></div>
+              <div id="typing-indicator" class="typing-indicator"></div>
+              <div class="chat-input-area">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Mensaje... (Enter para enviar)"
+                  maxlength="500" autocomplete="off">
+                <button id="btn-send" class="btn-send">↑</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Peers -->
+          <div id="peers-view" class="view-content hidden">
+            <!-- Host-only policy panel -->
+            <div id="host-policy-panel" class="host-policy hidden">
+              <div>
+                <label>
+                  <input type="checkbox" id="chk-revoke-on-disconnect">
+                  Revocar co-liderazgo si me desconecto
+                </label>
+                <div class="host-policy-note">El post-líder pasará a editor automáticamente</div>
+              </div>
+            </div>
+            <div class="peers-wrap" id="peers-list"></div>
+          </div>
+
+          <!-- Pull Requests -->
+          <div id="pr-view" class="view-content hidden">
+            <div class="pr-wrap" id="pr-list">
+              <p class="pr-empty">No hay propuestas de cambio aún.</p>
+            </div>
+            <!-- Compose panel (editors/co-hosts see this) -->
+            <div id="pr-compose-panel" class="pr-compose-panel hidden">
+              <textarea id="pr-text" class="pr-textarea"
+                placeholder="Texto que propones agregar o reemplazar..."></textarea>
+              <input type="text" id="pr-summary" class="pr-summary-input"
+                placeholder="Descripción breve del cambio (obligatoria)" maxlength="140">
+              <div class="pr-compose-actions">
+                <button class="btn-primary" id="pr-submit" style="width:auto;padding:8px 20px;margin-top:0;">Enviar
+                  propuesta ↑</button>
+                <button class="btn-small" id="pr-cancel">Cancelar</button>
+              </div>
+            </div>
+            <div id="pr-new-bar" class="pr-new-bar hidden">
+              <button class="btn-small" id="pr-new-btn" style="width:100%;justify-content:center;">
+                + Nueva propuesta de cambio
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <span class="autosave-dot" id="autosave-dot"></span>
+        <div id="status-dot" class="status-dot disconnected"></div>
+        <span id="status-text">Desconectado</span>
+        <span class="status-sep">·</span>
+        <span id="status-peers">0 peers</span>
+        <span class="status-sep">·</span>
+        <span id="word-count" class="word-count">0 palabras</span>
+        <div class="status-right">
+          <span id="status-save" style="color:var(--txt3);">Guardado local</span>
+          <span class="status-sep">·</span>
+          <span id="status-hash" class="status-hash"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared elements -->
   <div class="toast" id="toast"></div>
-  <input type="file" id="csvImport" accept=".csv,text/csv">
+  <input type="file" id="csvImport" accept=".csv,text/csv" style="display:none;">
 
+  <!-- Shared init script (captcha + switcher) -->
+  <script>
+
+    // ── MODE SWITCHER ──────────────────────────────────────────────
+    function switchMode(mode) {
+      const grf = document.getElementById('app-graficadora');
+      const opl = document.getElementById('app-openlab');
+      const tGrf = document.getElementById('sw-graficadora');
+      const tOpl = document.getElementById('sw-openlab');
+      if (mode === 'graficadora') {
+        grf.classList.remove('hidden-mode'); opl.classList.add('hidden-mode');
+        tGrf.classList.add('active'); tOpl.classList.remove('active');
+        document.body.className = document.body.className.replace(/mode-\S+/g, '').trim() + ' mode-graficadora';
+      } else {
+        opl.classList.remove('hidden-mode'); grf.classList.add('hidden-mode');
+        tOpl.classList.add('active'); tGrf.classList.remove('active');
+        document.body.className = document.body.className.replace(/mode-\S+/g, '').trim() + ' mode-openlab';
+      }
+    }
+    document.body.classList.add('mode-graficadora');
+
+    // ── SHARED CAPTCHA ─────────────────────────────────────────────
+    (function () {
+      var overlay = document.getElementById('captcha-overlay');
+      var qEl = document.getElementById('captcha-question');
+      var input = document.getElementById('captcha-input');
+      var btn = document.getElementById('captcha-btn');
+      var errEl = document.getElementById('captcha-error');
+      var refresh = document.getElementById('captcha-refresh');
+      if (!overlay) return;
+      // Openlab session modal: hide until captcha passes
+      var sessionModal = document.getElementById('modal-overlay');
+      if (sessionModal) sessionModal.classList.remove('active');
+
+      var answer = 0;
+      var ops = [
+        function () { var a = rnd(2, 12), b = rnd(2, 12); answer = a * b; return a + ' × ' + b; },
+        function () { var b = rnd(2, 9), a = b * rnd(2, 9); answer = a / b; return a + ' ÷ ' + b; },
+        function () { var a = rnd(10, 50), b = rnd(5, a); answer = a - b; return a + ' − ' + b; },
+        function () { var a = rnd(10, 60), b = rnd(5, 30); answer = a + b; return a + ' + ' + b; },
+      ];
+      function rnd(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+      function newChallenge() {
+        var fn = ops[Math.floor(Math.random() * ops.length)];
+        qEl.textContent = fn() + ' = ?';
+        input.value = ''; input.classList.remove('error', 'ok'); errEl.textContent = ''; input.focus();
+      }
+      function verify() {
+        var val = parseInt(input.value, 10);
+        if (isNaN(val)) { shake('Ingresá un número'); return; }
+        if (val !== answer) { shake('Incorrecto — intentá de nuevo'); newChallenge(); return; }
+        input.classList.add('ok'); btn.textContent = '✓ Acceso concedido'; btn.disabled = true;
+        setTimeout(function () {
+          overlay.classList.add('hiding');
+          setTimeout(function () {
+            overlay.remove();
+            if (sessionModal) sessionModal.classList.add('active');
+          }, 420);
+        }, 500);
+      }
+      function shake(msg) { errEl.textContent = msg; input.classList.add('error'); setTimeout(function () { input.classList.remove('error'); }, 400); }
+      btn.addEventListener('click', verify);
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') verify(); });
+      refresh.addEventListener('click', newChallenge);
+      newChallenge();
+    })();
+
+  </script>
+
+  <!-- External deps for OpenLab -->
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+
+  <!-- Graficadora JS -->
   <script>
     // ═══════════════════════════════════════════════════
     //  NUMBER PARSER
@@ -1711,74 +4309,7 @@
     function seriesGetSec(s) { return +((s.elapsed + (s.t0 !== null ? performance.now() - s.t0 : 0)) / 1000).toFixed(2); }
     function fmtMs(ms) { const s = ms / 1000; return s < 100 ? s.toFixed(1) + 's' : Math.round(s) + 's'; }
 
-    // ═══════════════════════════════════════════════════
-    //  MIC ENUMERATION
-    // ═══════════════════════════════════════════════════
-    async function enumMics() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => null);
-        if (stream) stream.getTracks().forEach(t => t.stop());
-        const devs = await navigator.mediaDevices.enumerateDevices();
-        S.mics = devs.filter(d => d.kind === 'audioinput')
-          .map(d => ({ deviceId: d.deviceId || 'default', label: d.label || 'Micrófono' }));
-      } catch (e) { S.mics = []; }
-      S.series.filter(s => s.active).forEach(s => refreshMicDropdown(s.id));
-    }
-    function refreshMicDropdown(sid) {
-      const row = document.getElementById('microw-' + sid);
-      const sel = document.getElementById('micsel-' + sid);
-      if (!row || !sel) return;
-      const multi = S.mics.length > 1;
-      row.classList.toggle('hidden', !multi);
-      if (!multi) return;
-      const cur = sel.value || 'default';
-      sel.innerHTML = S.mics.map(m => `<option value="${esc(m.deviceId)}"${m.deviceId === cur ? ' selected' : ''}>${esc(m.label.replace(/\s*\(.*?\)\s*$/, '').trim() || 'Micrófono')}</option>`).join('');
-    }
-
-    // ═══════════════════════════════════════════════════
-    //  SPEECH RECOGNITION
-    // ═══════════════════════════════════════════════════
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    function makeRec(sid) {
-      if (!SR) return null;
-      const r = new SR();
-      r.lang = 'es-ES'; r.continuous = true; r.interimResults = true;
-      r.onresult = e => {
-        let inter = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          const tx = e.results[i][0].transcript.trim();
-          if (e.results[i].isFinal) onFinal(sid, tx); else inter = tx;
-        }
-        if (inter) setHeard(sid, inter, 'interim');
-      };
-      r.onerror = e => {
-        if (e.error !== 'no-speech') {
-          const s = S.series.find(s => s.id === sid);
-          showToast(`Error (${s?.name || sid}): ${e.error}`, 'err');
-          stopRec(sid);
-        }
-      };
-      r.onend = () => { const s = S.series.find(s => s.id === sid); if (s && s.rec) { try { r.start(); } catch (_) { } } };
-      return r;
-    }
-    function startRec(sid) {
-      const s = S.series.find(s => s.id === sid); if (!s) return;
-      if (!SR) { showToast('Reconocimiento no disponible. Usa Chrome/Edge.', 'err'); return; }
-      if (!s.recObj) s.recObj = makeRec(sid);
-      s.rec = true; seriesStartTimer(s);
-      try { s.recObj.start(); } catch (_) { }
-      updateRecBtn(sid); updateGlobal();
-    }
-    function stopRec(sid) {
-      const s = S.series.find(s => s.id === sid); if (!s) return;
-      s.rec = false; seriesPauseTimer(s);
-      try { s.recObj?.stop(); } catch (_) { }
-      s.recObj = null;
-      updateRecBtn(sid); setHeard(sid, 'Di solo el número…', ''); updateGlobal();
-      if (!S.series.some(s => s.rec)) stopTimerLoop();
-    }
-    function toggleRec(sid) { const s = S.series.find(s => s.id === sid); if (s) s.rec ? stopRec(sid) : startRec(sid); }
-    function stopAll() { S.series.forEach(s => { if (s.rec) stopRec(s.id); }); }
+    function stopAll() { }
 
     // ═══════════════════════════════════════════════════
     //  MULTI-VALUE DISPATCH
@@ -1817,8 +4348,8 @@
       const color = colorArg != null ? colorArg : (ci ? ci.value : '#4ade80');
       if (!name) { showToast('Escribe un nombre para la serie', 'warn'); return; }
       S.series.push({
-        id: 's' + Date.now(), name, color, active: false, activatedAt: 0, micId: 'default',
-        rec: false, recObj: null, t0: null, elapsed: 0
+        id: 's' + Date.now(), name, color, active: false, activatedAt: 0,
+        t0: null, elapsed: 0
       });
       if (ni) ni.value = '';
       render(); advancePalette();
@@ -1834,7 +4365,7 @@
       if (s.active) {
         s.activatedAt = Date.now();
         S.actOrder = [...S.actOrder.filter(id => id !== sid), sid];
-        render(); refreshMicDropdown(sid); startRec(sid);
+        render();
       } else {
         S.actOrder = S.actOrder.filter(id => id !== sid);
         stopRec(sid); render();
@@ -1929,61 +4460,35 @@
         <button class="sc-del" onclick="event.stopPropagation();deleteSeries('${s.id}')" title="Eliminar serie">×</button>
       </div>
       <div class="sc-det">
-        <div class="mic-row hidden" id="microw-${s.id}">
-          <label>🎙 Micro</label>
-          <select class="mic-sel" id="micsel-${s.id}"
-            onchange="(()=>{const x=S.series.find(s=>s.id==='${s.id}');if(x)x.micId=this.value;})()"></select>
-        </div>
         <div class="sc-btmrow">
-          <button class="recbtn${s.rec ? ' on' : ''}" id="recbtn-${s.id}" style="--c:${s.color}"
-            onclick="toggleRec('${s.id}')">
-            ${s.rec ? icoPause + ' Pausar' : icoMic + ' Grabar'}
-          </button>
-          <div class="mbars${s.rec ? ' on' : ''}" id="bars-${s.id}" style="--c:${s.color}">
-            <div class="mb"></div><div class="mb"></div><div class="mb"></div>
-            <div class="mb"></div><div class="mb"></div><div class="mb"></div>
-          </div>
+          <input class="sc-numInput" id="input-${s.id}" type="number" step="any" placeholder="Valor…"
+            style="--c:${s.color}"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addValueFromInput('${s.id}')}">
+          <button class="recbtn" style="--c:${s.color}" onclick="addValueFromInput('${s.id}')">+ Agregar</button>
           <button class="sc-action" onclick="event.stopPropagation();resetSeriesTimer('${s.id}')" title="Resetear cronómetro">${icoReset}</button>
           <button class="sc-action" onclick="event.stopPropagation();undoSeries('${s.id}')" title="Deshacer último punto">${icoUndo}</button>
           <button class="sc-action danger" onclick="event.stopPropagation();clearSeries('${s.id}')" title="Limpiar serie">${icoClear}</button>
           <button class="sc-action export" onclick="event.stopPropagation();exportSeries('${s.id}')" title="Exportar serie CSV">${icoExport}</button>
         </div>
-        <div class="sc-heard" id="heard-${s.id}">Di solo el número…</div>
       </div>
     `;
         grid.appendChild(div);
       });
     }
 
-    function updateRecBtn(sid) {
-      const s = S.series.find(s => s.id === sid);
-      const btn = document.getElementById('recbtn-' + sid);
-      const bars = document.getElementById('bars-' + sid);
-      if (!btn || !s) return;
-      const icoMic = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>`;
-      const icoPause = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="6" width="4" height="12"/><rect x="14" y="6" width="4" height="12"/></svg>`;
-      btn.className = 'recbtn' + (s.rec ? ' on' : '');
-      btn.innerHTML = s.rec ? icoPause + ' Pausar' : icoMic + ' Grabar';
-      if (bars) bars.classList.toggle('on', s.rec);
-    }
-    function setHeard(sid, text, mode) {
-      const el = document.getElementById('heard-' + sid);
-      if (!el) return;
-      el.textContent = text; el.className = 'sc-heard' + (mode ? ' ' + mode : '');
+    function addValueFromInput(sid) {
+      const inp = document.getElementById('input-' + sid);
+      if (!inp) return;
+      const val = parseFloat(inp.value);
+      if (isNaN(val)) { showToast('Ingresa un número válido', 'warn'); inp.focus(); return; }
+      record(sid, val);
+      inp.value = '';
+      inp.focus();
     }
     function updateGlobal() {
-      const anyRec = S.series.some(s => s.rec);
       const actN = S.actOrder.length;
-      const hdot = document.getElementById('hdot');
-      const hstat = document.getElementById('hstatus');
-      const apill = document.getElementById('apill');
-      const acnt = document.getElementById('acnt');
       const stopb = document.getElementById('stopbtn');
-      if (hdot) hdot.classList.toggle('live', anyRec);
-      if (hstat) hstat.textContent = anyRec ? 'escuchando' : 'inactivo';
-      if (apill) apill.style.display = actN > 0 ? 'flex' : 'none';
-      if (acnt) acnt.textContent = actN;
-      if (stopb) stopb.disabled = !anyRec;
+      if (stopb) stopb.disabled = (actN === 0);
     }
 
     // ═══════════════════════════════════════════════════
@@ -2949,48 +5454,16 @@
         });
       }
 
-      // No speech recognition warning
-      if (!SR) {
-        const hdot = document.getElementById('hdot');
-        const hst = document.getElementById('hstatus');
-        if (hdot) { hdot.style.background = '#f87171'; hdot.classList.remove('live'); }
-        if (hst) hst.textContent = 'no soportado';
-      }
 
-      // ── CAPTCHA ──────────────────────────────────────────────────────
-      (function () {
-        const overlay = document.getElementById('captcha-overlay');
-        const qEl = document.getElementById('captcha-question');
-        const input = document.getElementById('captcha-input');
-        const btn = document.getElementById('captcha-btn');
-        const errEl = document.getElementById('captcha-error');
-        const refresh = document.getElementById('captcha-refresh');
-        if (!overlay) return;
-        let answer = 0;
-        const ops = [
-          () => { const a = rnd(2, 12), b = rnd(2, 12); answer = a * b; return `${a} × ${b}`; },
-          () => { const b = rnd(2, 9), a = b * rnd(2, 9); answer = a / b; return `${a} ÷ ${b}`; },
-          () => { const a = rnd(10, 50), b = rnd(5, a); answer = a - b; return `${a} − ${b}`; },
-          () => { const a = rnd(10, 60), b = rnd(5, 30); answer = a + b; return `${a} + ${b}`; },
-        ];
-        function rnd(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
-        function newChallenge() { const fn = ops[Math.floor(Math.random() * ops.length)]; qEl.textContent = fn() + ' = ?'; input.value = ''; input.classList.remove('error', 'ok'); errEl.textContent = ''; input.focus(); }
-        function verify() { const val = parseInt(input.value, 10); if (isNaN(val)) { shake('Ingresá un número'); return; } if (val !== answer) { shake('Incorrecto — intentá de nuevo'); newChallenge(); return; } input.classList.add('ok'); btn.textContent = '✓ Acceso concedido'; btn.disabled = true; setTimeout(() => { overlay.classList.add('hiding'); setTimeout(() => overlay.remove(), 420); }, 500); }
-        function shake(msg) { errEl.textContent = msg; input.classList.add('error'); setTimeout(() => input.classList.remove('error'), 400); }
-        btn.addEventListener('click', verify);
-        input.addEventListener('keydown', e => { if (e.key === 'Enter') verify(); });
-        refresh.addEventListener('click', newChallenge);
-        newChallenge();
-      })();
-      // ─────────────────────────────────────────────────────────────────
+
+      // [captcha: shared block]
 
       // Default series
       addSeries('Serie A', '#4ade80');
       addSeries('Serie B', '#a78bfa');
       advancePalette();
 
-      enumMics();
-      navigator.mediaDevices?.addEventListener('devicechange', enumMics);
+
 
       // Debounced resize — mobile browsers fire resize constantly as address bar hides/shows.
       // Only redraw if the WIDTH changed; ignore height-only changes (address bar).
@@ -3012,7 +5485,1573 @@
         );
       }
     });
+
   </script>
+
+  <!-- OpenLab JS (ES module) -->
+  <script type="module">
+
+    'use strict'
+
+    /* ═══════════════════════════════════════════════════════════════════
+       CONFIG
+    ═══════════════════════════════════════════════════════════════════ */
+    const CONFIG = Object.freeze({
+      AUTOSAVE_MS: 3000,
+      // Múltiples servidores de señalización para resiliencia P2P
+      SIGNALING: [
+        'wss://y-webrtc-eu.fly.dev',
+        'wss://y-webrtc-ug.fly.dev',
+        'wss://y-webrtc.fly.dev',
+      ],
+      PEER_COLORS: ['#4ade80', '#60a5fa', '#a78bfa', '#fbbf24', '#f87171', '#34d399', '#fb923c', '#e879f9'],
+      DEFAULT_DOC: `# Nuevo documento científico
+
+Bienvenido a **LabColab** — editor colaborativo descentralizado.
+
+## Cómo usar
+
+- Escribe en **Markdown** con soporte para tablas, código y listas
+- Ecuaciones inline: $E = mc^2$
+- Ecuaciones en bloque:
+
+$$\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\varepsilon_0}$$
+
+## Tabla de ejemplo
+
+| Parámetro | Símbolo | Valor |
+|:---|:---:|---:|
+| Constante de Planck | $h$ | $6.626 \\times 10^{-34}$ J·s |
+| Velocidad de la luz | $c$ | $2.998 \\times 10^8$ m/s |
+`,
+    })
+
+    /* ═══════════════════════════════════════════════════════════════════
+       UTILS  — funciones puras sin efectos secundarios
+    ═══════════════════════════════════════════════════════════════════ */
+    // Nota: la destructuring se hace DESPUÉS de definir Utils (ver línea de abajo del módulo)
+
+    const Utils = (() => {
+      const $ = id => document.getElementById(id)
+
+      const rand = (n = 16) => {
+        let s = ''
+        while (s.length < n) s += Math.random().toString(36).slice(2)
+        return s.slice(0, n).toUpperCase()
+      }
+      const genId = () => rand(8) + '-' + rand(4) + '-' + rand(4)
+      const genRoom = () => rand(3) + rand(3)
+
+      const hashStr = s => s.split('').reduce((h, c) => (Math.imul(31, h) + c.charCodeAt(0)) | 0, 0)
+      const peerColor = id => CONFIG.PEER_COLORS[Math.abs(hashStr(id)) % CONFIG.PEER_COLORS.length]
+      const initials = name => name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '??'
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
+      const escHtml = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+      const debounce = (fn, delay) => {
+        let t
+        return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay) }
+      }
+
+      const applyDiff = (yt, oldStr, newStr, doc) => {
+        let i = 0, j = oldStr.length, k = newStr.length
+        while (i < j && i < k && oldStr[i] === newStr[i]) i++
+        while (j > i && k > i && oldStr[j - 1] === newStr[k - 1]) { j--; k-- }
+        doc.transact(() => {
+          if (j > i) yt.delete(i, j - i)
+          if (k > i) yt.insert(i, newStr.slice(i, k))
+        }, 'local')
+      }
+
+      const sha256 = async text => {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
+      }
+
+      const download = (filename, content, mime = 'text/plain') => {
+        const a = document.createElement('a')
+        const url = URL.createObjectURL(new Blob([content], { type: mime }))
+        a.href = url; a.download = filename; a.style.display = 'none'
+        document.body.appendChild(a); a.click()
+        setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a) }, 300)
+      }
+
+      return {
+        $, rand, genId, genRoom, peerColor, initials, clamp, escHtml,
+        debounce, applyDiff, sha256, download
+      }
+    })()
+
+    const { $, rand, genId, genRoom, peerColor, initials, clamp, escHtml,
+      debounce, applyDiff, sha256, download } = Utils
+    const State = (() => {
+      const _s = {
+        peerId: null, name: 'Anónimo', role: 'observer', roomId: null,
+        connected: false,
+        leftPanel: 'editor-view', rightPanel: 'preview-view',
+        unread: 0, prUnread: 0, _lastRoleTs: 0,
+        revokeOnDisconnect: false,
+        coHostPeerId: null,
+        boardTool: 'pen', boardColor: '#4ade80', boardWidth: 2,
+        drawing: false, activeStroke: null, strokes: [],
+      }
+      const get = key => _s[key]
+      const set = (k, v) => { _s[k] = v }
+      const patch = obj => Object.assign(_s, obj)
+      return { get, set, patch }
+    })()
+    const Bus = (() => {
+      const _L = {}
+      const on = (ev, cb) => { (_L[ev] = _L[ev] || []).push(cb) }
+      const off = (ev, cb) => { if (_L[ev]) _L[ev] = _L[ev].filter(f => f !== cb) }
+      const emit = (ev, d) => { (_L[ev] || []).forEach(cb => { try { cb(d) } catch (e) { console.error('Bus', ev, e) } }) }
+      return { on, off, emit }
+    })()
+    const Compat = (() => {
+      const check = () => {
+        const issues = []
+        if (window.innerWidth < 768)
+          issues.push({
+            level: 'warning', icon: '📱', title: 'Pantalla angosta',
+            msg: 'LabColab está optimizado para pantallas ≥ 768 px. La interfaz puede quedar recortada en dispositivos móviles.'
+          })
+        if (!window.crypto?.subtle)
+          issues.push({
+            level: 'error', icon: '🔓', title: 'Sin cifrado disponible',
+            msg: 'WebCrypto no está disponible. Abre la app en HTTPS, no HTTP. El cifrado extremo a extremo no funcionará.'
+          })
+        if (!window.RTCPeerConnection)
+          issues.push({
+            level: 'error', icon: '📡', title: 'WebRTC no disponible',
+            msg: 'Tu navegador no soporta WebRTC. La colaboración en tiempo real no funcionará. Prueba Chrome 90+, Firefox 88+ o Safari 15+.'
+          })
+        if (!window.indexedDB)
+          issues.push({
+            level: 'warning', icon: '💾', title: 'Sin persistencia local',
+            msg: 'IndexedDB no disponible (¿modo privado?). El documento no se guardará localmente entre sesiones.'
+          })
+        const ua = navigator.userAgent
+        if (/Trident|MSIE/.test(ua))
+          issues.push({
+            level: 'error', icon: '🚫', title: 'Internet Explorer no compatible',
+            msg: 'LabColab requiere Chrome 90+, Firefox 88+, Safari 15+ o Edge 90+.'
+          })
+        else if (/Edge\/\d+/.test(ua) && !/Edg\//.test(ua))
+          issues.push({
+            level: 'warning', icon: '⚠', title: 'Edge Legacy detectado',
+            msg: 'Se recomienda actualizar a Microsoft Edge (Chromium) para mejor experiencia.'
+          })
+        return issues
+      }
+
+      // Muestra el modal de compat si hay issues; resuelve la promesa al cerrar
+      const showIfNeeded = () => {
+        const issues = check()
+        if (!issues.length) return Promise.resolve()
+        return new Promise(resolve => {
+          const container = $('compat-issues')
+          container.innerHTML = ''
+          issues.forEach(({ level, icon, title, msg }) => {
+            const d = document.createElement('div')
+            d.className = 'compat-issue compat-' + level
+            d.innerHTML = `<span class="compat-icon">${icon}</span>
+          <div><div class="compat-title">${title}</div><div class="compat-msg">${msg}</div></div>`
+            container.appendChild(d)
+          })
+          $('compat-modal').classList.add('active')
+          $('compat-continue').addEventListener('click', () => {
+            $('compat-modal').classList.remove('active')
+            resolve()
+          }, { once: true })
+        })
+      }
+
+      return { check, showIfNeeded }
+    })()
+    const UI = (() => {
+      // ── Toast ──────────────────────────────────────────────────────
+      let _toastT = null
+      const toast = (msg, dur = 2800) => {
+        const el = $('toast')
+        el.textContent = msg; el.classList.add('show')
+        clearTimeout(_toastT)
+        _toastT = setTimeout(() => el.classList.remove('show'), dur)
+      }
+
+      // ── Connection ─────────────────────────────────────────────────
+      const setConnectionStatus = status => {
+        $('status-dot').className = 'status-dot ' + (status === 'connecting' ? 'connecting' : status === 'connected' ? 'connected' : 'disconnected')
+        $('status-text').textContent = {
+          connected: 'Conectado (WebRTC)',
+          error: 'Sin conexión — modo local',
+          connecting: 'Conectando vía WebRTC...',
+          disconnected: 'Desconectado',
+          error: 'Error de conexión',
+        }[status] ?? status
+      }
+
+      // ── Autosave dot (F1) ──────────────────────────────────────────
+      let _saveFlash = null
+      const flashSave = ts => {
+        const dot = $('autosave-dot')
+        const lbl = $('status-save')
+        const t = new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        dot.classList.add('saving')
+        lbl.textContent = '✓ Guardado ' + t
+        clearTimeout(_saveFlash)
+        _saveFlash = setTimeout(() => {
+          dot.classList.remove('saving')
+          lbl.textContent = 'Guardado local'
+        }, 4000)
+      }
+
+      // ── Role chip ──────────────────────────────────────────────────
+      const ROLE_LABELS = { host: 'host', editor: 'editor', 'co-host': 'co-líder', observer: 'observer' }
+      const setRole = role => {
+        const chip = $('role-chip')
+        chip.className = 'role-chip role-' + role
+        chip.textContent = ROLE_LABELS[role] ?? role
+        const ta = $('editor-textarea')
+        ta.readOnly = role === 'observer'
+        ta.style.opacity = role === 'observer' ? '0.6' : '1'
+        // Host-policy panel visibility
+        $('host-policy-panel').classList.toggle('hidden', role !== 'host')
+        // PR compose bar: editors and co-hosts can propose
+        const canPropose = role === 'editor' || role === 'co-host'
+        $('pr-new-bar').classList.toggle('hidden', !canPropose)
+      }
+
+      // ── Metrics ────────────────────────────────────────────────────
+      const setWordCount = words => { $('word-count').textContent = words + ' palabras' }
+      const setHash = h => { $('status-hash').textContent = h ? 'SHA-256: ' + h.slice(0, 16) + '...' : '' }
+      const setPeers = n => { $('status-peers').textContent = n + (n === 1 ? ' peer' : ' peers') }
+      const setDocHash = h => { $('doc-hash').textContent = h }
+
+      // ── Chat badge ─────────────────────────────────────────────────
+      const setChatBadge = n => {
+        const b = $('chat-badge')
+        if (n > 0) { b.textContent = n > 9 ? '9+' : n; b.classList.remove('hidden') }
+        else b.classList.add('hidden')
+      }
+
+      // ── PR badge ───────────────────────────────────────────────────
+      const setPRBadge = n => {
+        const b = $('pr-badge')
+        if (n > 0) { b.textContent = n > 9 ? '9+' : n; b.classList.remove('hidden') }
+        else b.classList.add('hidden')
+      }
+
+      // ── Peers bar (topbar avatars) ─────────────────────────────────
+      const renderPeersBar = states => {
+        const bar = $('peers-bar'); bar.innerHTML = ''
+        let i = 0
+        states.forEach((state, id) => {
+          if (!state?.name || i >= 6) return; i++
+          const el = document.createElement('div')
+          el.className = 'peer-avatar'
+          el.style.background = state.color || peerColor(id.toString())
+          el.style.color = '#0d0e12'
+          el.textContent = initials(state.name)
+          el.title = state.name + (id.toString() === State.get('peerId') ? ' (tú)' : '')
+          bar.appendChild(el)
+        })
+      }
+
+      // ── Peers list ─────────────────────────────────────────────────
+      const renderPeersList = states => {
+        const list = $('peers-list'); list.innerHTML = ''
+        const myPeer = State.get('peerId')
+        const myRole = State.get('role')
+        const coHostId = State.get('coHostPeerId')
+        let count = 0
+
+        states.forEach((state, id) => {
+          if (!state?.name) return; count++
+          const cid = id.toString()
+          const isMe = cid === myPeer
+          const isCoH = cid === coHostId
+          const color = state.color || peerColor(cid)
+          const role = state.role || 'editor'
+
+          const div = document.createElement('div')
+          div.className = 'peer-item' + (isCoH ? ' peer-colead' : '')
+
+          const roleTag = isCoH
+            ? '<span class="peer-role-tag" style="color:var(--amber);border-color:rgba(251,191,36,.35)">co-líder</span>'
+            : role === 'host'
+              ? '<span class="peer-role-tag" style="color:var(--accent);border-color:rgba(74,222,128,.3)">host</span>'
+              : ''
+
+          const coLeadBtn = (myRole === 'host' && !isMe)
+            ? `<button class="peer-action-btn${isCoH ? ' colead-active' : ''}"
+             onclick="App.toggleCoHost('${cid}')" title="${isCoH ? 'Quitar co-liderazgo' : 'Designar como post-líder'}">
+             ${isCoH ? '★ Post-líder' : '☆ Post-líder'}
+           </button>` : ''
+
+          const hostActions = (myRole === 'host' && !isMe)
+            ? `<button class="peer-action-btn" onclick="App.setRole('${cid}','editor')">Editor</button>
+           <button class="peer-action-btn" onclick="App.setRole('${cid}','observer')">Obs.</button>
+           ${coLeadBtn}` : ''
+
+          div.innerHTML = `
+        <div class="peer-dot" style="background:${color}"></div>
+        <div class="peer-info">
+          <div class="peer-name">${escHtml(state.name)}${roleTag}${isMe ? '<span style="color:var(--txt3);font-size:11px;"> (tú)</span>' : ''}</div>
+          <div class="peer-status">${role} · ${isMe ? 'local' : 'remoto'}</div>
+        </div>
+        ${hostActions ? '<div class="peer-actions">' + hostActions + '</div>' : ''}
+      `
+          list.appendChild(div)
+        })
+
+        setPeers(states.has(myPeer) ? count : count + 1)
+        renderTypingIndicator(states)
+      }
+
+      // ── Typing indicator ───────────────────────────────────────────
+      const renderTypingIndicator = states => {
+        const myPeer = State.get('peerId')
+        const typing = []
+        states.forEach((s, id) => {
+          if (id.toString() !== myPeer && s?.typing && s?.name) typing.push(s.name.split(' ')[0])
+        })
+        $('typing-indicator').textContent = typing.length
+          ? typing.slice(0, 2).join(', ') + ' está escribiendo...' : ''
+      }
+
+      // ── Chat message ───────────────────────────────────────────────
+      const appendChatMsg = msg => {
+        const c = $('chat-messages')
+        const atBottom = c.scrollHeight - c.scrollTop - c.clientHeight < 40
+        if (msg.type === 'system') {
+          const el = document.createElement('div')
+          el.className = 'chat-sys'; el.textContent = msg.text; c.appendChild(el)
+        } else {
+          const isOwn = msg.peerId === State.get('peerId')
+          const div = document.createElement('div')
+          div.className = 'chat-msg' + (isOwn ? ' own' : '')
+          const time = new Date(msg.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          div.innerHTML = `
+        <div class="msg-meta">
+          <span class="msg-author" style="color:${msg.color || 'var(--accent)'}">${escHtml(msg.name || '?')}</span>
+          <span>${time}</span>
+        </div>
+        <div class="msg-bubble">${escHtml(msg.text)}</div>`
+          c.appendChild(div)
+          if (State.get('rightPanel') !== 'chat-view' && !isOwn) {
+            const u = State.get('unread') + 1
+            State.set('unread', u); setChatBadge(u)
+          }
+        }
+        if (atBottom) c.scrollTop = c.scrollHeight
+      }
+
+      // ── PR list (F2) ───────────────────────────────────────────────
+      const renderPRList = prs => {
+        const wrap = $('pr-list'); wrap.innerHTML = ''
+        const myPeer = State.get('peerId')
+        const myRole = State.get('role')
+        const canAct = myRole === 'host' || myRole === 'co-host'
+
+        if (!prs?.length) {
+          wrap.innerHTML = '<p class="pr-empty">No hay propuestas de cambio aún.</p>'; return
+        }
+        ;[...prs].sort((a, b) => b.ts - a.ts).forEach(pr => {
+          const isOwn = pr.authorId === myPeer
+          const isPend = pr.status === 'pending'
+          const badgeCls = { pending: 's-pending', accepted: 's-accepted', rejected: 's-rejected' }[pr.status]
+          const badgeTxt = { pending: 'pendiente', accepted: 'aceptada', rejected: 'rechazada' }[pr.status]
+          const div = document.createElement('div')
+          div.className = 'pr-item pr-' + pr.status
+          div.innerHTML = `
+        <div class="pr-header">
+          <span class="pr-author" style="color:${peerColor(pr.authorId)}">${escHtml(pr.authorName)}</span>
+          <span class="pr-status-badge ${badgeCls}">${badgeTxt}</span>
+          <span class="pr-ts">${new Date(pr.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+        <div class="pr-summary">${escHtml(pr.summary)}</div>
+        <pre class="pr-text-preview">${escHtml(pr.text)}</pre>
+        <div class="pr-footer">
+          ${canAct && isPend
+              ? `<button class="pr-btn pr-btn-accept" onclick="App.acceptPR('${pr.id}')">✅ Aceptar</button>
+               <button class="pr-btn pr-btn-reject" onclick="App.rejectPR('${pr.id}')">❌ Rechazar</button>`
+              : ''}
+          ${isOwn ? '<span class="pr-own">Tu propuesta</span>' : ''}
+        </div>`
+          wrap.appendChild(div)
+        })
+      }
+
+      // ── Panel switching ────────────────────────────────────────────
+      const switchPanel = (target, side) => {
+        const panelId = side === 'left' ? 'panel-left' : 'panel-right'
+        const panel = $(panelId)
+        panel.querySelectorAll('[data-panel]').forEach(b =>
+          b.classList.toggle('active', b.dataset.panel === target))
+        panel.querySelectorAll('.view-content').forEach(v =>
+          v.classList.toggle('hidden', v.id !== target))
+        if (side === 'left') {
+          State.set('leftPanel', target)
+          $('editor-toolbar').classList.toggle('hidden', target !== 'editor-view')
+          $('board-toolbar').classList.toggle('hidden', target !== 'board-view')
+        } else {
+          State.set('rightPanel', target)
+          if (target === 'chat-view') {
+            State.set('unread', 0); setChatBadge(0)
+            $('chat-messages').scrollTop = $('chat-messages').scrollHeight
+            $('chat-input').focus()
+          }
+          if (target === 'pr-view') {
+            State.set('prUnread', 0); setPRBadge(0)
+          }
+        }
+        Bus.emit('panel:switched', { target, side })
+      }
+
+      // ── App show ───────────────────────────────────────────────────
+      const showApp = roomId => {
+        $('modal-overlay').classList.remove('active')
+        $('room-code-display').textContent = roomId
+        const app = $('app'); app.style.display = 'flex'
+        setTimeout(() => app.classList.add('visible'), 50)
+        setConnectionStatus('connecting')
+        const url = new URL(location.href)
+        url.searchParams.set('room', roomId)
+        history.pushState({}, '', url)
+      }
+
+      const renderPreview = html => {
+        $('preview-content').innerHTML = html ||
+          '<p class="preview-empty">La vista previa aparecerá mientras escribes...</p>'
+      }
+
+      // ── Bus subscriptions ──────────────────────────────────────────
+      Bus.on('connection:status', ({ status }) => setConnectionStatus(status))
+      Bus.on('editor:wordcount', ({ words }) => setWordCount(words))
+      Bus.on('editor:hash', ({ hash }) => setHash(hash))
+      Bus.on('editor:saved', ({ ts }) => flashSave(ts))
+      Bus.on('role:changed', ({ role }) => setRole(role))
+      Bus.on('chat:message', ({ msg }) => appendChatMsg(msg))
+      Bus.on('preview:rendered', ({ html }) => renderPreview(html))
+      Bus.on('pr:rendered', ({ prs }) => renderPRList(prs))
+      Bus.on('pr:badge', ({ count }) => setPRBadge(count))
+      Bus.on('colead:changed', () => {
+        const states = Awareness.getStates()
+        renderPeersBar(states); renderPeersList(states)
+      })
+      Bus.on('awareness:changed', ({ states }) => {
+        renderPeersBar(states); renderPeersList(states)
+      })
+
+      return { toast, showApp, switchPanel, setDocHash, setRole, renderPRList, renderPeersBar }
+    })()
+    const Crypto = (() => {
+      let _key = null
+      const init = async (password, roomId) => {
+        const enc = new TextEncoder()
+        const mat = await crypto.subtle.importKey('raw', enc.encode(password || 'labcolab-default'),
+          { name: 'PBKDF2' }, false, ['deriveKey'])
+        _key = await crypto.subtle.deriveKey(
+          { name: 'PBKDF2', salt: enc.encode('labcolab-' + roomId), iterations: 100000, hash: 'SHA-256' },
+          mat, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt'])
+      }
+      const encrypt = async data => {
+        if (!_key) return data instanceof Uint8Array
+          ? data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) : data
+        const iv = crypto.getRandomValues(new Uint8Array(12))
+        const buf = data instanceof Uint8Array
+          ? data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) : data
+        const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, _key, buf)
+        const out = new Uint8Array(12 + ct.byteLength)
+        out.set(iv, 0); out.set(new Uint8Array(ct), 12); return out.buffer
+      }
+      const decrypt = async data => {
+        if (!_key) return data
+        try {
+          const buf = data instanceof ArrayBuffer ? data : await data.arrayBuffer()
+          const arr = new Uint8Array(buf)
+          return await crypto.subtle.decrypt({ name: 'AES-GCM', iv: arr.slice(0, 12) }, _key, arr.slice(12))
+        } catch { return null }
+      }
+      return { init, encrypt, decrypt }
+    })()
+    /* ═══════════════════════════════════════════════════════════════════
+       YJS  — CRDT + y-webrtc (WebRTC P2P, señalización pública) + y-indexeddb
+       
+       y-webrtc conecta peers directamente vía WebRTC usando
+       wss://y-webrtc-eu.fly.dev como señalizador público.
+       No requiere configurar ningún servidor propio.
+       El awareness (presencia de peers) está incluido en y-webrtc.
+    ═══════════════════════════════════════════════════════════════════ */
+    const Yjs = (() => {
+      let _Y, _WebrtcProvider, _IndexeddbPersistence
+      let _doc, _text, _strokes, _chat, _session, _meta, _undo
+      let _provider   // WebrtcProvider instance
+      let _idb        // IndexeddbPersistence instance
+
+      // ── Load libraries ──────────────────────────────────────────
+      const load = async () => {
+        try {
+          const ym = await import('https://esm.sh/yjs@13.6.18?bundle')
+          _Y = ym.default ? { ...ym.default, ...ym } : ym
+
+          const wm = await import('https://esm.sh/y-webrtc@10.3.0?deps=yjs@13.6.18&bundle')
+          _WebrtcProvider = wm.WebrtcProvider
+
+          const im = await import('https://esm.sh/y-indexeddb@9.0.12?deps=yjs@13.6.18&bundle')
+          _IndexeddbPersistence = im.IndexeddbPersistence
+
+          return true
+        } catch (e) {
+          console.error('Error cargando Yjs / y-webrtc:', e)
+          return false
+        }
+      }
+
+      // ── Init ─────────────────────────────────────────────────────
+      const init = async (roomId, password, isHost) => {
+        if (!await load()) {
+          toast('Error cargando librerías de colaboración.')
+          Bus.emit('connection:status', { status: 'disconnected' })
+          return false
+        }
+
+        _doc = new _Y.Doc()
+        _text = _doc.getText('editor')
+        _strokes = _doc.getArray('strokes')
+        _chat = _doc.getArray('chat')
+        _session = _doc.getMap('session')
+        _meta = _doc.getMap('meta')
+
+        // peerId = string de clientID numérico de Yjs
+        State.set('peerId', String(_doc.clientID))
+
+        // ── IndexedDB persistence ──────────────────────────────────
+        _idb = new _IndexeddbPersistence('labcolab-' + roomId, _doc)
+        _idb.whenSynced.then(() => {
+          if (isHost && _text.length === 0)
+            _doc.transact(() => _text.insert(0, CONFIG.DEFAULT_DOC), 'init')
+          Bus.emit('yjs:synced')
+        })
+
+        // ── WebRTC provider ────────────────────────────────────────
+        // La sala se identifica con roomId + hash del password para aislar salas
+        const roomKey = password ? roomId + '-' + await _hashRoom(password) : roomId
+        _provider = new _WebrtcProvider(roomKey, _doc, {
+          signaling: CONFIG.SIGNALING,  // múltiples servidores para resiliencia
+          password: password || null,
+          maxConns: 20,
+        })
+
+        // ── Connection watchdog: reemite estado awareness si la conexión cae ──
+        setInterval(() => {
+          if (!_provider) return
+          const nowConnected = _provider.connected
+          Bus.emit('connection:status', { status: nowConnected ? 'connected' : 'connecting' })
+          State.set('connected', nowConnected)
+          // Refrescar awareness local para que otros peers lo reciban al reconectar
+          if (!nowConnected) {
+            try {
+              const aw = _provider.awareness
+              const cur = aw.getLocalState()
+              if (cur) aw.setLocalState({ ...cur })
+            } catch (_e) { }
+          }
+        }, 5000)
+
+        // ── Awareness (incluida en y-webrtc) ──────────────────────
+        const awareness = _provider.awareness
+
+        // Establecer estado local de awareness con nombre y rol
+        awareness.setLocalState({
+          name: State.get('name'),
+          role: State.get('role'),
+          color: Utils.peerColor(String(_doc.clientID)),
+          cursor: null,
+          boardStroke: null,
+        })
+
+        // Propagar cambios de awareness al Bus
+        awareness.on('change', () => {
+          const states = new Map()
+          awareness.getStates().forEach((state, clientId) => {
+            if (state && state.name) states.set(String(clientId), state)
+          })
+          Bus.emit('awareness:changed', { states })
+        })
+
+        // ── Conexión ──────────────────────────────────────────────
+        _provider.on('status', ({ connected }) => {
+          Bus.emit('connection:status', { status: connected ? 'connected' : 'connecting' })
+          State.set('connected', connected)
+          if (connected) clearTimeout(_connTimeout)
+        })
+
+        Bus.emit('connection:status', { status: 'connecting' })
+
+        // Timeout: if still not connected after 12s, show error and work locally
+        const _connTimeout = setTimeout(() => {
+          if (!State.get('connected')) {
+            Bus.emit('connection:status', { status: 'error' })
+            toast('Sin conexión P2P — funcionando en modo local.')
+          }
+        }, 12000)
+
+        setTimeout(() => {
+          if (!State.get('connected'))
+            Bus.emit('connection:status', { status: _provider.connected ? 'connected' : 'connecting' })
+        }, 2000)
+
+        // ── UndoManager ───────────────────────────────────────────
+        _undo = new _Y.UndoManager(_text, { captureTimeout: 500 })
+
+        // ── Host: init session map ─────────────────────────────────
+        if (isHost) {
+          _session.set('host', String(_doc.clientID))
+          _session.set('hostName', State.get('name'))
+          _session.set('created', Date.now())
+          _session.set('hostPolicy', { revokeOnDisconnect: false })
+          _meta.set('title', 'Nuevo documento')
+        }
+
+        // Emit initial awareness so peers bar shows immediately
+        setTimeout(() => {
+          const states = new Map()
+          awareness.getStates().forEach((state, clientId) => {
+            if (state && state.name) states.set(String(clientId), state)
+          })
+          Bus.emit('awareness:changed', { states })
+        }, 100)
+
+        return true
+      }
+
+      // ── Awareness helpers (used by Editor, Chat, etc.) ───────────
+      const getAwareness = () => _provider?.awareness
+
+      const setLocalAwarenessField = (field, value) => {
+        const aw = _provider?.awareness
+        if (!aw) return
+        const cur = aw.getLocalState() || {}
+        aw.setLocalState({ ...cur, [field]: value })
+      }
+
+      const setLocalAwarenessState = state => {
+        _provider?.awareness?.setLocalState(state)
+      }
+
+      const getAwarenessStates = () => {
+        const states = new Map()
+        _provider?.awareness?.getStates().forEach((state, clientId) => {
+          if (state && state.name) states.set(String(clientId), state)
+        })
+        return states
+      }
+
+      // ── Hash room+password for isolation ────────────────────────
+      const _hashRoom = async password => {
+        const buf = await crypto.subtle.digest(
+          'SHA-256', new TextEncoder().encode(password + ':labcolab'))
+        return Array.from(new Uint8Array(buf)).slice(0, 4)
+          .map(b => b.toString(16).padStart(2, '0')).join('')
+      }
+
+      // ── Role signals ──────────────────────────────────────────────
+      const watchRoleSignals = () => {
+        if (!_session) return
+        _session.observe(ev => {
+          if (ev.keysChanged.has('roleSignals')) {
+            const sigs = _session.get('roleSignals') || {}
+            const myId = String(_doc.clientID)
+            const sig = sigs[myId]
+            if (sig && sig.ts > State.get('_lastRoleTs')) {
+              State.set('_lastRoleTs', sig.ts)
+              State.set('role', sig.role)
+              Bus.emit('role:changed', { role: sig.role })
+              setLocalAwarenessField('role', sig.role)
+              toast('Tu rol cambió a: ' + sig.role)
+            }
+          }
+          if (ev.keysChanged.has('coHost')) {
+            const coHost = _session.get('coHost')
+            State.set('coHostPeerId', coHost ? coHost.peerId : null)
+            Bus.emit('colead:changed', coHost)
+            if (coHost && coHost.peerId === State.get('peerId')) {
+              State.set('role', 'co-host')
+              Bus.emit('role:changed', { role: 'co-host' })
+              setLocalAwarenessField('role', 'co-host')
+              toast('⭐ Eres el nuevo post-líder')
+            }
+            if (!coHost && State.get('role') === 'co-host') {
+              State.set('role', 'editor')
+              Bus.emit('role:changed', { role: 'editor' })
+              setLocalAwarenessField('role', 'editor')
+              toast('Co-liderazgo revocado — eres editor')
+            }
+          }
+          if (ev.keysChanged.has('hostPolicy')) {
+            const pol = _session.get('hostPolicy') || {}
+            State.set('revokeOnDisconnect', !!pol.revokeOnDisconnect)
+            const chk = $('chk-revoke-on-disconnect')
+            if (chk) chk.checked = !!pol.revokeOnDisconnect
+          }
+        })
+      }
+
+      // ── Watch host presence (F5) ──────────────────────────────────
+      const watchHostPresence = () => {
+        Bus.on('awareness:changed', ({ states }) => {
+          if (!_session) return
+          const hostId = _session.get('host')
+          const coHost = _session.get('coHost')
+          const myPeer = State.get('peerId')
+          if (!hostId || !coHost || coHost.peerId !== myPeer) return
+          if (!State.get('revokeOnDisconnect')) return
+          const hostPresent = states.has(hostId)
+          if (!hostPresent && State.get('role') === 'co-host') {
+            State.set('role', 'editor')
+            Bus.emit('role:changed', { role: 'editor' })
+            setLocalAwarenessField('role', 'editor')
+            toast('⚠ Host desconectado — co-liderazgo revocado automáticamente')
+          }
+        })
+      }
+
+      // ── Assign role ───────────────────────────────────────────────
+      const setRole = (clientId, role) => {
+        if (State.get('role') !== 'host' || !_session) return
+        const sigs = _session.get('roleSignals') || {}
+        sigs[String(clientId)] = { role, ts: Date.now() }
+        _session.set('roleSignals', { ...sigs })
+        toast('Rol asignado: ' + role)
+      }
+
+      // ── Toggle co-host (F4) ───────────────────────────────────────
+      const toggleCoHost = clientId => {
+        if (State.get('role') !== 'host' || !_session) return
+        const current = _session.get('coHost')
+        const cid = String(clientId)
+        if (current && current.peerId === cid) {
+          _session.set('coHost', null)
+          setRole(cid, 'editor')
+          toast('Co-liderazgo revocado')
+        } else {
+          if (current) setRole(current.peerId, 'editor')
+          const states = getAwarenessStates()
+          const name = states.get(cid)?.name ?? 'Desconocido'
+          _session.set('coHost', { peerId: cid, name, ts: Date.now() })
+          setRole(cid, 'co-host')
+          toast('Post-líder designado: ' + name)
+        }
+      }
+
+      // ── Host policy (F5) ─────────────────────────────────────────
+      const setHostPolicy = revokeOnDisconnect => {
+        if (State.get('role') !== 'host' || !_session) return
+        State.set('revokeOnDisconnect', revokeOnDisconnect)
+        _session.set('hostPolicy', { revokeOnDisconnect })
+        toast(revokeOnDisconnect
+          ? '🔒 Co-líder perderá permisos si te desconectas'
+          : '🔓 Co-líder mantiene permisos aunque te desconectes')
+      }
+
+      // ── Accessors ─────────────────────────────────────────────────
+      const getText = () => _text
+      const getStrokes = () => _strokes
+      const getChat = () => _chat
+      const getDoc = () => _doc
+      const getUndo = () => _undo
+      const getSession = () => _session
+
+      return {
+        init, watchRoleSignals, watchHostPresence,
+        setRole, toggleCoHost, setHostPolicy,
+        getText, getStrokes, getChat, getDoc, getUndo, getSession,
+        getAwareness, getAwarenessStates,
+        setLocalAwarenessField, setLocalAwarenessState,
+      }
+    })()
+
+    /* ═══════════════════════════════════════════════════════════════════
+       AWARENESS  — thin wrapper sobre y-webrtc awareness
+       Mantiene la interfaz que usan Editor, Chat, Board, etc.
+    ═══════════════════════════════════════════════════════════════════ */
+    const Awareness = (() => {
+      const getStates = () => Yjs.getAwarenessStates()
+      const setLocalState = state => Yjs.setLocalAwarenessState(state)
+      const setLocalField = (field, value) => Yjs.setLocalAwarenessField(field, value)
+      return { getStates, setLocalState, setLocalField }
+    })()
+    const Editor = (() => {
+      let _last = '', _sel = { start: 0, end: 0 }, _cursorRaf = null
+
+      const _ta = () => $('editor-textarea')
+      const _saveSel = () => { const t = _ta(); _sel = { start: t.selectionStart, end: t.selectionEnd } }
+      const _getSel = () => document.activeElement === _ta()
+        ? { s: _ta().selectionStart, e: _ta().selectionEnd }
+        : { s: _sel.start, e: _sel.end }
+
+      const _apply = (newFull, ss, se) => {
+        const ta = _ta(); ta.value = newFull; ta.focus(); ta.setSelectionRange(ss, se)
+        const yt = Yjs.getText(); const doc = Yjs.getDoc()
+        if (yt && doc) { try { applyDiff(yt, _last, newFull, doc) } catch (e) { console.warn(e) } }
+        _last = newFull; _metrics()
+      }
+
+      const wrapSelection = (before, after) => {
+        const ta = _ta(); const { s, e } = _getSel()
+        const sel = ta.value.slice(s, e) || 'texto'
+        const full = ta.value.slice(0, s) + before + sel + after + ta.value.slice(e)
+        _apply(full, s + before.length, s + before.length + sel.length)
+      }
+
+      const insertAtCursor = text => {
+        const ta = _ta(); const { s, e } = _getSel()
+        _apply(ta.value.slice(0, s) + text + ta.value.slice(e), s + text.length, s + text.length)
+      }
+
+      // Throttle cursor broadcasts via RAF: evita saturar awareness en cada tecla
+      const _broadcastCursor = () => {
+        if (!State.get('peerId')) return
+        if (_cursorRaf) return
+        _cursorRaf = requestAnimationFrame(() => {
+          _cursorRaf = null
+          Awareness.setLocalField('cursor', { pos: _ta().selectionStart, name: State.get('name') })
+        })
+      }
+
+      const _debouncedHash = debounce(async () => {
+        const h = await sha256(Yjs.getText()?.toString() ?? '')
+        Bus.emit('editor:hash', { hash: h }); return h
+      }, 2000)
+
+      // F1: autosave every 3 s if document changed
+      let _lastSaved = ''
+      const _debouncedSave = debounce(() => {
+        const cur = _ta().value
+        if (cur === _lastSaved) return
+        _lastSaved = cur
+        Bus.emit('editor:saved', { ts: Date.now() })
+      }, CONFIG.AUTOSAVE_MS)
+
+      const _metrics = () => {
+        const text = (_ta().value || '').replace(/[#*_`$\[\]]/g, '').trim()
+        Bus.emit('editor:wordcount', { words: text ? text.split(/\s+/).length : 0 })
+        _debouncedHash()
+        Bus.emit('editor:changed', { value: _ta().value })
+        _debouncedSave()
+      }
+
+      const getHash = async () => {
+        const h = await sha256(Yjs.getText()?.toString() ?? '')
+        Bus.emit('editor:hash', { hash: h }); return h
+      }
+
+      const _syncFromYjs = () => {
+        const ta = _ta(); const _t2 = Yjs.getText(); if (!_t2) return; const nv = _t2.toString()
+        if (ta.value === nv) return
+        const ss = ta.selectionStart, se = ta.selectionEnd
+        ta.value = nv; _last = nv
+        ta.setSelectionRange(clamp(ss, 0, nv.length), clamp(se, 0, nv.length))
+        _metrics()
+      }
+
+      const setup = () => {
+        const ta = _ta()
+        const _yt = Yjs.getText(); if (_yt) _yt.observe(ev => { if (ev.transaction.origin !== 'local') _syncFromYjs() })
+        Bus.on('yjs:synced', _syncFromYjs)
+
+        // F3: textarea → Yjs for ALL non-observer roles
+        ta.addEventListener('input', () => {
+          _saveSel()
+          if (State.get('role') === 'observer') return
+          if (!Yjs.getText()) return
+          const nv = ta.value
+          applyDiff(Yjs.getText(), _last, nv, Yjs.getDoc())
+          _last = nv; _metrics(); _broadcastCursor()
+        })
+
+        ta.addEventListener('focus', _saveSel)
+        ta.addEventListener('keyup', () => { _saveSel(); _broadcastCursor() })
+        ta.addEventListener('click', () => { _saveSel(); _broadcastCursor() })
+        ta.addEventListener('select', () => { _saveSel(); _broadcastCursor() })
+
+        ta.addEventListener('keydown', e => {
+          _saveSel()
+          if (e.ctrlKey || e.metaKey) {
+            if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); Yjs.getUndo()?.undo() }
+            if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) { e.preventDefault(); Yjs.getUndo()?.redo() }
+            if (e.key === 'b') { e.preventDefault(); wrapSelection('**', '**') }
+            if (e.key === 'i') { e.preventDefault(); wrapSelection('*', '*') }
+            if (e.key === 'k') { e.preventDefault(); wrapSelection('$', '$') }
+            if (e.key === 's') { e.preventDefault(); toast('✓ Guardado localmente') }
+          }
+          if (e.key === 'Tab') {
+            e.preventDefault()
+            const s = ta.selectionStart
+            _apply(ta.value.slice(0, s) + '  ' + ta.value.slice(ta.selectionEnd), s + 2, s + 2)
+          }
+        })
+
+        // Editor toolbar
+        document.querySelectorAll('[data-action]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (State.get('role') === 'observer') return
+            const A = {
+              'bold': () => wrapSelection('**', '**'),
+              'italic': () => wrapSelection('*', '*'),
+              'code': () => wrapSelection('`', '`'),
+              'h1': () => insertAtCursor('\n# '),
+              'h2': () => insertAtCursor('\n## '),
+              'h3': () => insertAtCursor('\n### '),
+              'math-inline': () => wrapSelection('$', '$'),
+              'math-block': () => insertAtCursor('\n\n$$\n\n$$\n\n'),
+              'ul': () => insertAtCursor('\n- '),
+              'hr': () => insertAtCursor('\n---\n'),
+              'table': () => insertAtCursor('\n| Col 1 | Col 2 | Col 3 |\n|:---|:---:|---:|\n| Dato | Dato | Dato |\n'),
+            }
+            A[btn.dataset.action]?.()
+          })
+        })
+      }
+
+      return { setup, wrapSelection, insertAtCursor, getHash }
+    })()
+    const Preview = (() => {
+      marked.setOptions({ breaks: true, gfm: true })
+      const mkM = i => '\x02MATH' + i + '\x03'
+      const mkC = i => '\x02CODE' + i + '\x03'
+
+      const render = md => {
+        if (!md?.trim()) return ''
+        const math = [], code = []
+        let s = md.replace(/(```[\s\S]*?```|`[^`]+`)/g, m => { const i = code.length; code.push(m); return mkC(i) })
+        s = s.replace(/\$\$([\s\S]+?)\$\$/g, (_, l) => { const i = math.length; math.push({ l, d: true }); return '\n\n' + mkM(i) + '\n\n' })
+        s = s.replace(/(?<!\\)\$([^$\n]+?)\$/g, (_, l) => { const i = math.length; math.push({ l, d: false }); return mkM(i) })
+        code.forEach((c, i) => { s = s.split(mkC(i)).join(c) })
+        let html = marked.parse(s)
+        math.forEach(({ l, d }, i) => {
+          try {
+            const r = katex.renderToString(l.trim(), { displayMode: d, throwOnError: false, strict: false })
+            html = html.split(mkM(i)).join(d ? '</p><div class="katex-display">' + r + '</div><p>' : r)
+          } catch { html = html.split(mkM(i)).join('<span class="math-error">[LaTeX: ' + escHtml(l) + ']</span>') }
+        })
+        return html.replace(/<p>\s*<\/p>/g, '')
+      }
+
+      const setup = () => {
+        Bus.on('editor:changed', ({ value }) =>
+          Bus.emit('preview:rendered', { html: render(value) }))
+        Bus.on('yjs:synced', () => {
+          const ta = document.getElementById('editor-textarea')
+          if (ta) Bus.emit('preview:rendered', { html: render(ta.value) })
+        })
+      }
+
+      return { setup, render }
+    })()
+    const Board = (() => {
+      let _c, _ctx, _dpr = 1, _init = false, _peers = {}, _raf = null, _awarenessRaf = null
+
+      const _sched = () => { if (!_raf) _raf = requestAnimationFrame(() => { _raf = null; _draw() }) }
+
+      const _draw = () => {
+        if (!_ctx) return
+        const w = _c.width / _dpr, h = _c.height / _dpr
+        _ctx.fillStyle = '#0d0e12'; _ctx.fillRect(0, 0, w, h)
+        _ctx.fillStyle = '#1a1c24'
+        for (let x = 20; x < w; x += 20) for (let y = 20; y < h; y += 20) {
+          _ctx.beginPath(); _ctx.arc(x, y, .7, 0, Math.PI * 2); _ctx.fill()
+        }
+        State.get('strokes').forEach(s => _stroke(s))
+        Object.values(_peers).forEach(s => { if (s) { _ctx.globalAlpha = .65; _stroke(s); _ctx.globalAlpha = 1 } })
+        const active = State.get('activeStroke')
+        if (active) _stroke(active)
+      }
+
+      const _stroke = s => {
+        if (!s?.tool) return
+        _ctx.save()
+        _ctx.strokeStyle = s.color || '#4ade80'; _ctx.fillStyle = s.color || '#4ade80'
+        _ctx.lineWidth = s.width || 2; _ctx.lineCap = 'round'; _ctx.lineJoin = 'round'
+        switch (s.tool) {
+          case 'pen': case 'eraser': _pen(s.points); break
+          case 'line': _ctx.beginPath(); _ctx.moveTo(s.x1, s.y1); _ctx.lineTo(s.x2, s.y2); _ctx.stroke(); break
+          case 'rect': _ctx.strokeRect(Math.min(s.x1, s.x2), Math.min(s.y1, s.y2), Math.abs(s.x2 - s.x1), Math.abs(s.y2 - s.y1)); break
+          case 'circle': {
+            const cx = (s.x1 + s.x2) / 2, cy = (s.y1 + s.y2) / 2, rx = Math.abs(s.x2 - s.x1) / 2, ry = Math.abs(s.y2 - s.y1) / 2
+            _ctx.beginPath(); _ctx.ellipse(cx, cy, Math.max(rx, 1), Math.max(ry, 1), 0, 0, Math.PI * 2); _ctx.stroke(); break
+          }
+          case 'arrow': {
+            _ctx.beginPath(); _ctx.moveTo(s.x1, s.y1); _ctx.lineTo(s.x2, s.y2); _ctx.stroke()
+            const a = Math.atan2(s.y2 - s.y1, s.x2 - s.x1), sz = Math.max(10, (s.width || 2) * 4)
+            _ctx.beginPath(); _ctx.moveTo(s.x2, s.y2)
+            _ctx.lineTo(s.x2 - sz * Math.cos(a - Math.PI / 6), s.y2 - sz * Math.sin(a - Math.PI / 6))
+            _ctx.lineTo(s.x2 - sz * Math.cos(a + Math.PI / 6), s.y2 - sz * Math.sin(a + Math.PI / 6))
+            _ctx.closePath(); _ctx.fill(); break
+          }
+          case 'text':
+            _ctx.font = (s.fontSize || 16) + "px 'Familjen Grotesk',sans-serif"
+            _ctx.fillText(s.text, s.x1, s.y1); break
+        }
+        _ctx.restore()
+      }
+
+      const _pen = pts => {
+        if (!pts || pts.length < 2) return
+        _ctx.beginPath(); _ctx.moveTo(pts[0][0], pts[0][1])
+        for (let i = 1; i < pts.length - 1; i++) {
+          const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2
+          _ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my)
+        }
+        _ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]); _ctx.stroke()
+      }
+
+      const _resize = () => {
+        if (!_c) return
+        _dpr = window.devicePixelRatio || 1
+        const wrap = $('board-wrap'), w = wrap.offsetWidth, h = wrap.offsetHeight
+        _c.width = w * _dpr; _c.height = h * _dpr
+        _c.style.width = w + 'px'; _c.style.height = h + 'px'
+        _ctx.scale(_dpr, _dpr); _draw()
+      }
+
+      const _pos = e => {
+        const r = _c.getBoundingClientRect()
+        return { x: e.clientX - r.left, y: e.clientY - r.top }
+      }
+
+      const _commit = () => {
+        const inp = $('board-text-input'), text = inp.value.trim(); inp.style.display = 'none'
+        if (!text) return
+        if (Yjs.getStrokes()) Yjs.getStrokes().push([{
+          id: genId(), tool: 'text', color: State.get('boardColor'), fontSize: 16, text,
+          x1: parseFloat(inp.dataset.x), y1: parseFloat(inp.dataset.y),
+          peerId: State.get('peerId'), peerName: State.get('name'), ts: Date.now()
+        }])
+      }
+
+      const _start = e => {
+        if (State.get('role') === 'observer') return
+        const { x, y } = _pos(e)
+        if (State.get('boardTool') === 'text') {
+          const inp = $('board-text-input')
+          inp.style.display = 'block'; inp.style.left = x + 'px'; inp.style.top = (y - 18) + 'px'
+          inp.dataset.x = x; inp.dataset.y = y; inp.value = ''; inp.focus(); return
+        }
+        State.set('drawing', true)
+        State.set('activeStroke', {
+          id: genId(), tool: State.get('boardTool'),
+          color: State.get('boardTool') === 'eraser' ? '#0d0e12' : State.get('boardColor'),
+          width: State.get('boardTool') === 'eraser' ? State.get('boardWidth') * 5 : State.get('boardWidth'),
+          peerId: State.get('peerId'), peerName: State.get('name'),
+          ts: Date.now(), points: [[x, y]], x1: x, y1: y, x2: x, y2: y
+        })
+      }
+
+      const _move = e => {
+        if (!State.get('drawing') || !State.get('activeStroke')) return
+        const { x, y } = _pos(e), s = State.get('activeStroke')
+        s.x2 = x; s.y2 = y
+        if (s.tool === 'pen' || s.tool === 'eraser') s.points.push([x, y])
+        // Throttle awareness via RAF: evita saturar la red en cada mousemove
+        if (!_awarenessRaf) {
+          _awarenessRaf = requestAnimationFrame(() => {
+            Awareness.setLocalField('boardStroke', { ...State.get('activeStroke') })
+            _awarenessRaf = null
+          })
+        }
+        _sched()
+      }
+
+      const _end = () => {
+        if (!State.get('drawing') || !State.get('activeStroke')) return
+        State.set('drawing', false)
+        const s = State.get('activeStroke'); State.set('activeStroke', null)
+        if ((s.tool === 'pen' || s.tool === 'eraser') && s.points.length < 2) return
+        if (s.tool !== 'pen' && s.tool !== 'eraser' && Math.abs(s.x2 - s.x1) < 4 && Math.abs(s.y2 - s.y1) < 4) return
+        if (Yjs.getStrokes()) Yjs.getStrokes().push([s])
+        Awareness.setLocalField('boardStroke', null)
+      }
+
+      const init = () => {
+        if (_init) { _resize(); return }; _init = true
+        _c = $('board-canvas'); _ctx = _c.getContext('2d'); _resize()
+        new ResizeObserver(_resize).observe($('board-wrap'))
+        _c.addEventListener('mousedown', _start)
+        _c.addEventListener('mousemove', _move)
+        _c.addEventListener('mouseup', _end)
+        _c.addEventListener('mouseleave', _end)
+        _c.addEventListener('touchstart', e => { e.preventDefault(); _start(e.touches[0]) }, { passive: false })
+        _c.addEventListener('touchmove', e => { e.preventDefault(); _move(e.touches[0]) }, { passive: false })
+        _c.addEventListener('touchend', e => { e.preventDefault(); _end() }, { passive: false })
+        $('board-text-input').addEventListener('keydown', e => {
+          if (e.key === 'Enter') _commit()
+          if (e.key === 'Escape') $('board-text-input').style.display = 'none'
+        })
+        const _strks = Yjs.getStrokes(); if (_strks) _strks.observe(() => {
+          State.set('strokes', Yjs.getStrokes().toArray().map(item => Array.isArray(item) ? item[0] : item))
+          _sched()
+        })
+        Bus.on('awareness:changed', ({ states }) => {
+          _peers = {}; const myId = State.get('peerId')
+          states.forEach((state, id) => { if (id.toString() !== myId && state?.boardStroke) _peers[id] = state.boardStroke })
+          _sched()
+        })
+      }
+
+      return { init, resize: _resize }
+    })()
+    const Chat = (() => {
+      let _tt = null
+      const send = () => {
+        const inp = $('chat-input'), text = inp.value.trim(); if (!text) return
+        const msg = {
+          id: genId(), peerId: State.get('peerId'), name: State.get('name'),
+          color: peerColor(State.get('peerId')), text, ts: Date.now()
+        }
+        if (Yjs.getChat()) Yjs.getChat().push([msg])
+        // Show own message immediately (observer skips own messages to avoid duplication)
+        Bus.emit('chat:message', { msg })
+        inp.value = ''; Awareness.setLocalField('typing', false)
+      }
+      const setup = () => {
+        // Observe chat array — fires for local and remote inserts
+        const _ch = Yjs.getChat(); if (_ch) _ch.observe(ev => {
+          ev.changes.delta.forEach(op => {
+            if (!op.insert) return
+            op.insert.forEach(item => {
+              const msg = Array.isArray(item) ? item[0] : item
+              // Avoid re-rendering own messages that were already sent via local push
+              if (msg && msg.peerId !== State.get('peerId')) {
+                Bus.emit('chat:message', { msg })
+              }
+            })
+          })
+        })
+        $('chat-input').addEventListener('input', () => {
+          if (!State.get('peerId')) return
+          Awareness.setLocalField('typing', true)
+          clearTimeout(_tt)
+          _tt = setTimeout(() => { if (State.get('peerId')) Awareness.setLocalField('typing', false) }, 2000)
+        })
+        $('btn-send').addEventListener('click', send)
+        $('chat-input').addEventListener('keydown', e => {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
+        })
+      }
+      return { setup }
+    })()
+    /* ═══════════════════════════════════════════════════════════════════
+       REMOTE CURSORS  — renderiza la posición de cursor de cada peer
+       en el textarea usando un mirror div para calcular coordenadas px
+    ═══════════════════════════════════════════════════════════════════ */
+    const RemoteCursors = (() => {
+      let _mirror = null
+
+      // Crea (o reutiliza) un div espejo invisible del textarea para medir posiciones de texto
+      const _getMirror = ta => {
+        if (_mirror && document.body.contains(_mirror)) {
+          _mirror.style.width = ta.offsetWidth + 'px'
+          _mirror.style.height = ta.offsetHeight + 'px'
+          return _mirror
+        }
+        const s = getComputedStyle(ta)
+        _mirror = document.createElement('div')
+          ;['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing',
+            'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+            'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth',
+            'tabSize', 'boxSizing'].forEach(p => { _mirror.style[p] = s[p] })
+        _mirror.style.position = 'absolute'
+        _mirror.style.visibility = 'hidden'
+        _mirror.style.overflow = 'hidden'
+        _mirror.style.top = '-9999px'
+        _mirror.style.left = '-9999px'
+        _mirror.style.whiteSpace = 'pre-wrap'
+        _mirror.style.wordBreak = 'break-word'
+        _mirror.style.width = ta.offsetWidth + 'px'
+        _mirror.style.height = ta.offsetHeight + 'px'
+        document.body.appendChild(_mirror)
+        return _mirror
+      }
+
+      // Devuelve coordenadas {x, y, h} en px para la posición de carácter `pos` en el textarea
+      const _coords = (ta, pos) => {
+        try {
+          const mirror = _getMirror(ta)
+          const safe = Math.min(Math.max(pos, 0), ta.value.length)
+          const pre = ta.value.slice(0, safe)
+          mirror.innerHTML = pre
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/\n/g, '<br>') + '<span id="_rc_mark">|</span>'
+          const mark = mirror.querySelector('#_rc_mark')
+          if (!mark) return null
+          const mRect = mirror.getBoundingClientRect()
+          const sRect = mark.getBoundingClientRect()
+          const taRect = ta.getBoundingClientRect()
+          return {
+            x: (sRect.left - taRect.left) + (ta.scrollLeft || 0),
+            y: (sRect.top - taRect.top) + (ta.scrollTop || 0),
+            h: sRect.height || 20,
+          }
+        } catch (_e) { return null }
+      }
+
+      let _rafId = null
+      const render = states => {
+        if (_rafId) cancelAnimationFrame(_rafId)
+        _rafId = requestAnimationFrame(() => {
+          _rafId = null
+          const container = $('remote-cursors')
+          const ta = $('editor-textarea')
+          if (!container || !ta) return
+          container.innerHTML = ''
+          if (State.get('leftPanel') !== 'editor-view') return
+          const myId = State.get('peerId')
+          states.forEach((state, id) => {
+            if (id.toString() === myId) return
+            const pos = state?.cursor?.pos
+            if (pos == null) return
+            const coords = _coords(ta, pos)
+            if (!coords) return
+            const color = state.color || peerColor(id.toString())
+            const name = (state.name || '?').split(' ')[0].slice(0, 14)
+            const line = document.createElement('div')
+            line.className = 'remote-cursor-line'
+            line.style.cssText = `left:${coords.x}px;top:${coords.y - (ta.scrollTop || 0)}px;height:${coords.h}px;background:${color};`
+            const lbl = document.createElement('div')
+            lbl.className = 'remote-cursor-label'
+            lbl.style.background = color
+            lbl.textContent = name
+            line.appendChild(lbl)
+            container.appendChild(line)
+          })
+        })
+      }
+
+      const setup = () => {
+        Bus.on('awareness:changed', ({ states }) => render(states))
+        $('editor-textarea')?.addEventListener('scroll', () => {
+          render(Awareness.getStates())
+        }, { passive: true })
+        Bus.on('panel:switched', () => {
+          if (State.get('leftPanel') === 'editor-view') render(Awareness.getStates())
+        })
+      }
+      return { setup, render }
+    })()
+    const PR = (() => {
+      // PRs stored as JSON string in ySession['pullRequests']
+      const _get = () => {
+        try { return JSON.parse(Yjs.getSession()?.get('pullRequests') || '[]') } catch { return [] }
+      }
+      const _save = prs => {
+        Yjs.getSession()?.set('pullRequests', JSON.stringify(prs))
+      }
+      const _refresh = prs => {
+        Bus.emit('pr:rendered', { prs })
+        const pending = prs.filter(p => p.status === 'pending').length
+        Bus.emit('pr:badge', { count: pending })
+        if (pending > 0 && State.get('rightPanel') !== 'pr-view') {
+          State.set('prUnread', pending)
+        }
+      }
+
+      const submit = (text, summary) => {
+        if (!text.trim()) { toast('Escribe el texto propuesto'); return }
+        if (!summary.trim()) { toast('Añade una descripción breve'); return }
+        const prs = _get()
+        prs.push({
+          id: genId(), authorId: State.get('peerId'), authorName: State.get('name'),
+          summary: summary.trim(), text: text.trim(), status: 'pending', ts: Date.now()
+        })
+        _save(prs); toast('Propuesta enviada ✓')
+      }
+
+      const accept = id => {
+        const role = State.get('role')
+        if (role !== 'host' && role !== 'co-host') return
+        const prs = _get(), pr = prs.find(p => p.id === id)
+        if (!pr || pr.status !== 'pending') return
+        pr.status = 'accepted'
+        const yt = Yjs.getText(), doc = Yjs.getDoc()
+        if (yt && doc) {
+          doc.transact(() => {
+            const cur = yt.toString()
+            yt.insert(yt.length, (cur.endsWith('\n') ? '' : '\n\n') + pr.text)
+          }, 'local')
+        }
+        _save(prs); toast('✅ Propuesta aceptada e insertada')
+      }
+
+      const reject = id => {
+        const role = State.get('role')
+        if (role !== 'host' && role !== 'co-host') return
+        const prs = _get(), pr = prs.find(p => p.id === id)
+        if (!pr || pr.status !== 'pending') return
+        pr.status = 'rejected'; _save(prs); toast('❌ Propuesta rechazada')
+      }
+
+      const setup = () => {
+        const session = Yjs.getSession(); if (!session) return
+
+        // Observe session for PR updates
+        session.observe(ev => {
+          if (ev.keysChanged.has('pullRequests')) _refresh(_get())
+        })
+        _refresh(_get())
+
+        // UI wiring
+        $('pr-new-btn').addEventListener('click', () => {
+          $('pr-compose-panel').classList.remove('hidden')
+          $('pr-new-bar').classList.add('hidden')
+        })
+        $('pr-cancel').addEventListener('click', () => {
+          $('pr-compose-panel').classList.add('hidden')
+          $('pr-new-bar').classList.remove('hidden')
+        })
+        $('pr-submit').addEventListener('click', () => {
+          submit($('pr-text').value, $('pr-summary').value)
+          $('pr-text').value = ''
+          $('pr-summary').value = ''
+          $('pr-compose-panel').classList.add('hidden')
+          $('pr-new-bar').classList.remove('hidden')
+        })
+      }
+
+      return { setup, accept, reject }
+    })()
+    const Export = (() => {
+      const setup = () => {
+        $('btn-export-open').addEventListener('click', async () => {
+          const h = await Editor.getHash(); UI.setDocHash(h)
+          $('export-modal').classList.add('active')
+        })
+        const close = () => $('export-modal').classList.remove('active')
+        $('close-export').addEventListener('click', close)
+        $('export-modal').addEventListener('click', e => { if (e.target === $('export-modal')) close() })
+        $('exp-md').addEventListener('click', () => {
+          download('labcolab-' + (State.get('roomId') || 'doc') + '-' + Date.now() + '.md',
+            Yjs.getText()?.toString() ?? '', 'text/markdown')
+          toast('Markdown descargado')
+        })
+        $('exp-html').addEventListener('click', async () => {
+          const h = await Editor.getHash()
+          const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<title>LabColab Export</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>body{font-family:Georgia,serif;max-width:800px;margin:40px auto;padding:0 24px;line-height:1.7;color:#222;}
+h1,h2,h3{margin-top:1.5em;}table{border-collapse:collapse;width:100%;}td,th{border:1px solid #ccc;padding:8px 12px;}
+pre{background:#f5f5f5;padding:12px;border-radius:4px;}footer{margin-top:40px;padding-top:16px;border-top:1px solid #ccc;font-size:11px;color:#888;}</style></head>
+<body>${$('preview-content').innerHTML}
+<footer>Sala: ${State.get('roomId')} · Exportado: ${new Date().toISOString()} · SHA-256: ${h}</footer>
+</body></html>`
+          download('labcolab-' + (State.get('roomId') || 'doc') + '.html', html, 'text/html')
+          toast('HTML descargado')
+        })
+        $('exp-print').addEventListener('click', () => window.print())
+      }
+      return { setup }
+    })()
+    /* ═══════════════════════════════════════════════════════════════════
+       SESSION  — orquesta inicio, conecta todos los módulos
+    ═══════════════════════════════════════════════════════════════════ */
+    const Session = (() => {
+      const start = async (roomId, password, isHost) => {
+        State.patch({ name: State.get('name'), role: isHost ? 'host' : 'editor', roomId })
+        UI.showApp(roomId)
+
+        if (!await Yjs.init(roomId, password, isHost)) return
+
+        Editor.setup()
+        Preview.setup()
+        Chat.setup()
+        RemoteCursors.setup()
+        Board.init()
+        Yjs.watchRoleSignals()
+        Yjs.watchHostPresence()
+        PR.setup()
+
+        // Pausa actualizaciones costosas cuando el tab está en segundo plano (Page Visibility API)
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden) {
+            // Al volver, refrescar estado de awareness para que otros peers nos detecten
+            const aw = Yjs.getAwareness()
+            if (aw) { const s = aw.getLocalState(); if (s) aw.setLocalState({ ...s }) }
+            Bus.emit('awareness:changed', { states: Awareness.getStates() })
+          }
+        })
+
+        Bus.emit('role:changed', { role: State.get('role') })
+
+        // Emit initial awareness so peers bar shows the local user immediately
+        setTimeout(() => {
+          Bus.emit('awareness:changed', { states: Awareness.getStates() })
+        }, 200)
+
+        setTimeout(() => {
+          Bus.emit('chat:message', {
+            msg: {
+              type: 'system',
+              text: 'Sala ' + roomId + ' — ' + (isHost ? 'creada' : 'unido') + ' como ' + State.get('name'),
+              ts: Date.now(),
+            }
+          })
+          toast(isHost ? 'Sala ' + roomId + ' creada ✓' : 'Unido a sala ' + roomId + ' ✓')
+        }, 500)
+      }
+      return { start }
+    })()
+
+    /* ═══════════════════════════════════════════════════════════════════
+       APP  — entry point, registra todos los event listeners de UI
+    ═══════════════════════════════════════════════════════════════════ */
+    const App = (() => {
+      // Exposed to window for inline onclick buttons in peers list
+      window.App = {
+        setRole: Yjs.setRole,
+        toggleCoHost: Yjs.toggleCoHost,
+        acceptPR: PR.accept,
+        rejectPR: PR.reject,
+      }
+
+      const _init = () => {
+        // ── Compat check ────────────────────────────────────────────
+        Compat.showIfNeeded()
+
+        // ── Modal tabs ───────────────────────────────────────────────
+        $('tab-btn-create').addEventListener('click', () => {
+          $('tab-btn-create').classList.add('active'); $('tab-btn-join').classList.remove('active')
+          $('tab-create').classList.add('active'); $('tab-join').classList.remove('active')
+        })
+        $('tab-btn-join').addEventListener('click', () => {
+          $('tab-btn-join').classList.add('active'); $('tab-btn-create').classList.remove('active')
+          $('tab-join').classList.add('active'); $('tab-create').classList.remove('active')
+        })
+
+        // ── Create ───────────────────────────────────────────────────
+        $('btn-create').addEventListener('click', () => {
+          const name = $('create-name').value.trim() || 'Investigador'
+          const pass = $('create-pass').value
+          State.patch({ name })
+          Session.start(genRoom(), pass, true)
+        })
+
+        // ── Join ─────────────────────────────────────────────────────
+        $('btn-join').addEventListener('click', () => {
+          const name = $('join-name').value.trim() || 'Investigador'
+          const room = $('join-room').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '')
+          const pass = $('join-pass').value
+          if (!room) { toast('Ingresa un código de sala'); return }
+          State.patch({ name })
+          Session.start(room, pass, false)
+        })
+
+          ;['create-name', 'create-pass'].forEach(id =>
+            $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-create').click() }))
+          ;['join-name', 'join-room', 'join-pass'].forEach(id =>
+            $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-join').click() }))
+
+        // ── Copy room link ───────────────────────────────────────────
+        $('btn-copy-room').addEventListener('click', () => {
+          const url = location.origin + location.pathname + '?room=' + State.get('roomId')
+          navigator.clipboard.writeText(url)
+            .then(() => toast('Enlace copiado'))
+            .catch(() => navigator.clipboard.writeText(State.get('roomId')).then(() => toast('Código copiado')))
+        })
+
+        // ── Export ───────────────────────────────────────────────────
+        Export.setup()
+
+        // ── Panel tabs ───────────────────────────────────────────────
+        document.querySelectorAll('[data-panel]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const target = btn.dataset.panel
+            const isLeft = btn.closest('.panel-tabs').closest('#panel-left') !== null
+            UI.switchPanel(target, isLeft ? 'left' : 'right')
+            Bus.emit('panel:switched', { panel: target, side: isLeft ? 'left' : 'right' })
+            if (isLeft && target === 'board-view') {
+              Board.init()
+              const c = $('board-canvas')
+              if (c) c.style.cursor = State.get('boardTool') === 'text' ? 'text' : 'crosshair'
+            }
+          })
+        })
+
+        // ── Board tools ──────────────────────────────────────────────
+        document.querySelectorAll('[data-btool]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-btool]').forEach(b => b.classList.remove('active'))
+            btn.classList.add('active'); State.set('boardTool', btn.dataset.btool)
+            const c = $('board-canvas')
+            if (c) c.style.cursor = State.get('boardTool') === 'text' ? 'text' : 'crosshair'
+          })
+        })
+        $('board-color').addEventListener('input', e => State.set('boardColor', e.target.value))
+        $('board-width').addEventListener('input', e => State.set('boardWidth', +e.target.value))
+        $('btn-clear-board').addEventListener('click', () => {
+          if (State.get('role') === 'observer') { toast('Sin permisos'); return }
+          if (!confirm('¿Limpiar toda la pizarra?')) return
+          const ys = Yjs.getStrokes()
+          if (ys) Yjs.getDoc().transact(() => ys.delete(0, ys.length))
+          State.set('strokes', []); toast('Pizarra limpiada')
+        })
+
+        // ── Host policy checkbox (F5) ─────────────────────────────────
+        $('chk-revoke-on-disconnect').addEventListener('change', e => {
+          Yjs.setHostPolicy(e.target.checked)
+        })
+
+        // ── Resize handle ────────────────────────────────────────────
+        let _rx = false, _rx0 = 0, _rw0 = 0
+        $('resize-handle').addEventListener('mousedown', e => {
+          _rx = true; _rx0 = e.clientX; _rw0 = $('panel-left').offsetWidth
+          $('resize-handle').classList.add('dragging')
+          document.body.style.userSelect = 'none'; document.body.style.cursor = 'col-resize'
+        })
+        document.addEventListener('mousemove', e => {
+          if (!_rx) return
+          $('panel-left').style.width = clamp(_rw0 + (e.clientX - _rx0), 280, window.innerWidth - 280) + 'px'
+        })
+        document.addEventListener('mouseup', () => {
+          if (!_rx) return; _rx = false
+          $('resize-handle').classList.remove('dragging')
+          document.body.style.userSelect = ''; document.body.style.cursor = ''
+          if (State.get('leftPanel') === 'board-view') Board.resize()
+        })
+
+        // ── Global shortcuts ─────────────────────────────────────────
+        document.addEventListener('keydown', e => {
+          if (!e.altKey) return
+          if (e.key === 'b') document.querySelector('[data-panel="board-view"]').click()
+          if (e.key === 'e') document.querySelector('[data-panel="editor-view"]').click()
+          if (e.key === 'c') document.querySelector('[data-panel="chat-view"]').click()
+          if (e.key === 'p') document.querySelector('[data-panel="pr-view"]').click()
+        })
+
+        // ── URL auto-fill ────────────────────────────────────────────
+        const urlRoom = new URLSearchParams(location.search).get('room')
+        if (urlRoom) {
+          $('tab-btn-join').click()
+          $('join-room').value = urlRoom.toUpperCase()
+          $('join-name').focus()
+        } else {
+          $('create-name').focus()
+        }
+      }
+
+      // [captcha: shared block]
+
+      if (document.readyState === 'loading')
+        document.addEventListener('DOMContentLoaded', _init)
+      else
+        _init()
+
+      return {}
+    })()
+
+  </script>
+
 </body>
 
 </html>
