@@ -589,20 +589,27 @@
       background: var(--border);
     }
 
-    /* ── NEW SERIES FORM ── */
-    #app-graficadora .nsform {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 14px;
+    /* ── EXCEL TABLE ── */
+    #app-graficadora .excel-card {
+      grid-column: 1 / -1;
     }
 
-    #app-graficadora .nsinput {
+    #app-graficadora .excel-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    #app-graficadora .excel-toolbar .nsinput {
       flex: 1;
-      min-width: 0;
+      min-width: 120px;
+      max-width: 200px;
       background: var(--s2);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 9px 13px;
+      border-radius: 8px;
+      padding: 7px 12px;
       font-family: 'Familjen Grotesk', sans-serif;
       font-size: 13px;
       font-weight: 600;
@@ -611,19 +618,19 @@
       transition: border-color .2s;
     }
 
-    #app-graficadora .nsinput::placeholder {
+    #app-graficadora .excel-toolbar .nsinput::placeholder {
       color: var(--txt3);
       font-weight: 400;
     }
 
-    #app-graficadora .nsinput:focus {
+    #app-graficadora .excel-toolbar .nsinput:focus {
       border-color: var(--border2);
     }
 
-    #app-graficadora .clrbtn {
-      width: 36px;
-      height: 36px;
-      border-radius: 9px;
+    #app-graficadora .excel-toolbar .clrbtn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
       border: 1px solid var(--border2);
       cursor: pointer;
       position: relative;
@@ -632,11 +639,11 @@
       transition: transform .15s;
     }
 
-    #app-graficadora .clrbtn:hover {
+    #app-graficadora .excel-toolbar .clrbtn:hover {
       transform: scale(1.08);
     }
 
-    #app-graficadora .clrbtn input[type=color] {
+    #app-graficadora .excel-toolbar .clrbtn input[type=color] {
       position: absolute;
       inset: 0;
       opacity: 0;
@@ -646,477 +653,240 @@
       border: none;
     }
 
-    #app-graficadora .addbtn {
-      width: 36px;
-      height: 36px;
-      border-radius: 9px;
-      border: 1px solid var(--border);
-      background: var(--txt);
-      color: var(--bg);
-      font-size: 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    #app-graficadora .excel-toolbar .et-sep {
+      width: 1px;
+      height: 22px;
+      background: var(--border);
       flex-shrink: 0;
-      transition: background .2s, transform .15s;
     }
 
-    #app-graficadora .addbtn:hover {
-      background: #c0c4d8;
-      transform: scale(1.06);
-    }
-
-    /* ── SERIES GRID ── */
-    #app-graficadora .sgrid {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    #app-graficadora .nohint {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--txt3);
-      text-align: center;
-      padding: 18px 0;
-    }
-
-    /* ── SERIES CARD ── */
-    #app-graficadora .sc {
-      background: var(--s1);
+    #app-graficadora .excel-scroll {
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: 320px;
       border: 1px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
-      transition: border-color .25s, box-shadow .25s;
+      border-radius: 10px;
     }
 
-    #app-graficadora .sc.active {
-      border-color: var(--c, #4ade80);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--c, #4ade80) 20%, transparent),
-        inset 0 0 32px color-mix(in srgb, var(--c, #4ade80) 4%, transparent);
+    #app-graficadora .excel-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
     }
 
-    #app-graficadora .sc-top {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 11px 14px;
-      cursor: pointer;
-      user-select: none;
+    #app-graficadora .excel-scroll::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 4px;
     }
 
-    #app-graficadora .sc-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      transition: box-shadow .3s;
-    }
-
-    #app-graficadora .sc.active .sc-dot {
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--c, #4ade80) 30%, transparent);
-    }
-
-    #app-graficadora .sc-name {
-      font-weight: 700;
-      font-size: 13px;
-      flex: 1;
-    }
-
-    #app-graficadora .sc-badge {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      letter-spacing: .1em;
-      color: #0d0e12;
-      background: var(--c, #4ade80);
-      border-radius: 100px;
-      padding: 2px 9px;
-      display: none;
-    }
-
-    #app-graficadora .sc.active .sc-badge {
-      display: block;
-    }
-
-    #app-graficadora .sc-order {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: var(--txt3);
-      background: var(--s2);
-      border-radius: 6px;
-      padding: 2px 7px;
-      display: none;
-    }
-
-    #app-graficadora .sc.active .sc-order {
-      display: block;
-    }
-
-    #app-graficadora .sc-timer {
+    #app-graficadora .excel-table {
+      width: 100%;
+      border-collapse: collapse;
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
-      color: var(--c, var(--txt2));
-      min-width: 52px;
-      text-align: right;
     }
 
-    #app-graficadora .sc-pts {
-      font-family: 'JetBrains Mono', monospace;
+    #app-graficadora .excel-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: var(--s2);
+      border-bottom: 1px solid var(--border2);
+      padding: 0;
+      white-space: nowrap;
+    }
+
+    #app-graficadora .excel-table thead th.et-idx,
+    #app-graficadora .excel-table tbody td.et-idx {
+      width: 36px;
+      min-width: 36px;
+      text-align: center;
+      color: var(--txt3);
       font-size: 10px;
-      color: var(--txt3);
+      background: var(--s1);
+      border-right: 1px solid var(--border);
+      position: sticky;
+      left: 0;
+      z-index: 3;
     }
 
-    #app-graficadora .sc-del {
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
-      border: none;
-      background: transparent;
-      color: var(--txt3);
-      cursor: pointer;
-      font-size: 16px;
+    #app-graficadora .excel-table thead th.et-idx {
+      z-index: 4;
+      background: var(--s2);
+    }
+
+    #app-graficadora .et-th-inner {
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-right: 1px solid var(--border);
+    }
+
+    #app-graficadora .et-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    #app-graficadora .et-sname {
+      flex: 1;
+      color: var(--txt);
+      font-size: 11px;
+      letter-spacing: .04em;
+      cursor: text;
+    }
+
+    #app-graficadora .et-del-col {
+      background: none;
+      border: none;
+      color: var(--txt3);
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0 2px;
+      border-radius: 4px;
       transition: color .15s, background .15s;
       flex-shrink: 0;
     }
 
-    #app-graficadora .sc-del:hover {
+    #app-graficadora .et-del-col:hover {
       color: #f87171;
-      background: rgba(248, 113, 113, .12);
+      background: rgba(248,113,113,.12);
     }
 
-    /* ── SERIES DETAILS ── */
-    #app-graficadora .sc-det {
-      padding: 0 14px 12px;
-      border-top: 1px solid var(--border);
-      display: none;
-      flex-direction: column;
-      gap: 8px;
+    #app-graficadora .et-add-col-th {
+      width: 36px;
+      min-width: 36px;
+      text-align: center;
     }
 
-    #app-graficadora .sc.active .sc-det {
-      display: flex;
-    }
-
-    /* mic row */
-    #app-graficadora .mic-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding-top: 10px;
-    }
-
-    #app-graficadora .mic-row label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      letter-spacing: .14em;
+    #app-graficadora .et-addcol-btn,
+    #app-graficadora .et-addrow-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
       color: var(--txt3);
-      text-transform: uppercase;
-      flex-shrink: 0;
-    }
-
-    #app-graficadora .mic-sel {
-      flex: 1;
-      min-width: 0;
-      background: var(--s2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--txt);
-      outline: none;
+      font-size: 16px;
+      line-height: 1;
       cursor: pointer;
-      transition: border-color .2s;
-    }
-
-    #app-graficadora .mic-sel:focus {
-      border-color: var(--border2);
-    }
-
-    #app-graficadora .mic-row.hidden {
-      display: none;
-    }
-
-    /* rec + action buttons row */
-    #app-graficadora .sc-btmrow {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    #app-graficadora .recbtn {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 13px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--s2);
-      color: var(--txt2);
-      font-family: 'Familjen Grotesk', sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all .2s;
-    }
-
-    #app-graficadora .recbtn:hover {
-      border-color: var(--c, #4ade80);
-      color: var(--c, #4ade80);
-    }
-
-    #app-graficadora .recbtn.on {
-      border-color: var(--c, #4ade80);
-      background: color-mix(in srgb, var(--c, #4ade80) 10%, transparent);
-      color: var(--c, #4ade80);
-    }
-
-    /* small icon-only buttons for per-series actions */
-    #app-graficadora .sc-action {
-      display: flex;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
+      transition: color .15s, border-color .15s, background .15s;
+    }
+
+    #app-graficadora .et-addcol-btn:hover,
+    #app-graficadora .et-addrow-btn:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: rgba(74,222,128,.07);
+    }
+
+    #app-graficadora .excel-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .1s;
+    }
+
+    #app-graficadora .excel-table tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    #app-graficadora .excel-table tbody tr:hover {
+      background: rgba(255,255,255,.02);
+    }
+
+    #app-graficadora .excel-table tbody tr.et-new-row {
+      background: rgba(74,222,128,.03);
+    }
+
+    #app-graficadora .excel-table td {
+      padding: 0;
+      border-right: 1px solid var(--border);
+    }
+
+    #app-graficadora .excel-table td.et-del-td {
       width: 28px;
-      height: 28px;
-      border-radius: 7px;
-      border: 1px solid var(--border);
-      background: var(--s2);
+      min-width: 28px;
+      text-align: center;
+      border-right: none;
+      background: var(--s1);
+      position: sticky;
+      right: 0;
+    }
+
+    #app-graficadora .et-del-row {
+      background: none;
+      border: none;
       color: var(--txt3);
       cursor: pointer;
-      transition: all .2s;
-      flex-shrink: 0;
-    }
-
-    #app-graficadora .sc-action:hover {
-      border-color: var(--border2);
-      color: var(--txt2);
-    }
-
-    #app-graficadora .sc-action.danger:hover {
-      border-color: rgba(248, 113, 113, .4);
-      color: #f87171;
-      background: rgba(248, 113, 113, .08);
-    }
-
-    #app-graficadora .sc-action.export:hover {
-      border-color: rgba(74, 222, 128, .4);
-      color: #4ade80;
-      background: rgba(74, 222, 128, .06);
-    }
-
-    #app-graficadora .sc-action[title] {
-      position: relative;
-    }
-
-    #app-graficadora .mbars {
-      display: flex;
+      font-size: 14px;
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
+      display: inline-flex;
       align-items: center;
-      gap: 2px;
-      height: 18px;
-      opacity: 0;
-      transition: opacity .3s;
-      margin-left: 2px;
+      justify-content: center;
+      transition: color .15s, background .15s;
     }
 
-    #app-graficadora .mbars.on {
-      opacity: 1;
+    #app-graficadora .et-del-row:hover {
+      color: #f87171;
+      background: rgba(248,113,113,.12);
     }
 
-    #app-graficadora .mb {
-      width: 3px;
-      border-radius: 3px;
-      height: 4px;
-      background: var(--c, #4ade80);
-      animation: mbw .65s ease-in-out infinite;
-    }
-
-    #app-graficadora .mb:nth-child(1) {
-      animation-delay: .0s
-    }
-
-    #app-graficadora .mb:nth-child(2) {
-      animation-delay: .1s
-    }
-
-    #app-graficadora .mb:nth-child(3) {
-      animation-delay: .2s
-    }
-
-    #app-graficadora .mb:nth-child(4) {
-      animation-delay: .3s
-    }
-
-    #app-graficadora .mb:nth-child(5) {
-      animation-delay: .2s
-    }
-
-    #app-graficadora .mb:nth-child(6) {
-      animation-delay: .1s
-    }
-
-    @keyframes mbw {
-
-      0%,
-      100% {
-        height: 3px
-      }
-
-      50% {
-        height: 16px
-      }
-    }
-
-    #app-graficadora .sc-numInput {
-      flex: 1;
-      min-width: 0;
-      background: var(--s2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 6px 10px;
+    #app-graficadora .et-cell {
+      width: 100%;
+      min-width: 90px;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 8px 10px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
       color: var(--txt);
-      outline: none;
-      transition: border-color .2s;
+      text-align: right;
       -moz-appearance: textfield;
+      transition: background .15s;
     }
 
-    #app-graficadora .sc-numInput::-webkit-outer-spin-button,
-    #app-graficadora .sc-numInput::-webkit-inner-spin-button {
+    #app-graficadora .et-cell::-webkit-outer-spin-button,
+    #app-graficadora .et-cell::-webkit-inner-spin-button {
       -webkit-appearance: none;
     }
 
-    #app-graficadora .sc-numInput:focus {
-      border-color: var(--c, var(--border2));
-    }
-
-    /* ── HINT CARD ── */
-    #app-graficadora .hintcard {
-      background: var(--s1);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px 20px;
-    }
-
-    #app-graficadora .hinttitle {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      letter-spacing: .18em;
-      color: var(--txt3);
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-
-    #app-graficadora .hintgrid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    #app-graficadora .hintitem {
-      background: var(--s2);
-      border-radius: 10px;
-      padding: 10px 12px;
-    }
-
-    #app-graficadora .hintitem .ex {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: var(--txt);
-      margin-bottom: 4px;
-    }
-
-    #app-graficadora .hintitem .ex span {
-      color: #4ade80;
-    }
-
-    #app-graficadora .hintitem .desc {
-      font-size: 11px;
-      color: var(--txt3);
-    }
-
-    /* ── LOG ── */
-    #app-graficadora .log-scroll {
-      max-height: 160px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    #app-graficadora .log-scroll::-webkit-scrollbar {
-      width: 3px;
-    }
-
-    #app-graficadora .log-scroll::-webkit-scrollbar-thumb {
-      background: var(--border);
+    #app-graficadora .et-cell:focus {
+      background: rgba(255,255,255,.05);
+      outline: 1px solid var(--border2);
+      outline-offset: -1px;
       border-radius: 3px;
     }
 
-    #app-graficadora .lrow {
-      display: flex;
-      align-items: center;
-      gap: 9px;
+    #app-graficadora .et-cell.et-time-cell {
+      color: var(--txt2);
+      min-width: 72px;
+    }
+
+    #app-graficadora .et-cell::placeholder {
+      color: var(--txt3);
+      opacity: .5;
+    }
+
+    #app-graficadora .et-addrow-tr td {
+      padding: 6px 8px;
       background: var(--s1);
-      border-radius: 8px;
-      padding: 7px 11px;
-      animation: fadeUp .25s ease;
-      border-left: 2px solid transparent;
+      border-right: none;
     }
 
-    #app-graficadora .lrow.fresh {
-      border-left-color: var(--lc, var(--txt));
-    }
-
-    @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(-4px)
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0)
-      }
-    }
-
-    #app-graficadora .lt {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: var(--txt3);
-      min-width: 42px;
-    }
-
-    #app-graficadora .lname {
-      font-size: 12px;
-      font-weight: 700;
-      flex: 1;
-    }
-
-    #app-graficadora .ltimer {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: var(--txt3);
-      min-width: 38px;
-    }
-
-    #app-graficadora .lval {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    #app-graficadora .lempty {
+    #app-graficadora .excel-empty {
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       color: var(--txt3);
       text-align: center;
-      padding: 16px 0;
+      padding: 28px 0;
+      letter-spacing: .04em;
     }
 
     /* ── CHART ── */
@@ -3751,33 +3521,25 @@
 
       <div class="layout">
 
-        <!-- LEFT: series manager + hints -->
-        <div style="display:flex;flex-direction:column;gap:14px;">
-          <div class="card">
-            <div class="card-label">Series de datos</div>
-            <div class="nsform">
-              <input class="nsinput" id="nsname" type="text" placeholder="Nombre de la serie…" maxlength="22"
-                onkeydown="if(event.key==='Enter')addSeries()">
-              <div class="clrbtn" id="clrbtn">
-                <input type="color" id="nscolor" value="#4ade80">
-              </div>
-              <button class="addbtn" onclick="addSeries()">+</button>
+        <!-- DATA TABLE (Excel-style) -->
+        <div class="card excel-card">
+          <div class="card-label">Tabla de datos</div>
+
+          <!-- Toolbar: add column -->
+          <div class="excel-toolbar">
+            <input class="nsinput" id="nsname" type="text" placeholder="Nombre de columna…" maxlength="22"
+              onkeydown="if(event.key==='Enter')addSeries()">
+            <div class="clrbtn" id="clrbtn" style="background:#4ade80;">
+              <input type="color" id="nscolor" value="#4ade80">
             </div>
-            <div class="sgrid" id="sgrid"></div>
-            <div class="nohint" id="nohint">Añade al menos una serie para comenzar</div>
+            <button class="btn btn-g" onclick="addSeries()" style="height:32px;font-size:12px;">+ Columna</button>
+            <div class="et-sep"></div>
+            <button class="btn" onclick="addRow()" style="height:32px;font-size:12px;">+ Fila</button>
           </div>
 
-
-        </div>
-
-        <!-- RIGHT: log -->
-        <div style="display:flex;flex-direction:column;gap:14px;">
-          <div class="card" style="flex:1;">
-            <div class="card-label">Historial <span id="lcnt"
-                style="color:var(--txt2);font-weight:700;margin-left:4px;"></span></div>
-            <div class="log-scroll" id="logscroll">
-              <div class="lempty">Sin datos todavía</div>
-            </div>
+          <!-- Table -->
+          <div class="excel-scroll" id="excel-scroll">
+            <div class="excel-empty" id="excel-empty">Añade al menos una columna para comenzar</div>
           </div>
         </div>
 
@@ -4280,9 +4042,11 @@
     //  STATE
     // ═══════════════════════════════════════════════════
     const S = {
-      series: [],  // {id,name,color,active,activatedAt,micId,rec,recObj,t0,elapsed}
-      data: [],    // {sid,time,value,ts}
-      mics: [],    // {deviceId,label}
+      series: [],  // {id,name,color}
+      data: [],    // derived: {sid,time,value,ts} — rebuilt from tableRows
+      tableRows: [], // [{id,time,cells:{seriesId:number|null}}]
+      _pendingRowId: null,   // row id currently being filled (multi-dispatch)
+      _pendingRowTs: 0,      // timestamp when pending row was created
       actOrder: [],
       tension: 0.4,
     };
@@ -4306,7 +4070,6 @@
     function seriesStartTimer(s) { s.t0 = performance.now(); startTimerLoop(); }
     function seriesPauseTimer(s) { if (s.t0 !== null) { s.elapsed += performance.now() - s.t0; s.t0 = null; } }
     function seriesResetTimer(s) { seriesPauseTimer(s); s.elapsed = 0; }
-    function seriesGetSec(s) { return +((s.elapsed + (s.t0 !== null ? performance.now() - s.t0 : 0)) / 1000).toFixed(2); }
     function fmtMs(ms) { const s = ms / 1000; return s < 100 ? s.toFixed(1) + 's' : Math.round(s) + 's'; }
 
     function stopAll() { }
@@ -4331,13 +4094,15 @@
     }
     function record(sid, value) {
       const s = S.series.find(s => s.id === sid); if (!s) return;
-      const entry = { sid, value, time: seriesGetSec(s), ts: new Date().toLocaleTimeString('es-ES', { hour12: false }) };
-      S.data.push(entry); addLogRow(entry); redraw(); ctrlSync();
-      if (S.data.length === 1 || S.actOrder.length === 1) showToast(`✓  ${s.name}: ${fmt(value)}`, 'ok');
+      const time = +((Date.now() % 1000000) / 1000).toFixed(2); // ms → s approx
+      tableRecord(sid, value, time);
+      syncDataFromTable();
+      renderTable(); redraw(); ctrlSync();
+      showToast(`✓  ${s.name}: ${fmt(value)}`, 'ok');
     }
 
     // ═══════════════════════════════════════════════════
-    //  SERIES MANAGEMENT
+    //  SERIES / COLUMN MANAGEMENT
     // ═══════════════════════════════════════════════════
     const PALETTE = ['#4ade80', '#a78bfa', '#f87171', '#38bdf8', '#fb923c', '#f472b6', '#facc15', '#34d399'];
     let palIdx = 0;
@@ -4346,40 +4111,44 @@
       const ci = document.getElementById('nscolor');
       const name = nameArg != null ? nameArg : (ni ? ni.value.trim() : '');
       const color = colorArg != null ? colorArg : (ci ? ci.value : '#4ade80');
-      if (!name) { showToast('Escribe un nombre para la serie', 'warn'); return; }
-      S.series.push({
-        id: 's' + Date.now(), name, color, active: false, activatedAt: 0,
-        t0: null, elapsed: 0
-      });
+      if (!name) { showToast('Escribe un nombre para la columna', 'warn'); return; }
+      const sid = 's' + Date.now();
+      S.series.push({ id: sid, name, color });
+      // Add this column (null) to every existing row
+      S.tableRows.forEach(r => { r.cells[sid] = null; });
       if (ni) ni.value = '';
-      render(); advancePalette();
+      renderTable(); advancePalette();
     }
     function deleteSeries(sid) {
-      if (S.data.some(d => d.sid === sid)) { showToast('Borra los datos de esta serie antes', 'warn'); return; }
-      stopRec(sid); S.series = S.series.filter(s => s.id !== sid); S.actOrder = S.actOrder.filter(id => id !== sid);
-      render(); updateGlobal();
-    }
-    function toggleActive(sid) {
-      const s = S.series.find(s => s.id === sid); if (!s) return;
-      s.active = !s.active;
-      if (s.active) {
-        s.activatedAt = Date.now();
-        S.actOrder = [...S.actOrder.filter(id => id !== sid), sid];
-        render();
-      } else {
-        S.actOrder = S.actOrder.filter(id => id !== sid);
-        stopRec(sid); render();
+      if (S.data.some(d => d.sid === sid)) {
+        showToast('Borra los datos de esta columna antes', 'warn'); return;
       }
-      updateGlobal();
+      S.series = S.series.filter(s => s.id !== sid);
+      S.tableRows.forEach(r => { delete r.cells[sid]; });
+      renderTable(); updateGlobal();
     }
-    function resetSeriesTimer(sid) {
+    // deleteColumn: alias that checks/confirms
+    function deleteColumn(sid) {
       const s = S.series.find(s => s.id === sid); if (!s) return;
-      const wasRec = s.rec;
-      if (wasRec) seriesPauseTimer(s);
-      seriesResetTimer(s);
-      if (wasRec) seriesStartTimer(s);
-      const el = document.getElementById('timer-' + sid);
-      if (el) el.textContent = '0.0s';
+      const hasPts = S.tableRows.some(r => r.cells[sid] != null && !isNaN(r.cells[sid]));
+      if (hasPts) {
+        askConfirm(`¿Eliminar columna "${s.name}"?`,
+          'Se perderán todos los valores de esta columna.',
+          () => { S.series = S.series.filter(s => s.id !== sid); S.tableRows.forEach(r => { delete r.cells[sid]; }); syncDataFromTable(); renderTable(); redraw(); ctrlSync(); });
+      } else {
+        S.series = S.series.filter(s => s.id !== sid);
+        S.tableRows.forEach(r => { delete r.cells[sid]; });
+        renderTable();
+      }
+    }
+    function renameSeriesPrompt(sid) {
+      const s = S.series.find(s => s.id === sid); if (!s) return;
+      const newName = prompt('Nuevo nombre para la columna:', s.name);
+      if (newName && newName.trim()) { s.name = newName.trim(); renderTable(); }
+    }
+    function updateGlobal() {
+      const stopb = document.getElementById('stopbtn');
+      if (stopb) stopb.disabled = true; // no timers in table mode
     }
 
     // ═══════════════════════════════════════════════════
@@ -4391,137 +4160,250 @@
       if (idx === -1) { showToast('Sin datos para deshacer', 'warn'); return; }
       const rm = S.data.splice(idx, 1)[0];
       const s = S.series.find(s => s.id === sid);
-      rebuildLog(); render(); redraw(); ctrlSync();
+      rebuildTable(); redraw(); ctrlSync();
       showToast(`Deshecho: ${s?.name || '?'} ${fmt(rm.value)}`, 'warn');
     }
     function clearSeries(sid) {
       const s = S.series.find(s => s.id === sid); if (!s) return;
       askConfirm(
-        `¿Limpiar "${s.name}"?`,
-        'Se eliminarán todos los puntos de esta serie. El cronómetro se reiniciará.',
+        `¿Limpiar columna "${s.name}"?`,
+        'Se borrarán todos los valores de esta columna.',
         () => {
-          S.data = S.data.filter(d => d.sid !== sid);
-          seriesResetTimer(s);
-          rebuildLog(); render(); redraw(); ctrlSync();
+          S.tableRows.forEach(r => { r.cells[sid] = null; });
+          syncDataFromTable();
+          renderTable(); redraw(); ctrlSync();
           showToast(`${s.name} limpiada`, 'warn');
         }
       );
     }
-    function exportSeries(sid) {
-      const s = S.series.find(s => s.id === sid); if (!s) return;
-      const pts = S.data.filter(d => d.sid === sid);
-      if (!pts.length) { showToast('Sin datos para exportar', 'warn'); return; }
-      const rows = ['tiempo_s,valor,hora'];
-      pts.forEach(d => rows.push(`${d.time},${d.value},${d.ts}`));
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' }));
-      a.download = `${s.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
-      a.click(); showToast(`${s.name} exportada`, 'ok');
-    }
 
     // ═══════════════════════════════════════════════════
-    //  RENDER
+    //  TABLE (Excel-style)
     // ═══════════════════════════════════════════════════
-    function render() {
-      const grid = document.getElementById('sgrid');
-      const hint = document.getElementById('nohint');
-      if (!grid) return;
-      grid.innerHTML = '';
-      if (hint) hint.style.display = S.series.length ? 'none' : 'block';
-      if (!S.series.length) return;
-
-      const active = S.actOrder.map(id => S.series.find(s => s.id === id)).filter(Boolean);
-      const inactive = S.series.filter(s => !s.active);
-      [...active, ...inactive].forEach(s => {
-        const pts = S.data.filter(d => d.sid === s.id).length;
-        const oNum = s.active ? S.actOrder.indexOf(s.id) + 1 : null;
-        const msNow = s.elapsed + (s.t0 !== null ? performance.now() - s.t0 : 0);
-        const div = document.createElement('div');
-        div.className = 'sc' + (s.active ? ' active' : '');
-        div.id = 'sc-' + s.id;
-        div.style.setProperty('--c', s.color);
-
-        // SVG icons as strings
-        const icoMic = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>`;
-        const icoPause = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="6" width="4" height="12"/><rect x="14" y="6" width="4" height="12"/></svg>`;
-        const icoUndo = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 10h10a8 8 0 0 1 0 16H3"/><polyline points="3 10 7 6 3 2"/></svg>`;
-        const icoClear = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>`;
-        const icoExport = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
-        const icoReset = `↺`;
-
-        div.innerHTML = `
-      <div class="sc-top" onclick="toggleActive('${s.id}')">
-        <div class="sc-dot" style="background:${s.color}"></div>
-        <div class="sc-name">${esc(s.name)}</div>
-        ${s.active ? `<div class="sc-order">#${oNum}</div>` : ''}
-        <div class="sc-badge">ACTIVA</div>
-        <div class="sc-pts">${pts}pt</div>
-        <div class="sc-timer" id="timer-${s.id}">${fmtMs(msNow)}</div>
-        <button class="sc-del" onclick="event.stopPropagation();deleteSeries('${s.id}')" title="Eliminar serie">×</button>
-      </div>
-      <div class="sc-det">
-        <div class="sc-btmrow">
-          <input class="sc-numInput" id="input-${s.id}" type="number" step="any" placeholder="Valor…"
-            style="--c:${s.color}"
-            onkeydown="if(event.key==='Enter'){event.preventDefault();addValueFromInput('${s.id}')}">
-          <button class="recbtn" style="--c:${s.color}" onclick="addValueFromInput('${s.id}')">+ Agregar</button>
-          <button class="sc-action" onclick="event.stopPropagation();resetSeriesTimer('${s.id}')" title="Resetear cronómetro">${icoReset}</button>
-          <button class="sc-action" onclick="event.stopPropagation();undoSeries('${s.id}')" title="Deshacer último punto">${icoUndo}</button>
-          <button class="sc-action danger" onclick="event.stopPropagation();clearSeries('${s.id}')" title="Limpiar serie">${icoClear}</button>
-          <button class="sc-action export" onclick="event.stopPropagation();exportSeries('${s.id}')" title="Exportar serie CSV">${icoExport}</button>
-        </div>
-      </div>
-    `;
-        grid.appendChild(div);
+    function syncDataFromTable() {
+      S.data = [];
+      S.tableRows.forEach(row => {
+        S.series.forEach(s => {
+          const v = row.cells[s.id];
+          if (v != null && !isNaN(v)) {
+            S.data.push({
+              sid: s.id, time: row.time != null ? row.time : 0,
+              value: v, ts: row.ts || '—'
+            });
+          }
+        });
       });
     }
 
-    function addValueFromInput(sid) {
-      const inp = document.getElementById('input-' + sid);
-      if (!inp) return;
-      const val = parseFloat(inp.value);
-      if (isNaN(val)) { showToast('Ingresa un número válido', 'warn'); inp.focus(); return; }
-      record(sid, val);
-      inp.value = '';
-      inp.focus();
-    }
-    function updateGlobal() {
-      const actN = S.actOrder.length;
-      const stopb = document.getElementById('stopbtn');
-      if (stopb) stopb.disabled = (actN === 0);
+    function renderTable() {
+      const scroll = document.getElementById('excel-scroll');
+      if (!scroll) return;
+
+      if (!S.series.length) {
+        scroll.innerHTML = '<div class="excel-empty">Añade al menos una columna para comenzar</div>';
+        return;
+      }
+
+      const table = document.createElement('table');
+      table.className = 'excel-table';
+
+      // ── HEADER ──
+      const thead = document.createElement('thead');
+      const htr = document.createElement('tr');
+
+      // # col
+      const thIdx = document.createElement('th');
+      thIdx.className = 'et-idx';
+      thIdx.textContent = '#';
+      htr.appendChild(thIdx);
+
+      // Tiempo col
+      const thTime = document.createElement('th');
+      thTime.innerHTML = '<div class="et-th-inner" style="color:var(--txt2);min-width:72px;">Tiempo (s)</div>';
+      htr.appendChild(thTime);
+
+      // Series cols
+      S.series.forEach(s => {
+        const th = document.createElement('th');
+        th.className = 'et-series-th';
+        th.innerHTML = `<div class="et-th-inner">
+          <span class="et-dot" style="background:${s.color}"></span>
+          <span class="et-sname" ondblclick="renameSeriesPrompt('${s.id}')" title="Doble clic para renombrar">${esc(s.name)}</span>
+          <button class="et-del-col" onclick="deleteColumn('${s.id}')" title="Eliminar columna">×</button>
+        </div>`;
+        htr.appendChild(th);
+      });
+
+      // Add-col button
+      const thAdd = document.createElement('th');
+      thAdd.className = 'et-add-col-th';
+      thAdd.innerHTML = '<div style="padding:4px 6px;"></div>';
+      htr.appendChild(thAdd);
+
+      // Delete col (spacer)
+      const thDel = document.createElement('th');
+      thDel.style.cssText = 'width:28px;min-width:28px;background:var(--s1);';
+      htr.appendChild(thDel);
+
+      thead.appendChild(htr);
+      table.appendChild(thead);
+
+      // ── BODY ──
+      const tbody = document.createElement('tbody');
+
+      if (!S.tableRows.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = S.series.length + 4;
+        td.innerHTML = '<div class="excel-empty">Sin filas — pulsa "+ Fila" para añadir</div>';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      } else {
+        S.tableRows.forEach((row, i) => {
+          const tr = document.createElement('tr');
+          tr.id = 'etr-' + row.id;
+
+          // # cell
+          const tdIdx = document.createElement('td');
+          tdIdx.className = 'et-idx';
+          tdIdx.textContent = i + 1;
+          tr.appendChild(tdIdx);
+
+          // Tiempo cell
+          const tdTime = document.createElement('td');
+          const inpTime = document.createElement('input');
+          inpTime.type = 'number'; inpTime.step = 'any';
+          inpTime.className = 'et-cell et-time-cell';
+          inpTime.value = row.time != null ? fmt(row.time) : '';
+          inpTime.placeholder = '0';
+          inpTime.dataset.rowId = row.id; inpTime.dataset.field = '__time__';
+          inpTime.addEventListener('input', onCellInput);
+          inpTime.addEventListener('keydown', onCellKeydown);
+          tdTime.appendChild(inpTime);
+          tr.appendChild(tdTime);
+
+          // Value cells
+          S.series.forEach(s => {
+            const td = document.createElement('td');
+            td.style.setProperty('--c', s.color);
+            const inp = document.createElement('input');
+            inp.type = 'number'; inp.step = 'any';
+            inp.className = 'et-cell';
+            const v = row.cells[s.id];
+            inp.value = (v != null && !isNaN(v)) ? fmt(v) : '';
+            inp.placeholder = '—';
+            inp.dataset.rowId = row.id; inp.dataset.sid = s.id;
+            inp.addEventListener('input', onCellInput);
+            inp.addEventListener('keydown', onCellKeydown);
+            td.appendChild(inp);
+            tr.appendChild(td);
+          });
+
+          // Add-col spacer
+          const tdAddSpacer = document.createElement('td');
+          tdAddSpacer.className = 'et-add-col-th';
+          tr.appendChild(tdAddSpacer);
+
+          // Delete row button
+          const tdDel = document.createElement('td');
+          tdDel.className = 'et-del-td';
+          const btnDel = document.createElement('button');
+          btnDel.className = 'et-del-row';
+          btnDel.textContent = '×';
+          btnDel.title = 'Eliminar fila';
+          btnDel.onclick = () => deleteRow(row.id);
+          tdDel.appendChild(btnDel);
+          tr.appendChild(tdDel);
+
+          tbody.appendChild(tr);
+        });
+      }
+
+      table.appendChild(tbody);
+      scroll.innerHTML = '';
+      scroll.appendChild(table);
+
+      // Auto-scroll to last row if it's new
+      if (S._scrollToLast) {
+        scroll.scrollTop = scroll.scrollHeight;
+        S._scrollToLast = false;
+      }
     }
 
-    // ═══════════════════════════════════════════════════
-    //  LOG
-    // ═══════════════════════════════════════════════════
-    function addLogRow(e) {
-      const s = S.series.find(s => s.id === e.sid);
-      const sc = document.getElementById('logscroll');
-      if (!sc) return;
-      const emp = sc.querySelector('.lempty');
-      if (emp) emp.remove();
-      const r = document.createElement('div');
-      r.className = 'lrow fresh';
-      r.style.setProperty('--lc', s?.color || '#fff');
-      r.innerHTML = `
-    <span class="lt">${e.ts}</span>
-    <span class="lname" style="color:${s?.color || 'var(--txt)'}">${esc(s?.name || '?')}</span>
-    <span class="ltimer">${fmt(e.time)}s</span>
-    <span class="lval">${fmt(e.value)}</span>
-  `;
-      sc.insertBefore(r, sc.firstChild);
-      setTimeout(() => r.classList.remove('fresh'), 500);
-      const lcnt = document.getElementById('lcnt');
-      if (lcnt) lcnt.textContent = `(${S.data.length})`;
+    function onCellInput(e) {
+      const inp = e.target;
+      const rowId = inp.dataset.rowId;
+      const row = S.tableRows.find(r => r.id === rowId);
+      if (!row) return;
+      const raw = inp.value.trim();
+      const num = raw === '' ? null : parseFloat(raw);
+      if (inp.dataset.field === '__time__') {
+        row.time = (raw === '' || isNaN(num)) ? null : num;
+      } else {
+        row.cells[inp.dataset.sid] = (raw === '' || isNaN(num)) ? null : num;
+      }
+      syncDataFromTable();
+      redraw(); ctrlSync();
     }
-    function rebuildLog() {
-      const sc = document.getElementById('logscroll');
-      if (!sc) return;
-      sc.innerHTML = '<div class="lempty">Sin datos todavía</div>';
-      const lcnt = document.getElementById('lcnt');
-      if (!S.data.length) { if (lcnt) lcnt.textContent = ''; return; }
-      [...S.data].reverse().forEach(e => addLogRow(e));
+
+    function onCellKeydown(e) {
+      // Tab or Enter → move to next cell
+      if (e.key === 'Tab' || e.key === 'Enter') {
+        e.preventDefault();
+        const allInputs = [...document.querySelectorAll('#excel-scroll .et-cell')];
+        const idx = allInputs.indexOf(e.target);
+        const next = allInputs[idx + 1];
+        if (next) next.focus();
+        else addRow(); // Add new row at end
+      }
     }
+
+    function addRow() {
+      if (!S.series.length) { showToast('Añade al menos una columna primero', 'warn'); return; }
+      const cells = {};
+      S.series.forEach(s => { cells[s.id] = null; });
+      const row = { id: 'r' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), time: null, cells, ts: new Date().toLocaleTimeString('es-ES', { hour12: false }) };
+      S.tableRows.push(row);
+      S._scrollToLast = true;
+      renderTable();
+      // Focus the time cell of the new row
+      setTimeout(() => {
+        const newTr = document.getElementById('etr-' + row.id);
+        if (newTr) newTr.querySelector('.et-time-cell')?.focus();
+      }, 30);
+    }
+
+    function deleteRow(rowId) {
+      S.tableRows = S.tableRows.filter(r => r.id !== rowId);
+      syncDataFromTable();
+      renderTable(); redraw(); ctrlSync();
+    }
+
+    // Called by record() for programmatic data entry (voice / external)
+    function tableRecord(sid, value, time) {
+      // Reuse a pending row created within the last 80ms (multi-dispatch window)
+      const now = Date.now();
+      let row = null;
+      if (S._pendingRowId && (now - S._pendingRowTs) < 80) {
+        row = S.tableRows.find(r => r.id === S._pendingRowId);
+      }
+      if (!row) {
+        const cells = {};
+        S.series.forEach(s => { cells[s.id] = null; });
+        row = { id: 'r' + now + '_' + Math.random().toString(36).slice(2, 6), time, cells, ts: new Date().toLocaleTimeString('es-ES', { hour12: false }) };
+        S.tableRows.push(row);
+        S._pendingRowId = row.id;
+        S._pendingRowTs = now;
+        S._scrollToLast = true;
+      }
+      row.cells[sid] = value;
+      if (row.time == null) row.time = time;
+    }
+
+    function rebuildTable() {
+      renderTable();
+    }
+
     function ctrlSync() {
       const has = S.data.length > 0;
       ['ebtn', 'ubtn', 'cbtn'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = !has; });
@@ -4614,14 +4496,25 @@
         if (!VP[vpKey]) return;
         const { x, y } = canvasXY(e.clientX, e.clientY);
         const W = cv.clientWidth, H = cv.clientHeight;
-        const dc = px2data(x, y, VP[vpKey], W, H, P);
-        const isZoom = e.ctrlKey || e.metaKey || Math.abs(e.deltaY) > Math.abs(e.deltaX) && !e.shiftKey && e.deltaMode === 0 && Math.abs(e.deltaY) > 2;
+
+        // Normalize delta to logical pixels regardless of deltaMode
+        const LINE_PX = 32, PAGE_PX = H || 400;
+        const scale = e.deltaMode === 1 ? LINE_PX : e.deltaMode === 2 ? PAGE_PX : 1;
+        const dxPx = e.deltaX * scale;
+        const dyPx = e.deltaY * scale;
+
+        // Ctrl/Meta → always zoom. Otherwise: primarily-vertical = zoom, horizontal = pan.
+        const isZoom = e.ctrlKey || e.metaKey
+          || (!e.shiftKey && Math.abs(dyPx) > Math.abs(dxPx));
+
         if (isZoom) {
-          const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+          // Map pixel delta to a smooth, bounded zoom factor
+          const factor = Math.pow(0.999, dyPx);
+          const dc = px2data(x, y, VP[vpKey], W, H, P);
           VP[vpKey] = zoomVP(VP[vpKey], dc.x, dc.y, factor);
         } else {
-          const dpx = e.shiftKey ? e.deltaY : e.deltaX;
-          const dpy = e.shiftKey ? 0 : e.deltaY;
+          const dpx = e.shiftKey ? dyPx : dxPx;
+          const dpy = e.shiftKey ? 0   : dyPx;
           VP[vpKey] = panVP(VP[vpKey], dpx, dpy, W, H, P);
         }
         onDraw();
@@ -4825,13 +4718,16 @@
       });
 
       const W = cv.parentElement.offsetWidth, H = 420, DPR = window.devicePixelRatio || 1;
-      // Only resize the canvas backing store if dimensions actually changed —
-      // avoids clearing the canvas (and losing the drawn frame) on every redraw call.
-      if (cv.width !== Math.round(W * DPR) || cv.height !== Math.round(H * DPR)) {
-        cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+      const wPx = Math.round(W * DPR), hPx = Math.round(H * DPR);
+      // Always resize if needed (this also clears the canvas automatically)
+      if (cv.width !== wPx || cv.height !== hPx) {
+        cv.width = wPx; cv.height = hPx;
       }
       cv.style.width = W + 'px'; cv.style.height = H + 'px';
-      const ctx = cv.getContext('2d'); ctx.scale(DPR, DPR);
+      const ctx = cv.getContext('2d');
+      // Reset transform + clear every frame — prevents label trails and scale accumulation
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      ctx.clearRect(0, 0, W, H);
 
       const P = { t: 24, r: 24, b: 54, l: 72 };
       const cw = W - P.l - P.r, ch = H - P.t - P.b;
@@ -4894,26 +4790,30 @@
         });
       });
       ctx.restore();// unclip
+      refreshAnlSelects();
     }
 
     // ═══════════════════════════════════════════════════
     //  GLOBAL ACTIONS
     // ═══════════════════════════════════════════════════
     function undoLast(sid) {
-      // sid=null → undo globally (any last point); sid → undo last point of that series
       if (sid) return undoSeries(sid);
-      if (!S.data.length) return;
-      const rm = S.data.pop();
-      const s = S.series.find(s => s.id === rm.sid);
-      rebuildLog(); render(); redraw(); ctrlSync();
-      showToast(`Deshecho: ${s?.name || '?'} ${fmt(rm.value)}`, 'warn');
+      if (!S.tableRows.length) return;
+      // Remove the last non-empty row, or the last row
+      const lastFull = [...S.tableRows].reverse().find(r => S.series.some(s => r.cells[s.id] != null));
+      const target = lastFull || S.tableRows[S.tableRows.length - 1];
+      if (!target) return;
+      S.tableRows = S.tableRows.filter(r => r.id !== target.id);
+      syncDataFromTable();
+      rebuildTable(); redraw(); ctrlSync();
+      showToast('Última fila deshecha', 'warn');
     }
     function askClear(sid) {
       if (sid) return clearSeries(sid);
-      askConfirm('¿Limpiar todo?', 'Se eliminarán todos los puntos de todas las series.', () => {
-        S.data = []; S.series.forEach(s => seriesResetTimer(s));
-        VP.main = null;
-        rebuildLog(); render(); redraw(); ctrlSync();
+      askConfirm('¿Limpiar todo?', 'Se eliminarán todas las filas de datos.', () => {
+        S.tableRows = []; S._pendingRowId = null;
+        syncDataFromTable(); VP.main = null;
+        rebuildTable(); redraw(); ctrlSync();
         showToast('Todos los datos eliminados', 'warn');
       });
     }
@@ -4938,16 +4838,14 @@
       reader.onload = e => {
         const lines = e.target.result.split('\n').map(l => l.trim()).filter(Boolean);
         if (lines.length < 2) { showToast('CSV vacío o inválido', 'err'); return; }
-        const header = lines[0].toLowerCase();
-        // Detect column indices
-        const cols = header.split(',');
-        const iTime = cols.findIndex(c => c.includes('dato'));
+        const cols = lines[0].toLowerCase().split(',');
+        const iTime = cols.findIndex(c => c.includes('dato') || c.includes('tiempo'));
         const iSerie = cols.findIndex(c => c.includes('serie'));
         const iVal = cols.findIndex(c => c.includes('valor'));
         if (iTime < 0 || iVal < 0) { showToast('CSV sin columnas dato/valor', 'err'); return; }
 
+        const seriesMap = {};
         let added = 0;
-        const seriesMap = {};  // name → id (find existing or create)
 
         lines.slice(1).forEach(line => {
           const parts = line.split(',');
@@ -4955,29 +4853,31 @@
           const value = parseFloat(parts[iVal]);
           if (isNaN(time) || isNaN(value)) return;
           const sname = (iSerie >= 0 && parts[iSerie]) ? parts[iSerie].trim() : 'Importada';
-          // Find or create series
+
           if (!seriesMap[sname]) {
             let existing = S.series.find(s => s.name === sname);
             if (!existing) {
               const color = PALETTE[S.series.length % PALETTE.length];
-              S.series.push({
-                id: 's' + Date.now() + '_' + Math.random(), name: sname, color,
-                active: false, activatedAt: 0, micId: 'default', rec: false, recObj: null, t0: null, elapsed: 0
-              });
+              const sid = 's' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
+              S.series.push({ id: sid, name: sname, color });
               existing = S.series[S.series.length - 1];
             }
             seriesMap[sname] = existing.id;
           }
           const sid = seriesMap[sname];
+          const cells = {};
+          S.series.forEach(s => { cells[s.id] = null; });
+          cells[sid] = value;
           const ts = parts[3] || new Date().toLocaleTimeString('es-ES', { hour12: false });
-          S.data.push({ sid, time, value, ts });
+          S.tableRows.push({ id: 'r' + Date.now() + '_' + Math.random().toString(36).slice(2, 5), time, cells, ts });
           added++;
         });
 
-        // Sort data by time per series
-        S.data.sort((a, b) => a.time - b.time);
-        rebuildLog(); render(); redraw(); ctrlSync();
-        showToast(`${added} puntos importados`, 'ok');
+        // Ensure all rows have all columns
+        S.tableRows.forEach(r => { S.series.forEach(s => { if (!(s.id in r.cells)) r.cells[s.id] = null; }); });
+        syncDataFromTable();
+        renderTable(); redraw(); ctrlSync();
+        showToast(`${added} filas importadas`, 'ok');
       };
       reader.readAsText(file);
     }
@@ -5402,11 +5302,7 @@
       ctx.restore();
     }
 
-    // Hook: refresh selects whenever data changes
-    const _origRecord = record;
-    // We patch redraw to also refresh selects
-    const _origRedraw = redraw;
-    function redraw() { _origRedraw(); refreshAnlSelects(); }
+    // refreshAnlSelects is called at the end of redraw() directly (see redraw function)
 
     let _tt;
     function showToast(msg, type = '') {
@@ -5454,19 +5350,15 @@
         });
       }
 
-
-
       // [captcha: shared block]
 
-      // Default series
-      addSeries('Serie A', '#4ade80');
-      addSeries('Serie B', '#a78bfa');
+      // Default columns
+      addSeries('X', '#4ade80');
+      addSeries('Y', '#a78bfa');
       advancePalette();
+      renderTable();
 
-
-
-      // Debounced resize — mobile browsers fire resize constantly as address bar hides/shows.
-      // Only redraw if the WIDTH changed; ignore height-only changes (address bar).
+      // Debounced resize
       let _lastW = window.innerWidth, _resizeTimer = null;
       window.addEventListener('resize', () => {
         clearTimeout(_resizeTimer);
@@ -5504,6 +5396,17 @@
         'wss://y-webrtc-ug.fly.dev',
         'wss://y-webrtc.fly.dev',
       ],
+      // Servidores STUN adicionales — mejoran conectividad en redes móviles con NAT estricto
+      ICE_SERVERS: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:global.stun.twilio.com:3478' },
+        { urls: 'stun:stun.cloudflare.com:3478' },
+      ],
+      // Timeout más largo para redes móviles lentas
+      CONN_TIMEOUT_MS: 22000,
       PEER_COLORS: ['#4ade80', '#60a5fa', '#a78bfa', '#fbbf24', '#f87171', '#34d399', '#fb923c', '#e879f9'],
       DEFAULT_DOC: `# Nuevo documento científico
 
@@ -6041,6 +5944,10 @@ $$\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\varepsilon_0}$$
           signaling: CONFIG.SIGNALING,  // múltiples servidores para resiliencia
           password: password || null,
           maxConns: 20,
+          // ICE servers explícitos — crítico para WebRTC en redes móviles con NAT estricto
+          peerOpts: {
+            config: { iceServers: CONFIG.ICE_SERVERS }
+          }
         })
 
         // ── Connection watchdog: reemite estado awareness si la conexión cae ──
@@ -6049,8 +5956,9 @@ $$\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\varepsilon_0}$$
           const nowConnected = _provider.connected
           Bus.emit('connection:status', { status: nowConnected ? 'connected' : 'connecting' })
           State.set('connected', nowConnected)
-          // Refrescar awareness local para que otros peers lo reciban al reconectar
           if (!nowConnected) {
+            // Intentar reconectar activamente (útil en móvil tras cambio de red)
+            try { _provider.connect() } catch (_e) { }
             try {
               const aw = _provider.awareness
               const cur = aw.getLocalState()
@@ -6089,13 +5997,13 @@ $$\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\varepsilon_0}$$
 
         Bus.emit('connection:status', { status: 'connecting' })
 
-        // Timeout: if still not connected after 12s, show error and work locally
+        // Timeout: si no conectó, avisar y seguir en modo local
         const _connTimeout = setTimeout(() => {
           if (!State.get('connected')) {
             Bus.emit('connection:status', { status: 'error' })
             toast('Sin conexión P2P — funcionando en modo local.')
           }
-        }, 12000)
+        }, CONFIG.CONN_TIMEOUT_MS)
 
         setTimeout(() => {
           if (!State.get('connected'))
@@ -6124,6 +6032,19 @@ $$\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\varepsilon_0}$$
         }, 100)
 
         return true
+      }
+
+      // ── Reconnect (llamado al volver del background o recuperar red) ──
+      const reconnect = () => {
+        if (!_provider) return
+        try {
+          if (!_provider.connected) _provider.connect()
+        } catch (_e) { }
+        try {
+          const aw = _provider.awareness
+          const cur = aw?.getLocalState()
+          if (cur) aw.setLocalState({ ...cur })
+        } catch (_e) { }
       }
 
       // ── Awareness helpers (used by Editor, Chat, etc.) ───────────
@@ -6269,6 +6190,7 @@ $$\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\varepsilon_0}$$
         getText, getStrokes, getChat, getDoc, getUndo, getSession,
         getAwareness, getAwarenessStates,
         setLocalAwarenessField, setLocalAwarenessState,
+        reconnect,
       }
     })()
 
@@ -6872,14 +6794,19 @@ pre{background:#f5f5f5;padding:12px;border-radius:4px;}footer{margin-top:40px;pa
         Yjs.watchHostPresence()
         PR.setup()
 
-        // Pausa actualizaciones costosas cuando el tab está en segundo plano (Page Visibility API)
+        // Reconectar al volver del background (crítico en móvil — iOS/Android matan WebRTC)
         document.addEventListener('visibilitychange', () => {
           if (!document.hidden) {
-            // Al volver, refrescar estado de awareness para que otros peers nos detecten
-            const aw = Yjs.getAwareness()
-            if (aw) { const s = aw.getLocalState(); if (s) aw.setLocalState({ ...s }) }
+            Yjs.reconnect()
             Bus.emit('awareness:changed', { states: Awareness.getStates() })
           }
+        })
+
+        // Reconectar cuando la red se recupera (WiFi → datos, avión, etc.)
+        window.addEventListener('online', () => {
+          toast('Red restaurada — reconectando...')
+          // Pequeña pausa para que el SO termine de levantar la interfaz de red
+          setTimeout(() => Yjs.reconnect(), 800)
         })
 
         Bus.emit('role:changed', { role: State.get('role') })
