@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ley de Hess — AtlasDelta</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body>
+<div class="page">
+
+  <a href="thermo.html" class="back-link">← Volver</a>
+  <h1 class="page-title">Ley de Hess</h1>
+  <p class="page-sub">La entalpía es una función de estado: el camino no importa, solo el punto de partida y de llegada.</p>
+
+  <!-- ── 1. Enunciado ── -->
+  <div class="card">
+    <div class="card-label">Enunciado</div>
+    <p>Formulada por Germain Henri Hess en 1840, la ley establece que la <strong>variación de entalpía total</strong> de una reacción química es independiente del camino seguido. Si una reacción puede escribirse como la suma de dos o más reacciones, su ΔH será la suma de los ΔH de esas reacciones.</p>
+    <div class="math-block">
+      \[ \Delta H_{\text{rxn}} = \sum \Delta H_{\text{pasos}} \]
+    </div>
+    <div class="info-box">
+      <p>Esto es posible porque la entalpía H es una <strong>función de estado</strong>: su variación solo depende del estado inicial y final, no del mecanismo de reacción.</p>
+    </div>
+  </div>
+
+  <!-- ── 2. Reglas de manipulación ── -->
+  <div class="card">
+    <div class="card-label">Reglas de manipulación</div>
+    <p>Para combinar ecuaciones termoquímicas correctamente, se aplican tres reglas:</p>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">Regla 1</div>
+        <p><strong>Inversión:</strong> Si se invierte la dirección de una reacción, el signo de ΔH cambia.</p>
+        <div class="reaction" style="margin-top:8px;">
+          <span class="reagent">A → B</span>
+          <span class="arrow">·</span>
+          <span>ΔH = +x</span>
+          <span style="margin-left:16px;color:var(--txt3)">entonces</span>
+          <span style="margin-left:16px;" class="product">B → A</span>
+          <span class="arrow">·</span>
+          <span>ΔH = −x</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">Regla 2</div>
+        <p><strong>Multiplicación:</strong> Si se multiplica una reacción por un factor n, el ΔH también se multiplica por n.</p>
+        <div class="reaction" style="margin-top:8px;">
+          <span>n · (A → B) &nbsp;→&nbsp; ΔH' = n · ΔH</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">Regla 3</div>
+        <p><strong>Suma:</strong> Las especies que aparecen en ambos lados de las ecuaciones parciales se cancelan (como en álgebra).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3. Ejemplo paso a paso ── -->
+  <div class="card">
+    <div class="card-label">Ejemplo resuelto</div>
+    <p>Calcular el ΔH de la reacción:</p>
+    <div class="reaction">
+      <span class="reagent">C(s) + ½ O₂(g)</span>
+      <span class="arrow">→</span>
+      <span class="product">CO(g)</span>
+      <span style="margin-left:12px;color:var(--txt3)">ΔH = ?</span>
+    </div>
+    <p style="margin-top:14px;">Usando las reacciones conocidas:</p>
+
+    <div class="reaction">
+      <span style="color:var(--txt3);font-size:12px;margin-right:8px;">(1)</span>
+      <span class="reagent">C(s) + O₂(g)</span>
+      <span class="arrow">→</span>
+      <span class="product">CO₂(g)</span>
+      <span style="margin-left:12px;">ΔH₁ = −393,5 kJ</span>
+    </div>
+    <div class="reaction">
+      <span style="color:var(--txt3);font-size:12px;margin-right:8px;">(2)</span>
+      <span class="reagent">CO(g) + ½ O₂(g)</span>
+      <span class="arrow">→</span>
+      <span class="product">CO₂(g)</span>
+      <span style="margin-left:12px;">ΔH₂ = −283,0 kJ</span>
+    </div>
+
+    <p style="margin-top:16px;"><strong>Paso 1:</strong> Invertir la reacción (2) para que CO quede como producto:</p>
+    <div class="reaction">
+      <span style="color:var(--txt3);font-size:12px;margin-right:8px;">(2')</span>
+      <span class="reagent">CO₂(g)</span>
+      <span class="arrow">→</span>
+      <span class="product">CO(g) + ½ O₂(g)</span>
+      <span style="margin-left:12px;">ΔH₂' = +283,0 kJ</span>
+    </div>
+
+    <p><strong>Paso 2:</strong> Sumar (1) + (2') y cancelar CO₂:</p>
+    <div class="reaction">
+      <span class="reagent">C(s) + O₂(g) + CO₂(g)</span>
+      <span class="arrow">→</span>
+      <span class="product">CO₂(g) + CO(g) + ½ O₂(g)</span>
+    </div>
+    <p><strong>Paso 3:</strong> Cancelar especies iguales:</p>
+    <div class="reaction">
+      <span class="reagent">C(s) + ½ O₂(g)</span>
+      <span class="arrow">→</span>
+      <span class="product">CO(g)</span>
+    </div>
+
+    <div class="math-block">
+      \[ \Delta H = \Delta H_1 + \Delta H_{2'} = -393{,}5 + 283{,}0 = \mathbf{-110{,}5\ \text{kJ}} \]
+    </div>
+  </div>
+
+  <!-- ── 4. Entalpías de formación ── -->
+  <div class="card">
+    <div class="card-label">Entalpías estándar de formación</div>
+    <p>La Ley de Hess permite calcular el ΔH de cualquier reacción a partir de las <strong>entalpías estándar de formación</strong> (ΔH°f), que son los ΔH de formación de 1 mol de compuesto desde sus elementos en estado estándar.</p>
+    <div class="math-block">
+      \[ \Delta H^\circ_{\text{rxn}} = \sum n_p \, \Delta H^\circ_f(\text{productos}) - \sum n_r \, \Delta H^\circ_f(\text{reactivos}) \]
+    </div>
+    <div class="info-box">
+      <p>Por convención, la entalpía de formación de los <strong>elementos en su forma más estable</strong> (ej. O₂(g), C(grafito)) es cero.</p>
+    </div>
+
+    <h3>Tabla de valores comunes</h3>
+    <div class="table-wrap">
+      <table>
+        <caption>Entalpías estándar de formación a 25 °C (kJ/mol)</caption>
+        <thead>
+          <tr><th>Compuesto</th><th>Estado</th><th>ΔH°f (kJ/mol)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>H₂O</td><td>líquido</td><td>−285,8</td></tr>
+          <tr><td>H₂O</td><td>gas</td><td>−241,8</td></tr>
+          <tr><td>CO₂</td><td>gas</td><td>−393,5</td></tr>
+          <tr><td>CO</td><td>gas</td><td>−110,5</td></tr>
+          <tr><td>NH₃</td><td>gas</td><td>−46,1</td></tr>
+          <tr><td>HCl</td><td>gas</td><td>−92,3</td></tr>
+          <tr><td>SO₂</td><td>gas</td><td>−296,8</td></tr>
+          <tr><td>NO</td><td>gas</td><td>+90,3</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── 5. Enlace con energía de enlace ── -->
+  <div class="card">
+    <div class="card-label">Aplicación: Energías de enlace</div>
+    <p>La Ley de Hess también permite estimar ΔH a partir de las <strong>energías de enlace</strong>. Romper enlaces requiere energía (endotérmico); formarlos la libera (exotérmico).</p>
+    <div class="math-block">
+      \[ \Delta H \approx \sum E(\text{enlaces rotos}) - \sum E(\text{enlaces formados}) \]
+    </div>
+    <div class="warning-banner">
+      <div class="wb-icon">⚠️</div>
+      <p>Este método usa <strong>energías promedio</strong> de enlace y proporciona resultados aproximados. Para mayor precisión se usan entalpías de formación tabuladas.</p>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <p><a href="index.html">Inicio</a></p>
+  </footer>
+
+</div>
+<script src="/chatbot-widget.js"></script>
+</body>
+</html>

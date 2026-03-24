@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gases Reales — AtlasDelta</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body>
+<div class="page">
+
+  <a href="gases.html" class="back-link">← Volver</a>
+  <h1 class="page-title">Gases <em>Reales</em></h1>
+  <p class="page-sub">Correcciones al modelo ideal: volumen molecular e interacciones intermoleculares.</p>
+
+  <!-- ── 1. Desviaciones del gas ideal ── -->
+  <div class="card">
+    <div class="card-label">Desviaciones del comportamiento ideal</div>
+    <p>Los gases reales se desvían del comportamiento ideal, especialmente a <strong>altas presiones</strong> y <strong>bajas temperaturas</strong>. Estas desviaciones se cuantifican con el <strong>factor de compresibilidad Z</strong>:</p>
+    <div class="math-block">\[ Z = \frac{PV}{nRT} \]</div>
+    <p>Para un gas ideal, Z = 1 siempre. Para gases reales Z puede ser mayor o menor que 1:</p>
+    <div class="two-col">
+      <div class="mini-card">
+        <div class="mc-label">Z &lt; 1 — fuerzas atractivas</div>
+        <p>Las atracciones intermoleculares reducen la presión efectiva. El gas ocupa menos volumen del esperado. Predomina a <strong>presiones moderadas</strong>.</p>
+      </div>
+      <div class="mini-card">
+        <div class="mc-label">Z &gt; 1 — repulsiones / volumen</div>
+        <p>El volumen propio de las moléculas y las repulsiones a corta distancia aumentan la presión. Predomina a <strong>muy altas presiones</strong>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 2. Ecuación de Van der Waals ── -->
+  <div class="card">
+    <div class="card-label">Ecuación de Van der Waals</div>
+    <p>Propuesta por Johannes Diderik van der Waals en 1873, introduce dos correcciones a la ecuación ideal:</p>
+    <div class="math-block">
+      \[ \left(P + \frac{an^2}{V^2}\right)(V - nb) = nRT \]
+    </div>
+
+    <div class="two-col" style="margin-top:14px;">
+      <div class="mini-card">
+        <div class="mc-label">Constante a (L²·atm/mol²)</div>
+        <p>Corrige la <strong>presión</strong> por las fuerzas intermoleculares atractivas. El término an²/V² representa la presión "perdida" por atracciones.</p>
+        <p style="margin-top:6px;">Cuanto mayor <em>a</em>, más intensas las atracciones.</p>
+      </div>
+      <div class="mini-card">
+        <div class="mc-label">Constante b (L/mol)</div>
+        <p>Corrige el <strong>volumen</strong> sustrayendo el volumen propio de las moléculas (volumen excluido). El gas solo puede ocupar V − nb.</p>
+        <p style="margin-top:6px;">Cuanto mayor <em>b</em>, más grandes las moléculas.</p>
+      </div>
+    </div>
+
+    <h3>Tabla de constantes de Van der Waals</h3>
+    <div class="table-wrap">
+      <table>
+        <caption>Constantes a y b para gases comunes a 25 °C</caption>
+        <thead>
+          <tr><th>Gas</th><th>a (L²·atm/mol²)</th><th>b (L/mol)</th><th>Tipo</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>He</td><td>0,034</td><td>0,0237</td><td>Gas noble</td></tr>
+          <tr><td>H₂</td><td>0,244</td><td>0,0266</td><td>Diatómico</td></tr>
+          <tr><td>N₂</td><td>1,390</td><td>0,0391</td><td>Diatómico</td></tr>
+          <tr><td>O₂</td><td>1,360</td><td>0,0318</td><td>Diatómico</td></tr>
+          <tr><td>CO₂</td><td>3,592</td><td>0,0427</td><td>Lineal polar</td></tr>
+          <tr><td>H₂O</td><td>5,464</td><td>0,0305</td><td>Polar, enlaces H</td></tr>
+          <tr><td>NH₃</td><td>4,169</td><td>0,0371</td><td>Polar, enlaces H</td></tr>
+          <tr><td>CH₄</td><td>2,253</td><td>0,0428</td><td>Apolar</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── 3. Simulador Van der Waals ── -->
+  <div class="card">
+    <div class="card-label">Comparador ideal vs. Van der Waals</div>
+    <p>Ajusta las constantes y observa cuánto se desvía el gas real de la isoterma ideal.</p>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">Gas</span>
+      <select id="gasSelect" style="background:var(--s2);border:1px solid var(--border2);border-radius:8px;color:var(--txt2);font-family:'JetBrains Mono',monospace;font-size:11px;padding:6px 10px;outline:none;cursor:pointer;">
+        <option value="0.034,0.0237">He</option>
+        <option value="0.244,0.0266">H₂</option>
+        <option value="1.390,0.0391" selected>N₂</option>
+        <option value="1.360,0.0318">O₂</option>
+        <option value="3.592,0.0427">CO₂</option>
+        <option value="5.464,0.0305">H₂O</option>
+        <option value="4.169,0.0371">NH₃</option>
+        <option value="2.253,0.0428">CH₄</option>
+      </select>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">T (K)</span>
+      <input type="range" id="vdwT" min="200" max="700" step="25" value="300">
+      <span class="ctrl-val" id="vdwTval">300</span>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">n (mol)</span>
+      <input type="range" id="vdwN" min="1" max="5" step="1" value="1">
+      <span class="ctrl-val" id="vdwNval">1</span>
+    </div>
+
+    <div class="graph-wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div class="graph-title" style="margin:0;">P vs V — ideal (verde) vs. Van der Waals (azul)</div>
+        <div style="display:flex;gap:6px;">
+          <button class="graph-ctrl-btn" id="vdwZoomIn">+</button>
+          <button class="graph-ctrl-btn" id="vdwZoomOut">−</button>
+          <button class="graph-ctrl-btn" id="vdwReset">⌂</button>
+        </div>
+      </div>
+      <canvas id="cvVdW" style="display:block;width:100%;border-radius:8px;touch-action:none;"></canvas>
+    </div>
+
+    <div class="two-col" style="margin-top:12px;">
+      <div class="mini-card" style="text-align:center;">
+        <div class="mc-label">a (L²·atm/mol²)</div>
+        <p id="outA" style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;color:var(--accent);margin:4px 0;">—</p>
+      </div>
+      <div class="mini-card" style="text-align:center;">
+        <div class="mc-label">b (L/mol)</div>
+        <p id="outB" style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;color:#60a5fa;margin:4px 0;">—</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 4. Temperatura crítica ── -->
+  <div class="card">
+    <div class="card-label">Punto crítico</div>
+    <p>Por encima de la <strong>temperatura crítica (T_c)</strong>, un gas no puede licuarse sin importar la presión aplicada. En el punto crítico, las fases líquida y gaseosa se vuelven indistinguibles.</p>
+    <p>Las constantes de Van der Waals permiten calcular las propiedades críticas:</p>
+    <div class="math-block">
+      \[ T_c = \frac{8a}{27Rb} \qquad P_c = \frac{a}{27b^2} \qquad V_c = 3nb \]
+    </div>
+    <div class="info-box">
+      <p>Para el CO₂: a = 3,592 L²·atm/mol², b = 0,0427 L/mol → T_c ≈ 304 K (31 °C), P_c ≈ 72,8 atm. El dióxido de carbono supercrítico se usa ampliamente como solvente industrial.</p>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <p><a href="index.html">Inicio</a></p>
+  </footer>
+</div>
+
+<script>
+const C = { bg:'#13141a', grid:'#2a2d3a', axis:'#363a4a', txt:'#52566a', accent:'#4ade80', blue:'#60a5fa', orange:'#fb923c' };
+const R = 0.08206;
+
+function fmtNum(n) {
+  if (!isFinite(n)) return '—'; const a = Math.abs(n);
+  if (a === 0) return '0'; if (a >= 1e4 || (a < 0.01 && a > 0)) return n.toExponential(2);
+  return parseFloat(n.toFixed(3)).toString();
+}
+function niceStep(raw) {
+  if (!raw || raw <= 0) return 1;
+  const exp = Math.floor(Math.log10(raw)); const frac = raw / Math.pow(10, exp);
+  return (frac < 1.5 ? 1 : frac < 3.5 ? 2 : frac < 7.5 ? 5 : 10) * Math.pow(10, exp);
+}
+
+function makeChart(canvasId, initView, layers, opts = {}) {
+  const canvas = document.getElementById(canvasId); if (!canvas) return null;
+  const wrap = canvas.parentElement;
+  const AR = opts.aspectRatio || 0.52; const interactive = opts.interactive !== false;
+  const showTip = !!opts.tipFn && interactive; const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  let view = {...initView}, W = 0, H = 0, ctx = null, rafId = null;
+  function resize() {
+    const cs = getComputedStyle(wrap); const padH = parseFloat(cs.paddingLeft||0) + parseFloat(cs.paddingRight||0);
+    const newW = Math.floor((wrap.getBoundingClientRect().width || wrap.clientWidth) - padH) || 300;
+    const newH = Math.max(Math.round(newW * AR), 160);
+    if (newW === W && newH === H) return false;
+    W = newW; H = newH; canvas.width = W * DPR; canvas.height = H * DPR;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx = canvas.getContext('2d'); ctx.scale(DPR, DPR); return true;
+  }
+  function mkXforms() {
+    return { toX: xv => (xv - view.xMin) / (view.xMax - view.xMin) * W, toY: yv => H - (yv - view.yMin) / (view.yMax - view.yMin) * H, toMX: px => view.xMin + (px / W) * (view.xMax - view.xMin), toMY: py => view.yMin + ((H - py) / H) * (view.yMax - view.yMin) };
+  }
+  function draw() {
+    rafId = null; if (!ctx || W === 0) return;
+    const { toX, toY } = mkXforms(); const { xMin, xMax, yMin, yMax } = view;
+    ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
+    const gs = niceStep((xMax - xMin) / 7);
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
+    for (let x = Math.ceil(xMin/gs)*gs; x <= xMax + gs*0.01; x += gs) { ctx.beginPath(); ctx.moveTo(toX(x), 0); ctx.lineTo(toX(x), H); ctx.stroke(); }
+    for (let y = Math.ceil(yMin/gs)*gs; y <= yMax + gs*0.01; y += gs) { ctx.beginPath(); ctx.moveTo(0, toY(y)); ctx.lineTo(W, toY(y)); ctx.stroke(); }
+    ctx.strokeStyle = C.axis; ctx.lineWidth = 1.5;
+    if (yMin <= 0 && yMax >= 0) { ctx.beginPath(); ctx.moveTo(0, toY(0)); ctx.lineTo(W, toY(0)); ctx.stroke(); }
+    if (xMin <= 0 && xMax >= 0) { ctx.beginPath(); ctx.moveTo(toX(0), 0); ctx.lineTo(toX(0), H); ctx.stroke(); }
+    const pxPerUnit = W / (xMax - xMin); const labelStep = gs * (pxPerUnit * gs < 40 ? 2 : 1);
+    const fontSize = Math.round(Math.max(8, Math.min(10, W / 50)));
+    ctx.fillStyle = C.txt; ctx.font = `${fontSize}px JetBrains Mono, monospace`;
+    ctx.textAlign = 'center';
+    for (let x = Math.ceil(xMin/labelStep)*labelStep; x <= xMax; x += labelStep) {
+      if (Math.abs(x) < gs * 0.05) continue; const px = toX(x); if (px < fontSize || px > W - fontSize) continue;
+      const axY = toY(0); ctx.fillText(fmtNum(x), px, axY > H-14 ? axY-5 : axY < 12 ? axY+10 : axY+11);
+    }
+    ctx.textAlign = 'right';
+    for (let y = Math.ceil(yMin/labelStep)*labelStep; y <= yMax; y += labelStep) {
+      if (Math.abs(y) < gs * 0.05) continue; const py = toY(y); if (py < 8 || py > H - 6) continue;
+      const axX = toX(0); ctx.fillText(fmtNum(y), axX < 24 ? axX+28 : axX > W-8 ? W-4 : axX-4, py+3);
+    }
+    layers.forEach(fn => { try { fn(ctx, W, H, toX, toY, view); } catch(e){} });
+  }
+  function sched() { if (!rafId) rafId = requestAnimationFrame(draw); }
+  function zoomAt(px, py, factor) {
+    const { toMX, toMY } = mkXforms(); const cx = toMX(px), cy = toMY(py);
+    view.xMin = cx+(view.xMin-cx)*factor; view.xMax = cx+(view.xMax-cx)*factor;
+    view.yMin = cy+(view.yMin-cy)*factor; view.yMax = cy+(view.yMax-cy)*factor; sched();
+  }
+  let tipEl = null;
+  if (showTip) {
+    tipEl = document.createElement('div');
+    tipEl.style.cssText = `position:absolute;pointer-events:none;display:none;background:var(--s2);border:1px solid var(--border2);border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt2);padding:4px 9px;white-space:nowrap;z-index:10;`;
+    if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+    wrap.appendChild(tipEl);
+  }
+  function hideTip() { if (tipEl) tipEl.style.display = 'none'; }
+  function showCrosshair(mx, my) {
+    if (!opts.tipFn) return; const { toMX, toX, toY } = mkXforms(); const mathX = toMX(mx);
+    const tip = opts.tipFn(mathX); if (!tip) { hideTip(); return; }
+    if (tipEl) { tipEl.style.display = ''; tipEl.textContent = tip.text; const tw = tipEl.offsetWidth||150, th = tipEl.offsetHeight||24; let tx = mx+14, ty = my-th-8; if (tx+tw>W) tx=mx-tw-10; if (ty<4) ty=my+10; tipEl.style.left=tx+'px'; tipEl.style.top=ty+'px'; }
+    requestAnimationFrame(() => { if (!ctx||tip.y===undefined) return; const px=toX(mathX),py=toY(tip.y); const ay=Math.min(Math.max(toY(0),0),H),ax=Math.min(Math.max(toX(0),0),W); ctx.save(); ctx.setLineDash([3,3]); ctx.strokeStyle=C.txt; ctx.lineWidth=0.8; ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,ay); ctx.stroke(); ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(ax,py); ctx.stroke(); ctx.restore(); ctx.fillStyle=C.accent; ctx.strokeStyle=C.bg; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(px,py,4.5,0,2*Math.PI); ctx.fill(); ctx.stroke(); });
+  }
+  function getPos(e,i=0) { const r=canvas.getBoundingClientRect(); const src=e.touches?e.touches[i]:e.changedTouches?e.changedTouches[i]:e; if(!src) return null; return {x:src.clientX-r.left,y:src.clientY-r.top}; }
+  let dragging=false,dragStart=null,viewSnap=null,pinchDist=null;
+  function onDown(e){if(e.touches&&e.touches.length>1)return;e.preventDefault();const pos=getPos(e);if(!pos)return;dragging=true;dragStart=pos;viewSnap={...view};if(!e.touches)canvas.style.cursor='grabbing';}
+  function onMove(e){if(e.touches&&e.touches.length>=2){onPinch(e);return;}e.preventDefault();const pos=getPos(e);if(!pos)return;const{x:mx,y:my}=pos;if(dragging&&dragStart&&viewSnap){hideTip();const dx=(mx-dragStart.x)/W*(viewSnap.xMax-viewSnap.xMin);const dy=(my-dragStart.y)/H*(viewSnap.yMax-viewSnap.yMin);view.xMin=viewSnap.xMin-dx;view.xMax=viewSnap.xMax-dx;view.yMin=viewSnap.yMin+dy;view.yMax=viewSnap.yMax+dy;sched();}else if(showTip){sched();showCrosshair(mx,my);}}
+  function onUp(e){dragging=false;if(!e.touches)canvas.style.cursor='crosshair';}
+  function onLeave(){dragging=false;hideTip();canvas.style.cursor='crosshair';}
+  function onTouchEnd(e){if(e.touches.length===0){dragging=false;pinchDist=null;hideTip();}}
+  function onWheel(e){e.preventDefault();const pos=getPos(e);if(!pos)return;zoomAt(pos.x,pos.y,e.deltaY>0?1.13:1/1.13);}
+  function onPinch(e){e.preventDefault();if(e.touches.length<2)return;const dx=e.touches[0].clientX-e.touches[1].clientX;const dy=e.touches[0].clientY-e.touches[1].clientY;const dist=Math.sqrt(dx*dx+dy*dy);if(dist<1)return;const r=canvas.getBoundingClientRect();const mx=((e.touches[0].clientX+e.touches[1].clientX)/2)-r.left;const my=((e.touches[0].clientY+e.touches[1].clientY)/2)-r.top;if(pinchDist)zoomAt(mx,my,pinchDist/dist);pinchDist=dist;}
+  if(interactive){canvas.style.cursor='crosshair';canvas.style.touchAction='none';canvas.addEventListener('mousedown',onDown,{passive:false});canvas.addEventListener('mousemove',onMove,{passive:false});canvas.addEventListener('mouseup',onUp);canvas.addEventListener('mouseleave',onLeave);canvas.addEventListener('wheel',onWheel,{passive:false});canvas.addEventListener('touchstart',onDown,{passive:false});canvas.addEventListener('touchmove',onMove,{passive:false});canvas.addEventListener('touchend',onTouchEnd);canvas.addEventListener('touchcancel',onTouchEnd);}
+  const ro=new ResizeObserver(()=>{if(resize())sched();});ro.observe(wrap);resize();sched();
+  return {redraw:sched,setView(v){view={...v};sched();},resetView(){view={...initView};sched();},zoomIn(){zoomAt(W/2,H/2,1/1.35);},zoomOut(){zoomAt(W/2,H/2,1.35);},destroy(){ro.disconnect();if(rafId)cancelAnimationFrame(rafId);}};
+}
+
+function layerFn(fn, color, lw) {
+  return (ctx,W,H,toX,toY,view)=>{
+    ctx.strokeStyle=color;ctx.lineWidth=lw||2.5;ctx.lineJoin='round';
+    const STEPS=Math.round(W*1.6);const{xMin,xMax,yMin,yMax}=view;const yRange=yMax-yMin;
+    ctx.beginPath();let started=false,prevY=null;
+    for(let i=0;i<=STEPS;i++){const x=xMin+i*(xMax-xMin)/STEPS;let y;try{y=fn(x);}catch(e){started=false;prevY=null;continue;}if(y===null||!isFinite(y)||isNaN(y)){started=false;prevY=null;continue;}if(prevY!==null&&Math.abs(y-prevY)>yRange*0.55){started=false;}prevY=y;const px=toX(x),py=toY(y);if(!started){ctx.moveTo(px,py);started=true;}else ctx.lineTo(px,py);}
+    ctx.stroke();
+  };
+}
+function layerLegend(items) {
+  return (ctx,W)=>{ const fs=Math.max(9,Math.min(11,W/55));ctx.font=`${fs}px JetBrains Mono, monospace`;ctx.textAlign='left';items.forEach(({color,label},i)=>{ctx.fillStyle=color;ctx.fillRect(12,10+i*18,12,3);ctx.fillStyle=C.txt;ctx.fillText(label,28,17+i*18);});};
+}
+
+// ── Van der Waals simulator ──────────────────────────────────
+let vdwChart = null;
+
+function getVdwParams() {
+  const sel = document.getElementById('gasSelect');
+  const [a, b] = sel.value.split(',').map(Number);
+  return { a, b };
+}
+
+function idealP(n, T, V) { return V > 0.01 ? n * R * T / V : null; }
+function vdwP(n, T, V, a, b) {
+  const nb = n * b;
+  if (V <= nb + 0.001) return null;
+  const P = (n * R * T) / (V - nb) - a * n * n / (V * V);
+  return isFinite(P) && P > -50 ? P : null;
+}
+
+function updateVdW() {
+  const { a, b } = getVdwParams();
+  const T = parseFloat(document.getElementById('vdwT').value);
+  const n = parseFloat(document.getElementById('vdwN').value);
+  document.getElementById('vdwTval').textContent = T;
+  document.getElementById('vdwNval').textContent = n;
+  document.getElementById('outA').textContent = a;
+  document.getElementById('outB').textContent = b;
+
+  const gasName = document.getElementById('gasSelect').options[document.getElementById('gasSelect').selectedIndex].text;
+
+  if (vdwChart) { vdwChart.destroy(); vdwChart = null; }
+  vdwChart = makeChart('cvVdW',
+    { xMin: 0, xMax: 25, yMin: -2, yMax: 15 },
+    [
+      layerFn(V => idealP(n, T, V), C.accent, 2),
+      layerFn(V => vdwP(n, T, V, a, b), C.blue, 2),
+      layerLegend([
+        { color: C.accent, label: `Ideal  (n=${n}, T=${T}K)` },
+        { color: C.blue,   label: `Van der Waals — ${gasName}` },
+      ]),
+    ],
+    {
+      interactive: true, aspectRatio: 0.55,
+      tipFn: V => {
+        const Pi = idealP(n, T, V); const Pv = vdwP(n, T, V, a, b);
+        if (!Pi) return null;
+        return { text: `V=${fmtNum(V)}  P_id=${fmtNum(Pi)}  P_vdw=${fmtNum(Pv)}`, y: Pi };
+      },
+    }
+  );
+  document.getElementById('vdwZoomIn').onclick  = () => vdwChart && vdwChart.zoomIn();
+  document.getElementById('vdwZoomOut').onclick = () => vdwChart && vdwChart.zoomOut();
+  document.getElementById('vdwReset').onclick   = () => vdwChart && vdwChart.resetView();
+}
+
+document.getElementById('gasSelect').addEventListener('change', updateVdW);
+document.getElementById('vdwT').addEventListener('input', updateVdW);
+document.getElementById('vdwN').addEventListener('input', updateVdW);
+updateVdW();
+</script>
+<script src="/chatbot-widget.js"></script>
+</body>
+</html>

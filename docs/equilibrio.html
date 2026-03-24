@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Equilibrio Químico — AtlasDelta</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body>
+<div class="page">
+
+  <a href="thermo.html" class="back-link">← Volver</a>
+  <h1 class="page-title">Equilibrio Químico</h1>
+  <p class="page-sub">Estado dinámico en el que las velocidades de las reacciones directa e inversa se igualan.</p>
+
+  <!-- ── 1. Concepto ── -->
+  <div class="card">
+    <div class="card-label">Concepto</div>
+    <p>Una reacción química alcanza el <strong>equilibrio</strong> cuando la concentración de reactivos y productos deja de cambiar con el tiempo. Esto no significa que la reacción se haya detenido, sino que las dos reacciones —la directa y la inversa— ocurren a la misma velocidad.</p>
+    <div class="reaction">
+      <span class="reagent">aA + bB</span>
+      <span class="arrow">⇌</span>
+      <span class="product">cC + dD</span>
+    </div>
+    <div class="info-box">
+      <p>El equilibrio es <strong>dinámico</strong>: las moléculas continúan reaccionando, pero las concentraciones netas permanecen constantes. A escala macroscópica, el sistema parece estático.</p>
+    </div>
+  </div>
+
+  <!-- ── 2. Constante de equilibrio ── -->
+  <div class="card">
+    <div class="card-label">Constante de equilibrio — Kc</div>
+    <p>Para la reacción general <strong>aA + bB ⇌ cC + dD</strong>, la constante de equilibrio en términos de concentraciones molares es:</p>
+    <div class="math-block">
+      \[ K_c = \frac{[\text{C}]^c[\text{D}]^d}{[\text{A}]^a[\text{B}]^b} \]
+    </div>
+    <p>Los corchetes representan concentraciones molares en el equilibrio (mol/L). Los <strong>sólidos y líquidos puros</strong> no se incluyen en la expresión de K porque su concentración es constante.</p>
+
+    <h3>Constante Kp</h3>
+    <p>Cuando los reactivos son gases, se puede expresar K en función de las presiones parciales:</p>
+    <div class="math-block">
+      \[ K_p = \frac{P_C^c \, P_D^d}{P_A^a \, P_B^b} \]
+    </div>
+    <p>La relación entre ambas constantes es:</p>
+    <div class="math-block">
+      \[ K_p = K_c (RT)^{\Delta n} \]
+    </div>
+    <p>donde <strong>Δn</strong> es la variación en los moles de gas (productos − reactivos), <strong>R</strong> = 0,08206 L·atm/mol·K y <strong>T</strong> es la temperatura en Kelvin.</p>
+
+    <div class="two-col">
+      <div class="mini-card">
+        <div class="mc-label">Si K &gt; 1</div>
+        <p>El equilibrio favorece la formación de <strong>productos</strong>. La reacción directa es predominante.</p>
+      </div>
+      <div class="mini-card">
+        <div class="mc-label">Si K &lt; 1</div>
+        <p>El equilibrio favorece a los <strong>reactivos</strong>. La reacción inversa es predominante.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3. Cociente de reacción Q ── -->
+  <div class="card">
+    <div class="card-label">Cociente de reacción — Q</div>
+    <p>El <strong>cociente de reacción Q</strong> tiene la misma forma que K, pero se calcula con las concentraciones en cualquier momento del proceso (no necesariamente en el equilibrio).</p>
+    <div class="math-block">
+      \[ Q_c = \frac{[\text{C}]^c[\text{D}]^d}{[\text{A}]^a[\text{B}]^b} \]
+    </div>
+    <div class="two-col">
+      <div class="mini-card">
+        <div class="mc-label">Q &lt; K</div>
+        <p>La reacción avanza hacia los <strong>productos</strong> (→) para alcanzar el equilibrio.</p>
+      </div>
+      <div class="mini-card">
+        <div class="mc-label">Q &gt; K</div>
+        <p>La reacción avanza hacia los <strong>reactivos</strong> (←) para alcanzar el equilibrio.</p>
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:12px;">
+      <p>Cuando <strong>Q = K</strong>, el sistema ya se encuentra en equilibrio y no hay cambio neto en las concentraciones.</p>
+    </div>
+  </div>
+
+  <!-- ── 4. Principio de Le Chatelier ── -->
+  <div class="card">
+    <div class="card-label">Principio de Le Chatelier</div>
+    <p>Si un sistema en equilibrio es sometido a una perturbación externa, el sistema se ajusta para <strong>contrarrestar parcialmente</strong> esa perturbación y alcanzar un nuevo estado de equilibrio.</p>
+
+    <h3>Efecto de la concentración</h3>
+    <p>Aumentar la concentración de un reactivo desplaza el equilibrio hacia los productos; reducirla lo desplaza hacia los reactivos. Lo contrario ocurre si se manipula la concentración de un producto.</p>
+
+    <h3>Efecto de la presión y el volumen</h3>
+    <p>Solo afecta a equilibrios con gases. Aumentar la presión (disminuir el volumen) desplaza el equilibrio hacia el lado con <strong>menos moles de gas</strong>.</p>
+    <div class="reaction">
+      <span class="reagent">N₂(g) + 3 H₂(g)</span>
+      <span class="arrow">⇌</span>
+      <span class="product">2 NH₃(g)</span>
+    </div>
+    <p>En este caso, 4 moles de gas → 2 moles. Aumentar la presión favorece la formación de NH₃.</p>
+
+    <h3>Efecto de la temperatura</h3>
+    <div class="two-col">
+      <div class="mini-card">
+        <div class="mc-label">Reacción exotérmica (ΔH &lt; 0)</div>
+        <p>Aumentar T desplaza el equilibrio hacia los <strong>reactivos</strong> (K disminuye).</p>
+      </div>
+      <div class="mini-card">
+        <div class="mc-label">Reacción endotérmica (ΔH &gt; 0)</div>
+        <p>Aumentar T desplaza el equilibrio hacia los <strong>productos</strong> (K aumenta).</p>
+      </div>
+    </div>
+
+    <h3>Efecto de un catalizador</h3>
+    <div class="info-box">
+      <p>Un catalizador <strong>no desplaza el equilibrio</strong>. Acelera igualmente la reacción directa e inversa, por lo que solo se llega al equilibrio más rápido, sin cambiar el valor de K ni las concentraciones finales.</p>
+    </div>
+  </div>
+
+  <!-- ── 5. Tabla ICE ── -->
+  <div class="card">
+    <div class="card-label">Método ICE</div>
+    <p>La tabla <strong>ICE</strong> (Initial – Change – Equilibrium) es la herramienta estándar para resolver problemas de equilibrio:</p>
+
+    <div class="table-wrap" style="margin-top:14px;">
+      <table>
+        <caption>Ejemplo: N₂ + 3 H₂ ⇌ 2 NH₃ · concentraciones iniciales: [N₂]=1,0 M, [H₂]=3,0 M, [NH₃]=0</caption>
+        <thead>
+          <tr>
+            <th></th>
+            <th>N₂</th>
+            <th>H₂</th>
+            <th>NH₃</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Inicial</strong></td>
+            <td>1,0</td>
+            <td>3,0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td><strong>Cambio</strong></td>
+            <td>−x</td>
+            <td>−3x</td>
+            <td>+2x</td>
+          </tr>
+          <tr>
+            <td><strong>Equilibrio</strong></td>
+            <td>1,0 − x</td>
+            <td>3,0 − 3x</td>
+            <td>2x</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:12px;">Con el valor de K conocido, se sustituyen las expresiones del equilibrio en la expresión de K<sub>c</sub> y se resuelve para x.</p>
+  </div>
+
+  <!-- ── 6. Equilibrios heterogéneos ── -->
+  <div class="card">
+    <div class="card-label">Equilibrios heterogéneos</div>
+    <p>Cuando la reacción involucra más de una fase (sólido, líquido, gas), se denomina <strong>equilibrio heterogéneo</strong>. Las concentraciones de sólidos y líquidos puros son constantes y se omiten de la expresión de K.</p>
+    <div class="reaction">
+      <span class="reagent">CaCO₃(s)</span>
+      <span class="arrow">⇌</span>
+      <span class="product">CaO(s) + CO₂(g)</span>
+    </div>
+    <div class="math-block">
+      \[ K_c = [\text{CO}_2] \]
+    </div>
+    <p>Solo aparece el gas en la expresión de K porque CaCO₃ y CaO son sólidos puros.</p>
+  </div>
+
+  <footer class="site-footer">
+    <p><a href="index.html">Inicio</a></p>
+  </footer>
+
+</div>
+<script src="/chatbot-widget.js"></script>
+</body>
+</html>

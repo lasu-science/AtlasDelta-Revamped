@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leyes de los Gases — AtlasDelta</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body>
+<div class="page">
+
+  <a href="gases.html" class="back-link">← Volver</a>
+  <h1 class="page-title">Leyes de los <em>Gases</em></h1>
+  <p class="page-sub">Relaciones empíricas entre P, V, T y n — base experimental de la ecuación de estado.</p>
+
+  <!-- ── Tabs ── -->
+  <div class="card">
+    <div class="card-label">Seleccionar ley</div>
+    <div class="tab-bar" id="lawTabs">
+      <button class="tab-btn active" data-tab="boyle">Boyle</button>
+      <button class="tab-btn" data-tab="charles">Charles</button>
+      <button class="tab-btn" data-tab="gaylussac">Gay-Lussac</button>
+      <button class="tab-btn" data-tab="avogadro">Avogadro</button>
+      <button class="tab-btn" data-tab="combinada">Combinada</button>
+    </div>
+
+    <!-- BOYLE -->
+    <div class="tab-panel active" id="tab-boyle">
+      <h3>Ley de Boyle-Mariotte (1662)</h3>
+      <p>A <strong>temperatura y cantidad de gas constantes</strong>, la presión y el volumen de un gas son inversamente proporcionales.</p>
+      <div class="math-block">\[ P \cdot V = k \quad (T, n \ \text{ctes.}) \qquad \Rightarrow \qquad P_1 V_1 = P_2 V_2 \]</div>
+      <p>La gráfica P vs V es una <strong>hipérbola</strong> (isóterma). Cuanto mayor la temperatura, más alejada del origen queda la curva.</p>
+      <div class="ctrl-row">
+        <span class="ctrl-label">T (K)</span>
+        <input type="range" id="boyleT" min="100" max="600" step="50" value="300">
+        <span class="ctrl-val" id="boyleTval">300</span>
+      </div>
+      <div class="graph-wrap">
+        <div class="graph-title">Ley de Boyle — P vs V (n = 1 mol)</div>
+        <canvas id="cvBoyle" style="display:block;width:100%;touch-action:none;"></canvas>
+      </div>
+      <div class="info-box">
+        <p><strong>Ejemplo:</strong> Un gas a P₁ = 2 atm y V₁ = 3 L se comprime hasta V₂ = 1 L (T cte). La nueva presión es P₂ = P₁V₁/V₂ = 6 atm.</p>
+      </div>
+    </div>
+
+    <!-- CHARLES -->
+    <div class="tab-panel" id="tab-charles">
+      <h3>Ley de Charles (1787)</h3>
+      <p>A <strong>presión y cantidad de gas constantes</strong>, el volumen de un gas es directamente proporcional a su temperatura absoluta.</p>
+      <div class="math-block">\[ \frac{V}{T} = k \quad (P, n \ \text{ctes.}) \qquad \Rightarrow \qquad \frac{V_1}{T_1} = \frac{V_2}{T_2} \]</div>
+      <p>La gráfica V vs T es una <strong>recta</strong> que, extrapolada, corta el eje T en <strong>T = 0 K</strong> (cero absoluto), donde el volumen sería nulo.</p>
+      <div class="ctrl-row">
+        <span class="ctrl-label">P (atm)</span>
+        <input type="range" id="charlesP" min="0.5" max="3" step="0.5" value="1">
+        <span class="ctrl-val" id="charlesPval">1,0</span>
+      </div>
+      <div class="graph-wrap">
+        <div class="graph-title">Ley de Charles — V vs T (n = 1 mol)</div>
+        <canvas id="cvCharles" style="display:block;width:100%;touch-action:none;"></canvas>
+      </div>
+      <div class="info-box">
+        <p><strong>Ejemplo:</strong> Un gas ocupa V₁ = 2 L a T₁ = 300 K. Calentado a T₂ = 600 K (P cte), el nuevo volumen es V₂ = V₁·T₂/T₁ = 4 L.</p>
+      </div>
+    </div>
+
+    <!-- GAY-LUSSAC -->
+    <div class="tab-panel" id="tab-gaylussac">
+      <h3>Ley de Gay-Lussac (1809)</h3>
+      <p>A <strong>volumen y cantidad de gas constantes</strong>, la presión de un gas es directamente proporcional a su temperatura absoluta.</p>
+      <div class="math-block">\[ \frac{P}{T} = k \quad (V, n \ \text{ctes.}) \qquad \Rightarrow \qquad \frac{P_1}{T_1} = \frac{P_2}{T_2} \]</div>
+      <p>La gráfica P vs T es una <strong>recta</strong>. Igual que la ley de Charles, la extrapolación hasta P = 0 indica el cero absoluto.</p>
+      <div class="ctrl-row">
+        <span class="ctrl-label">V (L)</span>
+        <input type="range" id="glV" min="1" max="10" step="1" value="5">
+        <span class="ctrl-val" id="glVval">5</span>
+      </div>
+      <div class="graph-wrap">
+        <div class="graph-title">Ley de Gay-Lussac — P vs T (n = 1 mol)</div>
+        <canvas id="cvGL" style="display:block;width:100%;touch-action:none;"></canvas>
+      </div>
+      <div class="info-box">
+        <p><strong>Ejemplo:</strong> Una olla a presión a P₁ = 1 atm y T₁ = 300 K se calienta a T₂ = 450 K (V cte). La presión sube a P₂ = P₁·T₂/T₁ = 1,5 atm.</p>
+      </div>
+    </div>
+
+    <!-- AVOGADRO -->
+    <div class="tab-panel" id="tab-avogadro">
+      <h3>Ley de Avogadro (1811)</h3>
+      <p>A <strong>temperatura y presión constantes</strong>, el volumen de un gas es directamente proporcional a su cantidad de sustancia (moles).</p>
+      <div class="math-block">\[ \frac{V}{n} = k \quad (T, P \ \text{ctes.}) \qquad \Rightarrow \qquad \frac{V_1}{n_1} = \frac{V_2}{n_2} \]</div>
+      <p>Esto implica que <strong>volúmenes iguales</strong> de gases distintos, a la misma T y P, contienen el mismo número de moléculas — sin importar su naturaleza química.</p>
+      <div class="ctrl-row">
+        <span class="ctrl-label">T (K)</span>
+        <input type="range" id="avogT" min="200" max="600" step="50" value="300">
+        <span class="ctrl-val" id="avogTval">300</span>
+      </div>
+      <div class="graph-wrap">
+        <div class="graph-title">Ley de Avogadro — V vs n (P = 1 atm)</div>
+        <canvas id="cvAvog" style="display:block;width:100%;touch-action:none;"></canvas>
+      </div>
+      <div class="info-box">
+        <p>A 0 °C y 1 atm (STP), 1 mol de cualquier gas ideal ocupa <strong>22,414 L</strong>. Este valor se conoce como <em>volumen molar estándar</em>.</p>
+      </div>
+    </div>
+
+    <!-- COMBINADA -->
+    <div class="tab-panel" id="tab-combinada">
+      <h3>Ley de los gases combinada</h3>
+      <p>Combinando las leyes de Boyle, Charles y Gay-Lussac (con n constante) se obtiene:</p>
+      <div class="math-block">\[ \frac{P_1 V_1}{T_1} = \frac{P_2 V_2}{T_2} \]</div>
+      <p>Útil cuando dos de las tres variables (P, V, T) cambian simultáneamente. Si alguna permanece constante, la ecuación se reduce a la ley individual correspondiente.</p>
+
+      <h3 style="margin-top:18px;">Calculadora de estados</h3>
+      <p style="font-size:14px;margin-bottom:12px;">Ingresa el estado inicial y dos variables del estado final. La variable que dejes en blanco se calculará automáticamente.</p>
+
+      <div class="two-col">
+        <div class="mini-card">
+          <div class="mc-label">Estado 1 (inicial)</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3);width:50px;">P₁ (atm)</span>
+              <input type="number" id="cP1" value="1" min="0.001" step="0.1" style="flex:1;background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3);width:50px;">V₁ (L)</span>
+              <input type="number" id="cV1" value="2" min="0.001" step="0.1" style="flex:1;background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3);width:50px;">T₁ (K)</span>
+              <input type="number" id="cT1" value="300" min="1" step="1" style="flex:1;background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;">
+            </div>
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-label">Estado 2 (final) — deja uno en blanco</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3);width:50px;">P₂ (atm)</span>
+              <input type="number" id="cP2" value="" placeholder="?" step="0.1" style="flex:1;background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3);width:50px;">V₂ (L)</span>
+              <input type="number" id="cV2" value="4" step="0.1" style="flex:1;background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3);width:50px;">T₂ (K)</span>
+              <input type="number" id="cT2" value="600" step="1" style="flex:1;background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <button onclick="calcCombined()" style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0d0e12;background:var(--accent);border:none;border-radius:8px;padding:10px 22px;cursor:pointer;font-weight:600;">Calcular →</button>
+      </div>
+      <div id="combinedResult" style="margin-top:12px;display:none;">
+        <div class="info-box">
+          <p id="combinedResultText" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent);margin:0;"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Resumen comparativo ── -->
+  <div class="card">
+    <div class="card-label">Resumen comparativo</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Ley</th><th>Variable fija</th><th>Relación</th><th>Gráfica</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Boyle</strong></td><td>T, n</td><td>P · V = cte</td><td>Hipérbola (P vs V)</td></tr>
+          <tr><td><strong>Charles</strong></td><td>P, n</td><td>V / T = cte</td><td>Recta (V vs T)</td></tr>
+          <tr><td><strong>Gay-Lussac</strong></td><td>V, n</td><td>P / T = cte</td><td>Recta (P vs T)</td></tr>
+          <tr><td><strong>Avogadro</strong></td><td>T, P</td><td>V / n = cte</td><td>Recta (V vs n)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <p><a href="index.html">Inicio</a></p>
+  </footer>
+</div>
+
+<script>
+const C = { bg:'#13141a', grid:'#2a2d3a', axis:'#363a4a', txt:'#52566a', accent:'#4ade80', blue:'#60a5fa', orange:'#fb923c', purple:'#a78bfa' };
+const R = 0.08206;
+
+function fmtNum(n) {
+  if (!isFinite(n)) return '—';
+  const a = Math.abs(n);
+  if (a === 0) return '0';
+  if (a >= 1e4 || (a < 0.01 && a > 0)) return n.toExponential(2);
+  return parseFloat(n.toFixed(3)).toString();
+}
+function niceStep(raw) {
+  if (!raw || raw <= 0) return 1;
+  const exp = Math.floor(Math.log10(raw));
+  const frac = raw / Math.pow(10, exp);
+  return (frac < 1.5 ? 1 : frac < 3.5 ? 2 : frac < 7.5 ? 5 : 10) * Math.pow(10, exp);
+}
+
+function makeChart(canvasId, initView, layers, opts = {}) {
+  const canvas = document.getElementById(canvasId); if (!canvas) return null;
+  const wrap = canvas.parentElement;
+  const AR = opts.aspectRatio || 0.52;
+  const interactive = opts.interactive !== false;
+  const showTip = !!opts.tipFn && interactive;
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  let view = {...initView}, W = 0, H = 0, ctx = null, rafId = null;
+
+  function resize() {
+    const cs = getComputedStyle(wrap);
+    const padH = parseFloat(cs.paddingLeft||0) + parseFloat(cs.paddingRight||0);
+    const newW = Math.floor((wrap.getBoundingClientRect().width || wrap.clientWidth) - padH) || 300;
+    const newH = Math.max(Math.round(newW * AR), 160);
+    if (newW === W && newH === H) return false;
+    W = newW; H = newH;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx = canvas.getContext('2d'); ctx.scale(DPR, DPR); return true;
+  }
+  function mkXforms() {
+    const toX  = xv => (xv - view.xMin) / (view.xMax - view.xMin) * W;
+    const toY  = yv => H - (yv - view.yMin) / (view.yMax - view.yMin) * H;
+    const toMX = px => view.xMin + (px / W) * (view.xMax - view.xMin);
+    const toMY = py => view.yMin + ((H - py) / H) * (view.yMax - view.yMin);
+    return { toX, toY, toMX, toMY };
+  }
+  function draw() {
+    rafId = null; if (!ctx || W === 0) return;
+    const { toX, toY } = mkXforms(); const { xMin, xMax, yMin, yMax } = view;
+    ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
+    const gs = niceStep((xMax - xMin) / 7);
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
+    for (let x = Math.ceil(xMin/gs)*gs; x <= xMax + gs*0.01; x += gs) { const px = toX(x); ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke(); }
+    for (let y = Math.ceil(yMin/gs)*gs; y <= yMax + gs*0.01; y += gs) { const py = toY(y); ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(W, py); ctx.stroke(); }
+    ctx.strokeStyle = C.axis; ctx.lineWidth = 1.5;
+    if (yMin <= 0 && yMax >= 0) { ctx.beginPath(); ctx.moveTo(0, toY(0)); ctx.lineTo(W, toY(0)); ctx.stroke(); }
+    if (xMin <= 0 && xMax >= 0) { ctx.beginPath(); ctx.moveTo(toX(0), 0); ctx.lineTo(toX(0), H); ctx.stroke(); }
+    const pxPerUnit = W / (xMax - xMin);
+    const labelStep = gs * (pxPerUnit * gs < 40 ? 2 : 1);
+    const fontSize = Math.round(Math.max(8, Math.min(10, W / 50)));
+    ctx.fillStyle = C.txt; ctx.font = `${fontSize}px JetBrains Mono, monospace`;
+    ctx.textAlign = 'center';
+    for (let x = Math.ceil(xMin/labelStep)*labelStep; x <= xMax; x += labelStep) {
+      if (Math.abs(x) < gs * 0.05) continue;
+      const px = toX(x); if (px < fontSize || px > W - fontSize) continue;
+      const axY = toY(0); const ly = axY > H - 14 ? axY - 5 : axY < 12 ? axY + 10 : axY + 11;
+      ctx.fillText(fmtNum(x), px, ly);
+    }
+    ctx.textAlign = 'right';
+    for (let y = Math.ceil(yMin/labelStep)*labelStep; y <= yMax; y += labelStep) {
+      if (Math.abs(y) < gs * 0.05) continue;
+      const py = toY(y); if (py < 8 || py > H - 6) continue;
+      const axX = toX(0); const lx = axX < 24 ? axX + 28 : axX > W - 8 ? W - 4 : axX - 4;
+      ctx.fillText(fmtNum(y), lx, py + 3);
+    }
+    layers.forEach(fn => { try { fn(ctx, W, H, toX, toY, view); } catch(e){} });
+  }
+  function sched() { if (!rafId) rafId = requestAnimationFrame(draw); }
+  function zoomAt(px, py, factor) {
+    const { toMX, toMY } = mkXforms();
+    const cx = toMX(px), cy = toMY(py);
+    view.xMin = cx + (view.xMin - cx) * factor; view.xMax = cx + (view.xMax - cx) * factor;
+    view.yMin = cy + (view.yMin - cy) * factor; view.yMax = cy + (view.yMax - cy) * factor; sched();
+  }
+  let tipEl = null;
+  if (showTip) {
+    tipEl = document.createElement('div');
+    tipEl.style.cssText = `position:absolute;pointer-events:none;display:none;background:var(--s2);border:1px solid var(--border2);border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt2);padding:4px 9px;white-space:nowrap;z-index:10;`;
+    if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+    wrap.appendChild(tipEl);
+  }
+  function hideTip() { if (tipEl) tipEl.style.display = 'none'; }
+  function showCrosshair(mx, my) {
+    if (!opts.tipFn) return;
+    const { toMX, toX, toY } = mkXforms(); const mathX = toMX(mx);
+    const tip = opts.tipFn(mathX); if (!tip) { hideTip(); return; }
+    if (tipEl) {
+      tipEl.style.display = ''; tipEl.textContent = tip.text;
+      const tw = tipEl.offsetWidth || 150, th = tipEl.offsetHeight || 24;
+      let tx = mx + 14, ty = my - th - 8;
+      if (tx + tw > W) tx = mx - tw - 10; if (ty < 4) ty = my + 10;
+      tipEl.style.left = tx + 'px'; tipEl.style.top = ty + 'px';
+    }
+    requestAnimationFrame(() => {
+      if (!ctx || tip.y === undefined) return;
+      const px = toX(mathX), py = toY(tip.y);
+      const ay = Math.min(Math.max(toY(0), 0), H), ax = Math.min(Math.max(toX(0), 0), W);
+      ctx.save(); ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = C.txt; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, ay); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(ax, py); ctx.stroke();
+      ctx.restore();
+      ctx.fillStyle = C.accent; ctx.strokeStyle = C.bg; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(px, py, 4.5, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
+    });
+  }
+  function getPos(e, i = 0) {
+    const r = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[i] : e.changedTouches ? e.changedTouches[i] : e;
+    if (!src) return null; return { x: src.clientX - r.left, y: src.clientY - r.top };
+  }
+  let dragging = false, dragStart = null, viewSnap = null, pinchDist = null;
+  function onDown(e) { if (e.touches && e.touches.length > 1) return; e.preventDefault(); const pos = getPos(e); if (!pos) return; dragging = true; dragStart = pos; viewSnap = {...view}; if (!e.touches) canvas.style.cursor = 'grabbing'; }
+  function onMove(e) {
+    if (e.touches && e.touches.length >= 2) { onPinch(e); return; } e.preventDefault();
+    const pos = getPos(e); if (!pos) return; const { x: mx, y: my } = pos;
+    if (dragging && dragStart && viewSnap) { hideTip(); const dx = (mx - dragStart.x) / W * (viewSnap.xMax - viewSnap.xMin); const dy = (my - dragStart.y) / H * (viewSnap.yMax - viewSnap.yMin); view.xMin = viewSnap.xMin - dx; view.xMax = viewSnap.xMax - dx; view.yMin = viewSnap.yMin + dy; view.yMax = viewSnap.yMax + dy; sched(); } else if (showTip) { sched(); showCrosshair(mx, my); }
+  }
+  function onUp(e) { dragging = false; if (!e.touches) canvas.style.cursor = 'crosshair'; }
+  function onLeave() { dragging = false; hideTip(); canvas.style.cursor = 'crosshair'; }
+  function onTouchEnd(e) { if (e.touches.length === 0) { dragging = false; pinchDist = null; hideTip(); } }
+  function onWheel(e) { e.preventDefault(); const pos = getPos(e); if (!pos) return; zoomAt(pos.x, pos.y, e.deltaY > 0 ? 1.13 : 1/1.13); }
+  function onPinch(e) { e.preventDefault(); if (e.touches.length < 2) return; const dx = e.touches[0].clientX - e.touches[1].clientX; const dy = e.touches[0].clientY - e.touches[1].clientY; const dist = Math.sqrt(dx*dx + dy*dy); if (dist < 1) return; const r = canvas.getBoundingClientRect(); const mx = ((e.touches[0].clientX + e.touches[1].clientX)/2) - r.left; const my = ((e.touches[0].clientY + e.touches[1].clientY)/2) - r.top; if (pinchDist) zoomAt(mx, my, pinchDist / dist); pinchDist = dist; }
+  if (interactive) {
+    canvas.style.cursor = 'crosshair'; canvas.style.touchAction = 'none';
+    canvas.addEventListener('mousedown', onDown, {passive:false}); canvas.addEventListener('mousemove', onMove, {passive:false});
+    canvas.addEventListener('mouseup', onUp); canvas.addEventListener('mouseleave', onLeave);
+    canvas.addEventListener('wheel', onWheel, {passive:false}); canvas.addEventListener('touchstart', onDown, {passive:false});
+    canvas.addEventListener('touchmove', onMove, {passive:false}); canvas.addEventListener('touchend', onTouchEnd); canvas.addEventListener('touchcancel', onTouchEnd);
+  }
+  const ro = new ResizeObserver(() => { if (resize()) sched(); });
+  ro.observe(wrap); resize(); sched();
+  return { redraw: sched, setView(v) { view={...v}; sched(); }, resetView() { view={...initView}; sched(); }, zoomIn() { zoomAt(W/2,H/2,1/1.35); }, zoomOut() { zoomAt(W/2,H/2,1.35); }, destroy() { ro.disconnect(); if (rafId) cancelAnimationFrame(rafId); } };
+}
+
+function layerFn(fn, color, lw) {
+  return (ctx, W, H, toX, toY, view) => {
+    ctx.strokeStyle = color; ctx.lineWidth = lw || 2.5; ctx.lineJoin = 'round';
+    const STEPS = Math.round(W * 1.6); const { xMin, xMax, yMin, yMax } = view; const yRange = yMax - yMin;
+    ctx.beginPath(); let started = false, prevY = null;
+    for (let i = 0; i <= STEPS; i++) {
+      const x = xMin + i * (xMax - xMin) / STEPS; let y;
+      try { y = fn(x); } catch(e) { started = false; prevY = null; continue; }
+      if (y === null || !isFinite(y) || isNaN(y)) { started = false; prevY = null; continue; }
+      if (prevY !== null && Math.abs(y - prevY) > yRange * 0.55) { started = false; }
+      prevY = y; const px = toX(x), py = toY(y);
+      if (!started) { ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  };
+}
+function layerLegend(items) {
+  return (ctx, W) => {
+    const fs = Math.max(9, Math.min(11, W / 55)); ctx.font = `${fs}px JetBrains Mono, monospace`; ctx.textAlign = 'left';
+    items.forEach(({ color, label }, i) => { ctx.fillStyle = color; ctx.fillRect(12, 10 + i*18, 12, 3); ctx.fillStyle = C.txt; ctx.fillText(label, 28, 17 + i*18); });
+  };
+}
+
+// ── Tab switching ────────────────────────────────────────────
+const charts = {};
+document.querySelectorAll('#lawTabs .tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#lawTabs .tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const id = 'tab-' + btn.dataset.tab;
+    document.getElementById(id).classList.add('active');
+    initTab(btn.dataset.tab);
+  });
+});
+
+function initTab(name) {
+  if (charts[name]) { charts[name].destroy(); charts[name] = null; }
+  if (name === 'boyle')     initBoyle();
+  if (name === 'charles')   initCharles();
+  if (name === 'gaylussac') initGL();
+  if (name === 'avogadro')  initAvog();
+}
+
+// ── Boyle ───────────────────────────────────────────────────
+function initBoyle() {
+  const T = parseFloat(document.getElementById('boyleT').value);
+  document.getElementById('boyleTval').textContent = T;
+  const colors = [C.accent, C.blue, C.orange];
+  const Ts = [T * 0.5, T, T * 2];
+  const layers = Ts.map((t, i) => layerFn(V => V > 0.05 ? (1 * R * t) / V : null, colors[i % colors.length], 2.2));
+  layers.push(layerLegend(Ts.map((t, i) => ({ color: colors[i % colors.length], label: `T = ${t.toFixed(0)} K` }))));
+  charts.boyle = makeChart('cvBoyle', { xMin: 0, xMax: 20, yMin: 0, yMax: 10 }, layers, {
+    interactive: true, aspectRatio: 0.52,
+    tipFn: V => V > 0.05 ? { text: `V=${fmtNum(V)} L  P=${fmtNum(R*T/V)} atm`, y: R*T/V } : null,
+  });
+}
+document.getElementById('boyleT').addEventListener('input', () => initBoyle());
+initBoyle();
+
+// ── Charles ─────────────────────────────────────────────────
+function initCharles() {
+  const P = parseFloat(document.getElementById('charlesP').value);
+  document.getElementById('charlesPval').textContent = P.toFixed(1).replace('.', ',');
+  const colors = [C.accent, C.blue, C.purple];
+  const Ps = [P * 0.5, P, P * 2];
+  const layers = Ps.map((p, i) => layerFn(T => T > 0 ? (1 * R * T) / p : null, colors[i % colors.length], 2.2));
+  layers.push(layerLegend(Ps.map((p, i) => ({ color: colors[i % colors.length], label: `P = ${p.toFixed(2)} atm` }))));
+  charts.charles = makeChart('cvCharles', { xMin: 0, xMax: 700, yMin: 0, yMax: 60 }, layers, {
+    interactive: true, aspectRatio: 0.52,
+    tipFn: T => T > 0 ? { text: `T=${fmtNum(T)} K  V=${fmtNum(R*T/P)} L`, y: R*T/P } : null,
+  });
+}
+document.getElementById('charlesP').addEventListener('input', () => initCharles());
+
+// ── Gay-Lussac ───────────────────────────────────────────────
+function initGL() {
+  const V = parseFloat(document.getElementById('glV').value);
+  document.getElementById('glVval').textContent = V;
+  const colors = [C.accent, C.blue, C.orange];
+  const Vs = [V * 0.5, V, V * 2];
+  const layers = Vs.map((v, i) => layerFn(T => T > 0 ? (1 * R * T) / v : null, colors[i % colors.length], 2.2));
+  layers.push(layerLegend(Vs.map((v, i) => ({ color: colors[i % colors.length], label: `V = ${v.toFixed(1)} L` }))));
+  charts.gaylussac = makeChart('cvGL', { xMin: 0, xMax: 700, yMin: 0, yMax: 10 }, layers, {
+    interactive: true, aspectRatio: 0.52,
+    tipFn: T => T > 0 ? { text: `T=${fmtNum(T)} K  P=${fmtNum(R*T/V)} atm`, y: R*T/V } : null,
+  });
+}
+document.getElementById('glV').addEventListener('input', () => initGL());
+
+// ── Avogadro ─────────────────────────────────────────────────
+function initAvog() {
+  const T = parseFloat(document.getElementById('avogT').value);
+  document.getElementById('avogTval').textContent = T;
+  const colors = [C.accent, C.blue, C.orange];
+  const Ts2 = [T * 0.5, T, T * 2];
+  const layers = Ts2.map((t, i) => layerFn(n => n > 0 ? (n * R * t) / 1 : null, colors[i % colors.length], 2.2));
+  layers.push(layerLegend(Ts2.map((t, i) => ({ color: colors[i % colors.length], label: `T = ${t.toFixed(0)} K` }))));
+  charts.avogadro = makeChart('cvAvog', { xMin: 0, xMax: 5, yMin: 0, yMax: 200 }, layers, {
+    interactive: true, aspectRatio: 0.52,
+    tipFn: n => n > 0 ? { text: `n=${fmtNum(n)} mol  V=${fmtNum(n*R*T)} L`, y: n*R*T } : null,
+  });
+}
+document.getElementById('avogT').addEventListener('input', () => initAvog());
+
+// ── Combined law calculator ──────────────────────────────────
+function calcCombined() {
+  const P1 = parseFloat(document.getElementById('cP1').value);
+  const V1 = parseFloat(document.getElementById('cV1').value);
+  const T1 = parseFloat(document.getElementById('cT1').value);
+  const P2 = document.getElementById('cP2').value.trim();
+  const V2 = document.getElementById('cV2').value.trim();
+  const T2 = document.getElementById('cT2').value.trim();
+  const k = P1 * V1 / T1;
+  let result = '', unit = '', name = '';
+  const res = document.getElementById('combinedResult');
+  const txt = document.getElementById('combinedResultText');
+  if (!P2 && V2 && T2) {
+    const val = (parseFloat(T2) * k) / parseFloat(V2);
+    result = val.toFixed(4); unit = 'atm'; name = 'P₂';
+    document.getElementById('cP2').value = result;
+  } else if (!V2 && P2 && T2) {
+    const val = (parseFloat(T2) * k) / parseFloat(P2);
+    result = val.toFixed(4); unit = 'L'; name = 'V₂';
+    document.getElementById('cV2').value = result;
+  } else if (!T2 && P2 && V2) {
+    const val = (parseFloat(P2) * parseFloat(V2)) / k;
+    result = val.toFixed(4); unit = 'K'; name = 'T₂';
+    document.getElementById('cT2').value = result;
+  } else {
+    txt.textContent = 'Deja exactamente UNA casilla del estado final en blanco.';
+    txt.style.color = '#f87171'; res.style.display = 'block'; return;
+  }
+  txt.style.color = 'var(--accent)';
+  txt.textContent = `${name} = ${result} ${unit}`;
+  res.style.display = 'block';
+}
+</script>
+<script src="/chatbot-widget.js"></script>
+</body>
+</html>
