@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,92 +10,98 @@
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
+
 <body>
-<div class="page">
+  <div class="page">
 
-  <a href="advmath.html" class="back-link">← Volver</a>
-  <h1 class="page-title">Función <em>W de Lambert</em></h1>
+    <a href="metodos-numericos.html" class="back-link">← Volver</a>
+    <h1 class="page-title">Función <em>W de Lambert</em></h1>
 
-  <div class="card">
-    <div class="card-label">Definición</div>
-    <p class="math-block">$$ W(z)\,e^{W(z)} = z \qquad z \in \mathbb{C} $$</p>
-    <p>La función \( W \) de Lambert es la inversa de \( f(w) = w e^w \). Dado un valor \( z \), \( W(z) \) devuelve el exponente \( w \) que satisface la ecuación. No tiene forma cerrada elemental y debe evaluarse numéricamente o mediante series.</p>
-  </div>
+    <div class="card">
+      <div class="card-label">Definición</div>
+      <p class="math-block">$$ W(z)\,e^{W(z)} = z \qquad z \in \mathbb{C} $$</p>
+      <p>La función \( W \) de Lambert es la inversa de \( f(w) = w e^w \). Dado un valor \( z \), \( W(z) \) devuelve
+        el exponente \( w \) que satisface la ecuación. No tiene forma cerrada elemental y debe evaluarse numéricamente
+        o mediante series.</p>
+    </div>
 
-  <div class="card">
-    <div class="card-label">Ramas principales</div>
-    <p>Para valores reales, \( W \) tiene dos ramas:</p>
-    <div class="two-col">
-      <div class="mini-card">
-        <div class="mc-label">Rama \( W_0 \) (principal)</div>
-        <p>Definida para \( z \geq -1/e \), toma valores \( W_0(z) \geq -1 \). Es la rama estándar.</p>
+    <div class="card">
+      <div class="card-label">Ramas principales</div>
+      <p>Para valores reales, \( W \) tiene dos ramas:</p>
+      <div class="two-col">
+        <div class="mini-card">
+          <div class="mc-label">Rama \( W_0 \) (principal)</div>
+          <p>Definida para \( z \geq -1/e \), toma valores \( W_0(z) \geq -1 \). Es la rama estándar.</p>
+        </div>
+        <div class="mini-card">
+          <div class="mc-label">Rama \( W_{-1} \)</div>
+          <p>Definida para \( -1/e \leq z < 0 \), toma valores \( W_{-1}(z) \leq -1 \). Segunda rama real.</p>
+        </div>
       </div>
-      <div class="mini-card">
-        <div class="mc-label">Rama \( W_{-1} \)</div>
-        <p>Definida para \( -1/e \leq z < 0 \), toma valores \( W_{-1}(z) \leq -1 \). Segunda rama real.</p>
+      <div class="info-box">
+        <p>En \( z = -1/e \) ambas ramas se encuentran en el punto \( W = -1 \) (mínimo de \( we^w \)).</p>
       </div>
     </div>
-    <div class="info-box">
-      <p>En \( z = -1/e \) ambas ramas se encuentran en el punto \( W = -1 \) (mínimo de \( we^w \)).</p>
+
+    <div class="card">
+      <div class="card-label">Aplicaciones</div>
+      <ul>
+        <li>Resolución exacta de ecuaciones de la forma \( x e^x = c \).</li>
+        <li>Física: tiempo de caída con resistencia del aire proporcional a la velocidad.</li>
+        <li>Electrónica: solución analítica de la ecuación del diodo (modelo de Shockley).</li>
+        <li>Biología y epidemiología: tamaño final de epidemias en modelos SIR.</li>
+        <li>Álgebra computacional: soluciones de \( x^x = k \) y ecuaciones trascendentes similares.</li>
+      </ul>
     </div>
-  </div>
 
-  <div class="card">
-    <div class="card-label">Aplicaciones</div>
-    <ul>
-      <li>Resolución exacta de ecuaciones de la forma \( x e^x = c \).</li>
-      <li>Física: tiempo de caída con resistencia del aire proporcional a la velocidad.</li>
-      <li>Electrónica: solución analítica de la ecuación del diodo (modelo de Shockley).</li>
-      <li>Biología y epidemiología: tamaño final de epidemias en modelos SIR.</li>
-      <li>Álgebra computacional: soluciones de \( x^x = k \) y ecuaciones trascendentes similares.</li>
-    </ul>
-  </div>
-
-  <div class="card">
-    <div class="card-label">Evaluación numérica</div>
-    <p>No existe expresión elemental cerrada. Los métodos habituales son:</p>
-    <ul>
-      <li><strong>Newton-Raphson</strong> aplicado a \( g(w) = we^w - z = 0 \), con convergencia cuadrática.</li>
-      <li><strong>Halley's method</strong> (orden cúbico), especialmente eficiente cerca de \( z = -1/e \).</li>
-      <li><strong>Expansión en serie</strong> alrededor de \( z = 0 \): \( W_0(z) = z - z^2 + \tfrac{3}{2}z^3 - \cdots \)</li>
-    </ul>
-    <p class="math-block">$$ W_0(z) = \sum_{n=1}^{\infty} \frac{(-n)^{n-1}}{n!}\,z^n \qquad |z| < \frac{1}{e} $$</p>
-  </div>
-
-  <div class="card">
-    <div class="card-label">Ejemplo práctico</div>
-    <p>Resolver \( x e^x = 2 \). Por definición, \( x = W_0(2) \).</p>
-    <p>Aplicando Newton-Raphson sobre \( g(w) = we^w - 2 \) con \( w_0 = 1 \):</p>
-
-    <p class="math-block">$$
-      w_1 = w_0 - \frac{w_0 e^{w_0} - 2}{e^{w_0}(w_0 + 1)} = 1 - \frac{e - 2}{2e} \approx 0.8526
-    $$</p>
-    <p class="math-block">$$
-      w_2 \approx 0.8526 - \frac{0.8526\,e^{0.8526} - 2}{e^{0.8526}(1.8526)} \approx 0.8526
-    $$</p>
-
-    <p>Verificación:</p>
-    <div class="info-box">
-      <p class="math-block">$$ W_0(2) \approx 0.8526 \quad\Rightarrow\quad 0.8526\, e^{0.8526} \approx 2.000\;\checkmark $$</p>
+    <div class="card">
+      <div class="card-label">Evaluación numérica</div>
+      <p>No existe expresión elemental cerrada. Los métodos habituales son:</p>
+      <ul>
+        <li><strong>Newton-Raphson</strong> aplicado a \( g(w) = we^w - z = 0 \), con convergencia cuadrática.</li>
+        <li><strong>Halley's method</strong> (orden cúbico), especialmente eficiente cerca de \( z = -1/e \).</li>
+        <li><strong>Expansión en serie</strong> alrededor de \( z = 0 \): \( W_0(z) = z - z^2 + \tfrac{3}{2}z^3 - \cdots
+          \)</li>
+      </ul>
+      <p class="math-block">$$ W_0(z) = \sum_{n=1}^{\infty} \frac{(-n)^{n-1}}{n!}\,z^n \qquad |z| < \frac{1}{e} $$</p>
     </div>
+
+    <div class="card">
+      <div class="card-label">Ejemplo práctico</div>
+      <p>Resolver \( x e^x = 2 \). Por definición, \( x = W_0(2) \).</p>
+      <p>Aplicando Newton-Raphson sobre \( g(w) = we^w - 2 \) con \( w_0 = 1 \):</p>
+
+      <p class="math-block">$$
+        w_1 = w_0 - \frac{w_0 e^{w_0} - 2}{e^{w_0}(w_0 + 1)} = 1 - \frac{e - 2}{2e} \approx 0.8526
+        $$</p>
+      <p class="math-block">$$
+        w_2 \approx 0.8526 - \frac{0.8526\,e^{0.8526} - 2}{e^{0.8526}(1.8526)} \approx 0.8526
+        $$</p>
+
+      <p>Verificación:</p>
+      <div class="info-box">
+        <p class="math-block">$$ W_0(2) \approx 0.8526 \quad\Rightarrow\quad 0.8526\, e^{0.8526} \approx
+          2.000\;\checkmark $$</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Notación</div>
+      <ul>
+        <li>\( W(z) \) — función W de Lambert (rama principal \( W_0 \) si no se indica)</li>
+        <li>\( W_0 \) — rama principal (\( W \geq -1 \))</li>
+        <li>\( W_{-1} \) — rama secundaria real (\( W \leq -1 \))</li>
+        <li>\( e \) — base del logaritmo natural \( \approx 2.71828 \)</li>
+        <li>\( -1/e \) — singularidad de rama (punto mínimo del dominio real)</li>
+      </ul>
+    </div>
+
+    <footer class="site-footer">
+      <p><a href="index.html">Inicio</a></p>
+    </footer>
+
   </div>
-
-  <div class="card">
-    <div class="card-label">Notación</div>
-    <ul>
-      <li>\( W(z) \) — función W de Lambert (rama principal \( W_0 \) si no se indica)</li>
-      <li>\( W_0 \) — rama principal (\( W \geq -1 \))</li>
-      <li>\( W_{-1} \) — rama secundaria real (\( W \leq -1 \))</li>
-      <li>\( e \) — base del logaritmo natural \( \approx 2.71828 \)</li>
-      <li>\( -1/e \) — singularidad de rama (punto mínimo del dominio real)</li>
-    </ul>
-  </div>
-
-  <footer class="site-footer">
-    <p><a href="index.html">Inicio</a></p>
-  </footer>
-
-</div>
   <script src="/chatbot-widget.js"></script>
 </body>
+
 </html>
