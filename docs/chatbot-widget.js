@@ -1,18 +1,16 @@
 /**
  * chatbot-widget.js
- * Asistente de chat con Gemini via proxy (Cloudflare Worker).
- * La API key nunca queda expuesta en el navegador.
+ * Asistente de chat con Groq (Llama 3.3) via proxy Cloudflare Worker.
  *
  * CONFIGURACIÓN:
- *   1. Desplegá el Cloudflare Worker (cloudflare-worker.js)
+ *   1. Desplegá cloudflare-worker.js en Cloudflare
  *   2. Reemplazá proxyUrl con la URL de tu Worker
  *   3. Editá systemPrompt para personalizar el asistente
  */
 
 (function () {
   const CONFIG = {
-    // ← URL de tu Cloudflare Worker (sin barra al final)
-    proxyUrl: "https://gemini-proxy.ezesouto2.workers.dev",
+    proxyUrl:     "https://gemini-proxy.ezesouto2.workers.dev", // ← tu Worker
     systemPrompt: "Eres un asistente amigable y conciso para este sitio web. Respondés en el mismo idioma que el usuario. Tus respuestas son breves y útiles.",
     welcomeMessage: "¡Hola! 👋 ¿En qué te puedo ayudar hoy?",
     botName: "Asistente",
@@ -38,27 +36,19 @@
     #cw-badge {
       position: absolute; top: -3px; right: -3px;
       width: 14px; height: 14px; border-radius: 50%;
-      background: #e94560; border: 2px solid #fff;
-      display: none;
+      background: #e94560; border: 2px solid #fff; display: none;
     }
     #cw-badge.visible { display: block; }
 
     #cw-panel {
       position: fixed; bottom: 96px; right: 28px; z-index: 9997;
-      width: 360px; max-height: 520px;
-      background: #ffffff;
-      border-radius: 20px;
+      width: 360px; max-height: 520px; background: #fff; border-radius: 20px;
       box-shadow: 0 20px 60px rgba(0,0,0,.18), 0 4px 16px rgba(0,0,0,.08);
-      display: flex; flex-direction: column;
-      overflow: hidden;
-      transform: scale(.92) translateY(16px);
-      opacity: 0; pointer-events: none;
+      display: flex; flex-direction: column; overflow: hidden;
+      transform: scale(.92) translateY(16px); opacity: 0; pointer-events: none;
       transition: transform .25s cubic-bezier(.34,1.56,.64,1), opacity .2s ease;
     }
-    #cw-panel.open {
-      transform: scale(1) translateY(0);
-      opacity: 1; pointer-events: all;
-    }
+    #cw-panel.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
 
     #cw-header {
       background: linear-gradient(135deg, #1a1a2e, #0f3460);
@@ -70,82 +60,61 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 18px; flex-shrink: 0;
     }
-    #cw-header-info { flex: 1; }
     #cw-bot-name { color: #fff; font-size: 15px; font-weight: 600; }
     #cw-status { color: rgba(255,255,255,.6); font-size: 12px; display: flex; align-items: center; gap: 5px; }
     #cw-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; display: inline-block; }
 
     #cw-messages {
       flex: 1; overflow-y: auto; padding: 16px;
-      display: flex; flex-direction: column; gap: 10px;
-      background: #f9fafb;
+      display: flex; flex-direction: column; gap: 10px; background: #f9fafb;
       scrollbar-width: thin; scrollbar-color: #e2e8f0 transparent;
     }
 
     .cw-msg { display: flex; gap: 8px; max-width: 88%; }
-    .cw-msg.bot { align-self: flex-start; }
+    .cw-msg.bot  { align-self: flex-start; }
     .cw-msg.user { align-self: flex-end; flex-direction: row-reverse; }
 
-    .cw-bubble {
-      padding: 10px 14px; border-radius: 16px;
-      font-size: 14px; line-height: 1.5; word-break: break-word;
-    }
-    .cw-msg.bot .cw-bubble {
-      background: #fff; color: #1e293b;
-      border-bottom-left-radius: 4px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.07);
-    }
-    .cw-msg.user .cw-bubble {
-      background: linear-gradient(135deg, #1a1a2e, #0f3460);
-      color: #fff; border-bottom-right-radius: 4px;
-    }
+    .cw-bubble { padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.5; word-break: break-word; }
+    .cw-msg.bot  .cw-bubble { background: #fff; color: #1e293b; border-bottom-left-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+    .cw-msg.user .cw-bubble { background: linear-gradient(135deg, #1a1a2e, #0f3460); color: #fff; border-bottom-right-radius: 4px; }
 
     .cw-typing { display: flex; gap: 4px; align-items: center; padding: 12px 14px; }
-    .cw-typing span {
-      width: 7px; height: 7px; border-radius: 50%; background: #94a3b8;
-      animation: cw-bounce .9s infinite ease-in-out;
-    }
+    .cw-typing span { width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; animation: cw-bounce .9s infinite ease-in-out; }
     .cw-typing span:nth-child(2) { animation-delay: .15s; }
     .cw-typing span:nth-child(3) { animation-delay: .3s; }
     @keyframes cw-bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
 
-    #cw-input-row {
-      display: flex; gap: 8px; padding: 12px 14px;
-      border-top: 1px solid #f1f5f9; background: #fff;
-    }
+    #cw-input-row { display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid #f1f5f9; background: #fff; }
     #cw-input {
       flex: 1; border: 1.5px solid #e2e8f0; border-radius: 12px;
       padding: 10px 14px; font-size: 14px; color: #1e293b; outline: none;
       resize: none; min-height: 40px; max-height: 100px;
-      transition: border-color .2s;
-      font-family: 'DM Sans', sans-serif;
+      transition: border-color .2s; font-family: 'DM Sans', sans-serif;
     }
     #cw-input:focus { border-color: #0f3460; }
     #cw-send {
-      width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px;
-      border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; border: none;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
       background: linear-gradient(135deg, #1a1a2e, #0f3460);
       transition: opacity .2s, transform .15s;
     }
     #cw-send:hover { opacity: .9; transform: scale(1.05); }
     #cw-send:disabled { opacity: .4; cursor: not-allowed; transform: none; }
     #cw-footer { text-align: center; font-size: 10px; color: #94a3b8; padding: 0 0 8px; }
-    #cw-footer a { color: #94a3b8; }
 
     @media (max-width: 420px) {
       #cw-panel { width: calc(100vw - 24px); right: 12px; bottom: 84px; }
-      #cw-fab { right: 16px; bottom: 16px; }
+      #cw-fab   { right: 16px; bottom: 16px; }
     }
   `;
 
   // ─── HTML ──────────────────────────────────────────────────────────────────
   const HTML = `
     <style>${STYLES}</style>
-
     <div id="cw-panel" role="dialog" aria-label="Chat de soporte">
       <div id="cw-header">
-        <div id="cw-avatar">✨</div>
-        <div id="cw-header-info">
+        <div id="cw-avatar">🦙</div>
+        <div>
           <div id="cw-bot-name">${CONFIG.botName}</div>
           <div id="cw-status"><span id="cw-dot"></span> En línea</div>
         </div>
@@ -159,7 +128,7 @@
           </svg>
         </button>
       </div>
-      <div id="cw-footer">Powered by <a href="https://aistudio.google.com" target="_blank">Google Gemini</a></div>
+      <div id="cw-footer">Powered by Groq · Llama 3.3</div>
     </div>
 
     <button id="cw-fab" aria-label="Abrir chat">
@@ -170,7 +139,7 @@
     </button>
   `;
 
-  // ─── Lógica ────────────────────────────────────────────────────────────────
+  // ─── Inicializar DOM ───────────────────────────────────────────────────────
   const root = document.createElement("div");
   root.id = "cw-root";
   root.innerHTML = HTML;
@@ -183,23 +152,22 @@
   const sendBtn = document.getElementById("cw-send");
   const badge   = document.getElementById("cw-badge");
 
-  let history = [];
+  // Historial en formato OpenAI: [{role, content}]
+  let history = [{ role: "system", content: CONFIG.systemPrompt }];
   let isOpen  = false;
   let hasSeen = false;
 
+  // ─── Abrir / cerrar ────────────────────────────────────────────────────────
   fab.addEventListener("click", () => {
     isOpen = !isOpen;
     panel.classList.toggle("open", isOpen);
     fab.classList.toggle("open", isOpen);
-    if (isOpen) {
-      badge.classList.remove("visible");
-      hasSeen = true;
-      input.focus();
-    }
+    if (isOpen) { badge.classList.remove("visible"); hasSeen = true; input.focus(); }
   });
 
+  // ─── Helpers DOM ───────────────────────────────────────────────────────────
   function addMessage(text, role) {
-    const wrap = document.createElement("div");
+    const wrap   = document.createElement("div");
     wrap.className = `cw-msg ${role}`;
     const bubble = document.createElement("div");
     bubble.className = "cw-bubble";
@@ -222,9 +190,9 @@
     if (el) el.remove();
   }
 
-  // ─── Llamada al proxy (sin API key en el frontend) ────────────────────────
+  // ─── Llamada al proxy (formato OpenAI) ────────────────────────────────────
   async function sendToAPI(userText) {
-    history.push({ role: "user", parts: [{ text: userText }] });
+    history.push({ role: "user", content: userText });
     sendBtn.disabled = true;
     showTyping();
 
@@ -232,16 +200,7 @@
       const res = await fetch(CONFIG.proxyUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: CONFIG.systemPrompt }]
-          },
-          contents: history,
-          generationConfig: {
-            maxOutputTokens: 1024,
-            temperature: 0.7,
-          },
-        }),
+        body: JSON.stringify({ messages: history }),
       });
 
       if (!res.ok) {
@@ -249,15 +208,14 @@
         throw new Error(err?.error?.message || `HTTP ${res.status}`);
       }
 
-      const data = await res.json();
-      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sin respuesta.";
+      const data  = await res.json();
+      const reply = data.choices?.[0]?.message?.content || "Sin respuesta.";
 
-      history.push({ role: "model", parts: [{ text: reply }] });
-
+      history.push({ role: "assistant", content: reply });
       hideTyping();
       addMessage(reply, "bot");
-
       if (!isOpen) badge.classList.add("visible");
+
     } catch (e) {
       hideTyping();
       addMessage(`⚠️ Error: ${e.message}`, "bot");
@@ -267,6 +225,7 @@
     }
   }
 
+  // ─── Enviar ────────────────────────────────────────────────────────────────
   function handleSend() {
     const text = input.value.trim();
     if (!text) return;
@@ -285,7 +244,7 @@
     input.style.height = Math.min(input.scrollHeight, 100) + "px";
   });
 
-  // Mensaje de bienvenida
+  // ─── Bienvenida ────────────────────────────────────────────────────────────
   setTimeout(() => {
     addMessage(CONFIG.welcomeMessage, "bot");
     if (!hasSeen) badge.classList.add("visible");
