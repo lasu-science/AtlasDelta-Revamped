@@ -1,18 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Red Neuronal — AtlasDelta</title>
-  <link rel="icon" type="image/png" href="favicon.png">
+  <title>Red Neuronal — AtlasDelta (Mejorada)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap"
-    rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
-    /* ── Variables ── */
     :root {
       --bg: #0d0e12;
       --s0: #13141a;
@@ -31,16 +25,10 @@
       --radius-sm: 10px;
     }
 
-    *,
-    *::before,
-    *::after {
+    * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-    }
-
-    html {
-      scroll-behavior: smooth;
     }
 
     body {
@@ -50,123 +38,152 @@
       font-size: 16px;
       line-height: 1.65;
       min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 9999;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, .03) 2px, rgba(0, 0, 0, .03) 4px);
     }
 
     .page {
-      max-width: 960px;
+      max-width: 1000px;
       margin: 0 auto;
-      padding: 36px 24px 80px;
-      position: relative;
-      z-index: 1;
-    }
-
-    /* ── Header ── */
-    .kicker {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      letter-spacing: .22em;
-      color: var(--txt3);
-      text-transform: uppercase;
-      margin-bottom: 8px;
+      padding: 40px 24px;
     }
 
     .page-title {
       font-family: 'Instrument Serif', serif;
       font-size: clamp(2rem, 6vw, 3.2rem);
       font-weight: 400;
-      line-height: 1.1;
-      letter-spacing: -.02em;
-      background: linear-gradient(135deg, #e4e6f0 30%, #52566a 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 6px;
-    }
-
-    .page-title em {
-      font-style: italic;
+      margin-bottom: 8px;
+      color: var(--txt);
     }
 
     .page-sub {
       font-size: 14px;
       color: var(--txt2);
-      margin-bottom: 32px;
+      margin-bottom: 36px;
     }
 
-    hr {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 28px 0;
+    /* ── Layout con pasos ── */
+    .workflow {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 32px;
+      margin-bottom: 40px;
     }
 
-    /* ── Card ── */
+    .steps-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .step {
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      background: var(--s1);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .step:hover {
+      border-color: var(--border2);
+    }
+
+    .step.active {
+      background: rgba(74, 222, 128, 0.08);
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+
+    .step.done::before {
+      content: '✓';
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .step.done {
+      opacity: 0.6;
+    }
+
+    .step-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--txt3);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .step-title {
+      font-weight: 600;
+      color: var(--txt);
+      margin-bottom: 2px;
+    }
+
+    .step-desc {
+      font-size: 12px;
+      color: var(--txt2);
+    }
+
+    /* ── Contenido principal ── */
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .section {
+      display: none;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    .section.visible {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* ── Cards ── */
     .card {
       background: var(--s0);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 22px 24px;
+      padding: 24px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
       margin-bottom: 16px;
+      color: var(--txt);
     }
 
-    .card-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      letter-spacing: .22em;
-      color: var(--txt3);
-      text-transform: uppercase;
-      margin-bottom: 18px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .card-desc {
+      font-size: 13px;
+      color: var(--txt2);
+      margin-bottom: 20px;
+      line-height: 1.6;
     }
 
-    .card-label::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
+    /* ── Formularios ── */
+    .form-group {
+      margin-bottom: 20px;
     }
 
-    /* ── Layout grid ── */
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    .grid-3 {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 16px;
-    }
-
-    @media (max-width: 720px) {
-
-      .grid-2,
-      .grid-3 {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* ── Forms ── */
     label {
       display: block;
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
-      letter-spacing: .15em;
+      letter-spacing: 0.15em;
       color: var(--txt3);
       text-transform: uppercase;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     input[type="text"],
@@ -180,1119 +197,1082 @@
       color: var(--txt);
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
-      padding: 10px 14px;
-      transition: border-color .2s;
-      outline: none;
-      resize: vertical;
+      padding: 12px;
+      transition: border-color 0.2s;
     }
 
     input:focus,
     textarea:focus,
     select:focus {
-      border-color: var(--border2);
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
     }
 
-    input::placeholder,
-    textarea::placeholder {
-      color: var(--txt3);
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+      font-size: 12px;
     }
 
-    select {
-      cursor: pointer;
-    }
-
-    select option {
-      background: var(--s2);
-    }
-
-    .form-group {
-      margin-bottom: 16px;
-    }
-
-    .form-hint {
+    .hint {
       font-size: 11px;
       color: var(--txt3);
-      margin-top: 5px;
+      margin-top: 6px;
       font-family: 'JetBrains Mono', monospace;
     }
 
-    /* ── Buttons ── */
+    /* ── Botones ── */
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 20px;
+      padding: 12px 24px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
       background: var(--s1);
       color: var(--txt2);
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
-      letter-spacing: .1em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       cursor: pointer;
-      transition: all .2s;
+      transition: all 0.2s;
       user-select: none;
     }
 
-    .btn:hover {
+    .btn:hover:not(:disabled) {
       border-color: var(--border2);
       color: var(--txt);
       background: var(--s2);
     }
 
     .btn:disabled {
-      opacity: .4;
+      opacity: 0.4;
       cursor: not-allowed;
     }
 
-    .btn-accent {
-      background: rgba(74, 222, 128, .1);
-      border-color: rgba(74, 222, 128, .35);
+    .btn-primary {
+      background: rgba(74, 222, 128, 0.1);
+      border-color: rgba(74, 222, 128, 0.35);
       color: var(--accent);
     }
 
-    .btn-accent:hover {
-      background: rgba(74, 222, 128, .18);
+    .btn-primary:hover:not(:disabled) {
+      background: rgba(74, 222, 128, 0.18);
       border-color: var(--accent);
-      color: var(--accent);
-      box-shadow: 0 0 18px rgba(74, 222, 128, .12);
+      box-shadow: 0 0 18px rgba(74, 222, 128, 0.12);
+    }
+
+    .btn-secondary {
+      background: var(--s1);
+      border-color: var(--border);
+      color: var(--txt2);
     }
 
     .btn-danger {
-      background: rgba(248, 113, 113, .1);
-      border-color: rgba(248, 113, 113, .3);
+      background: rgba(248, 113, 113, 0.1);
+      border-color: rgba(248, 113, 113, 0.3);
       color: var(--danger);
     }
 
-    .btn-danger:hover {
-      background: rgba(248, 113, 113, .18);
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(248, 113, 113, 0.18);
       border-color: var(--danger);
     }
 
-    .btn-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
     /* ── Status badge ── */
-    .badge {
+    .status-badge {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 100px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
-      letter-spacing: .1em;
-      padding: 3px 10px;
-      border-radius: 100px;
-      border: 1px solid var(--border);
-      color: var(--txt3);
-      background: var(--s2);
+      letter-spacing: 0.1em;
       text-transform: uppercase;
+      background: var(--s2);
+      color: var(--txt3);
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
     }
 
-    .badge.running {
-      border-color: rgba(74, 222, 128, .4);
+    .status-badge.running {
+      background: rgba(74, 222, 128, 0.08);
+      border-color: var(--accent);
       color: var(--accent);
-      background: rgba(74, 222, 128, .07);
     }
 
-    .badge.done {
-      border-color: rgba(34, 197, 94, .4);
-      color: #86efac;
-      background: rgba(34, 197, 94, .06);
-    }
-
-    .badge.error {
-      border-color: rgba(248, 113, 113, .4);
-      color: var(--danger);
-      background: rgba(248, 113, 113, .06);
-    }
-
-    .pulse {
+    .status-badge .pulse {
       width: 6px;
       height: 6px;
-      border-radius: 50%;
       background: var(--accent);
+      border-radius: 50%;
       animation: pulse 1.2s ease-in-out infinite;
     }
 
     @keyframes pulse {
-
-      0%,
-      100% {
-        opacity: 1;
-        transform: scale(1);
-      }
-
-      50% {
-        opacity: .4;
-        transform: scale(.7);
-      }
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
     }
 
-    /* ── Metrics row ── */
+    /* ── Métricas ── */
     .metrics {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    @media (max-width: 600px) {
-      .metrics {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
     }
 
     .metric-box {
       background: var(--s1);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      padding: 14px 16px;
+      padding: 16px;
     }
 
     .metric-label {
       font-family: 'JetBrains Mono', monospace;
       font-size: 9px;
-      letter-spacing: .18em;
+      letter-spacing: 0.18em;
       color: var(--txt3);
       text-transform: uppercase;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .metric-value {
       font-family: 'Instrument Serif', serif;
-      font-size: 1.6rem;
-      font-weight: 400;
-      color: var(--txt);
-      line-height: 1;
-    }
-
-    .metric-value.accent {
+      font-size: 1.8rem;
       color: var(--accent);
+      line-height: 1;
+      font-weight: 400;
     }
 
-    .metric-value.warn {
-      color: var(--warn);
+    /* ── Canvas ── */
+    canvas {
+      width: 100%;
+      border-radius: var(--radius-sm);
+      background: var(--s1);
+      border: 1px solid var(--border);
+      display: block;
     }
 
-    /* ── Network canvas ── */
     #netCanvas {
-      width: 100%;
-      height: 280px;
-      display: block;
-      border-radius: var(--radius-sm);
-      background: var(--s1);
-      border: 1px solid var(--border);
-      margin-bottom: 12px;
+      height: 300px;
+      margin-bottom: 16px;
     }
 
-    /* ── Loss chart ── */
     #lossCanvas {
-      width: 100%;
-      height: 160px;
-      display: block;
-      border-radius: var(--radius-sm);
-      background: var(--s1);
-      border: 1px solid var(--border);
-      margin-bottom: 8px;
+      height: 200px;
     }
 
-    /* ── Data table ── */
-    .data-table-wrap {
-      overflow-x: auto;
+    /* ── Logs ── */
+    .log-container {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
       max-height: 200px;
       overflow-y: auto;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border);
     }
 
-    table {
+    .log-line {
+      padding: 4px 0;
+      color: var(--txt2);
+    }
+
+    .log-line.info { color: var(--accent); }
+    .log-line.warn { color: var(--warn); }
+    .log-line.error { color: var(--danger); }
+
+    /* ── Data preview ── */
+    .data-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
-    }
-
-    th {
-      position: sticky;
-      top: 0;
-      background: var(--s2);
-      padding: 8px 14px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      letter-spacing: .15em;
-      color: var(--txt3);
-      text-transform: uppercase;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
-    }
-
-    td {
-      padding: 8px 14px;
-      color: var(--txt2);
-      border-bottom: 1px solid var(--border);
-      font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
     }
 
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
-
-    tbody tr:hover {
-      background: rgba(255, 255, 255, .02);
-    }
-
-    /* ── Prediction result ── */
-    .pred-result {
-      background: var(--s1);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 16px 20px;
-      margin-top: 12px;
-      display: none;
-    }
-
-    .pred-result.visible {
-      display: block;
-    }
-
-    .pred-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      letter-spacing: .18em;
-      color: var(--txt3);
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .pred-bars {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .pred-bar-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .pred-bar-name {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--txt2);
-      min-width: 90px;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      white-space: nowrap;
-    }
-
-    .pred-bar-track {
-      flex: 1;
-      height: 6px;
+    .data-table th {
       background: var(--s2);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    .pred-bar-fill {
-      height: 100%;
-      border-radius: 10px;
-      background: var(--accent);
-      transition: width .4s cubic-bezier(.4, 0, .2, 1);
-    }
-
-    .pred-bar-pct {
+      padding: 10px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--txt3);
-      min-width: 38px;
-      text-align: right;
-    }
-
-    /* ── Log ── */
-    #trainingLog {
-      background: var(--s1);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 12px 16px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--txt3);
-      height: 100px;
-      overflow-y: auto;
-      scroll-behavior: smooth;
-    }
-
-    #trainingLog .log-line {
-      line-height: 1.8;
-    }
-
-    #trainingLog .log-ok {
-      color: var(--accent);
-    }
-
-    #trainingLog .log-warn {
-      color: var(--warn);
-    }
-
-    #trainingLog .log-err {
-      color: var(--danger);
-    }
-
-    /* ── Arch config pills ── */
-    .arch-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .arch-pill {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      padding: 4px 12px;
-      border-radius: 100px;
-      background: var(--s2);
-      border: 1px solid var(--border2);
-      color: var(--txt2);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .arch-pill.highlight {
-      border-color: rgba(74, 222, 128, .35);
-      color: var(--accent);
-      background: rgba(74, 222, 128, .07);
-    }
-
-    /* ── Section header inline ── */
-    .section-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .section-head h2 {
-      font-family: 'Instrument Serif', serif;
-      font-size: 1.3rem;
-      font-weight: 400;
-      font-style: italic;
-      color: var(--txt);
-    }
-
-    /* ── Step indicator ── */
-    .steps {
-      display: flex;
-      gap: 0;
-      margin-bottom: 28px;
-      background: var(--s0);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-
-    .step {
-      flex: 1;
-      padding: 12px 16px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--txt3);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-right: 1px solid var(--border);
-      transition: all .25s;
-    }
-
-    .step:last-child {
-      border-right: none;
-    }
-
-    .step.active {
-      color: var(--accent);
-      background: rgba(74, 222, 128, .05);
-    }
-
-    .step.done {
-      color: var(--txt2);
-    }
-
-    .step-num {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--s2);
-      border: 1px solid var(--border2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
       font-size: 9px;
-      flex-shrink: 0;
-    }
-
-    .step.active .step-num {
-      background: rgba(74, 222, 128, .15);
-      border-color: rgba(74, 222, 128, .5);
-      color: var(--accent);
-    }
-
-    .step.done .step-num {
-      background: rgba(74, 222, 128, .08);
-      border-color: rgba(74, 222, 128, .3);
-      color: var(--accent2);
-    }
-
-    /* ── Range slider ── */
-    input[type="range"] {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 4px;
-      background: var(--border2);
-      border-radius: 10px;
-      outline: none;
-      border: none;
-      padding: 0;
-    }
-
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: var(--accent);
-      cursor: pointer;
-      transition: box-shadow .2s;
-    }
-
-    input[type="range"]::-webkit-slider-thumb:hover {
-      box-shadow: 0 0 10px rgba(74, 222, 128, .4);
-    }
-
-    /* ── Tooltip ── */
-    .tooltip {
-      position: fixed;
-      background: var(--s2);
-      border: 1px solid var(--border2);
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: var(--txt2);
-      pointer-events: none;
-      z-index: 1000;
-      opacity: 0;
-      transition: opacity .15s;
-    }
-
-    .tooltip.visible {
-      opacity: 1;
-    }
-
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      letter-spacing: .2em;
-      text-transform: uppercase;
+      text-align: left;
       color: var(--txt3);
-      text-decoration: none;
-      transition: color .2s;
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
     }
 
-    .back-link:hover {
+    .data-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
       color: var(--txt2);
+    }
+
+    .data-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    @media (max-width: 720px) {
+      .workflow {
+        grid-template-columns: 1fr;
+      }
+
+      .steps-sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 10px;
+      }
+
+      .step {
+        flex: 0 0 auto;
+        min-width: 200px;
+      }
     }
   </style>
 </head>
-
 <body>
-
   <div class="page">
-    <!-- Header -->
-    <a href="index.html" class="back-link">← inicio</a>
-    <div class="kicker">Herramienta experimental</div>
-    <h1 class="page-title"><em>Red Neuronal</em></h1>
-    <p class="page-sub">Define tu contexto, añade datos de entrenamiento y observa la red aprender en tiempo real.</p>
+    <h1 class="page-title">Red Neuronal <em>Interactiva</em></h1>
+    <p class="page-sub">Entrena y visualiza una red neuronal con datos personalizados</p>
 
-    <!-- Steps -->
-    <div class="steps">
-      <div class="step active" id="step1">
-        <div class="step-num">1</div>Contexto
+    <div class="workflow">
+      <!-- Sidebar de pasos -->
+      <div class="steps-sidebar">
+        <div class="step active" onclick="showSection(0)">
+          <div class="step-num">Paso 1</div>
+          <div class="step-title">Datos</div>
+          <div class="step-desc">Carga o importa CSV</div>
+        </div>
+        <div class="step" onclick="showSection(1)">
+          <div class="step-num">Paso 2</div>
+          <div class="step-title">Arquitectura</div>
+          <div class="step-desc">Configura capas</div>
+        </div>
+        <div class="step" onclick="showSection(2)">
+          <div class="step-num">Paso 3</div>
+          <div class="step-title">Parámetros</div>
+          <div class="step-desc">Ajusta aprendizaje</div>
+        </div>
+        <div class="step" onclick="showSection(3)">
+          <div class="step-num">Paso 4</div>
+          <div class="step-title">Entrenamiento</div>
+          <div class="step-desc">Ejecuta el modelo</div>
+        </div>
+        <div class="step" onclick="showSection(4)">
+          <div class="step-num">Paso 5</div>
+          <div class="step-title">Predicción</div>
+          <div class="step-desc">Prueba resultados</div>
+        </div>
       </div>
-      <div class="step" id="step2">
-        <div class="step-num">2</div>Datos
-      </div>
-      <div class="step" id="step3">
-        <div class="step-num">3</div>Arquitectura
-      </div>
-      <div class="step" id="step4">
-        <div class="step-num">4</div>Entrenamiento
-      </div>
-      <div class="step" id="step5">
-        <div class="step-num">5</div>Predicción
-      </div>
-    </div>
 
-    <!-- ── STEP 1: Context ── -->
-    <div class="card" id="panelContext">
-      <div class="card-label">Paso 1 — Contexto del problema</div>
-      <div class="grid-2">
-        <div>
-          <div class="form-group">
-            <label>Descripción del problema</label>
-            <textarea id="contextDesc" rows="3"
-              placeholder="Ej: Clasificar si un mensaje de correo es spam o no basándome en palabras clave…"></textarea>
-            <div class="form-hint">// Describe qué quieres que aprenda tu red</div>
+      <!-- Contenido principal -->
+      <div class="main-content">
+
+        <!-- PASO 1: DATOS -->
+        <div class="section visible">
+          <div class="card">
+            <h2 class="card-title">1. Preparar Datos</h2>
+            <p class="card-desc">Importa un archivo CSV con tus datos. La primera columna debe ser la clase/etiqueta.</p>
+
+            <div class="form-group">
+              <label>Cargar archivo CSV</label>
+              <input type="file" id="csvFile" accept=".csv" onchange="loadCSVFile(event)">
+              <div class="hint" id="csvHint">Selecciona un archivo CSV con formato: clase,feat1,feat2,...</div>
+            </div>
+
+            <div class="form-group">
+              <label>O copia/pega datos CSV</label>
+              <textarea id="csvInput" placeholder="clase,característica1,característica2&#10;gato,4.5,2.1&#10;perro,5.2,2.8&#10;..."></textarea>
+              <div class="hint">Formato: primera fila es encabezado, primera columna es etiqueta</div>
+            </div>
+
+            <div class="btn-group">
+              <button class="btn btn-primary" onclick="importCSV()">📊 Importar Datos</button>
+              <button class="btn btn-secondary" onclick="showExample()">📋 Ver Ejemplo</button>
+            </div>
+
+            <div id="dataPreview" style="margin-top: 20px; display: none;">
+              <h3 style="color: var(--txt); margin-bottom: 12px;">Preview de datos (primeras 5 filas):</h3>
+              <div style="overflow-x: auto;">
+                <table class="data-table" id="previewTable"></table>
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Tipo de tarea</label>
-            <select id="taskType">
-              <option value="classification">Clasificación (clases discretas)</option>
-              <option value="regression">Regresión (valor numérico)</option>
-            </select>
+        </div>
+
+        <!-- PASO 2: ARQUITECTURA -->
+        <div class="section">
+          <div class="card">
+            <h2 class="card-title">2. Diseñar Arquitectura</h2>
+            <p class="card-desc">Define las capas ocultas de tu red neuronal. Usa números separados por comas.</p>
+
+            <div class="form-group">
+              <label>Capas ocultas (neuronen por capa)</label>
+              <input type="text" id="archInput" value="64,32,16" placeholder="64,32,16">
+              <div class="hint">Ejemplo: "64,32,16" = 3 capas ocultas con 64, 32 y 16 neuronas respectivamente</div>
+            </div>
+
+            <div class="metrics" style="margin-top: 20px;">
+              <div class="metric-box">
+                <div class="metric-label">Entrada</div>
+                <div class="metric-value" id="inputSizeMetric">-</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-label">Salida</div>
+                <div class="metric-value" id="outputSizeMetric">-</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-label">Parámetros</div>
+                <div class="metric-value" id="paramsMetric">-</div>
+              </div>
+            </div>
+
+            <canvas id="netCanvas"></canvas>
+
+            <div class="btn-group">
+              <button class="btn btn-primary" onclick="showSection(2)">▶ Siguiente Paso</button>
+              <button class="btn btn-secondary" onclick="showSection(0)">◀ Anterior</button>
+            </div>
           </div>
         </div>
-        <div>
-          <div class="form-group">
-            <label>Nombre de las clases / salidas (separadas por coma)</label>
-            <input type="text" id="classNames" placeholder="spam, no-spam  —  ó  —  positivo, negativo, neutro" />
-            <div class="form-hint">// Para regresión deja solo una etiqueta: "precio"</div>
+
+        <!-- PASO 3: PARÁMETROS -->
+        <div class="section">
+          <div class="card">
+            <h2 class="card-title">3. Configurar Parámetros</h2>
+            <p class="card-desc">Ajusta los hiperparámetros del entrenamiento para optimizar el aprendizaje.</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div class="form-group">
+                <label>Tasa de aprendizaje (Learning Rate)</label>
+                <input type="number" id="lrInput" value="0.01" min="0.0001" max="1" step="0.001">
+                <div class="hint">Valores típicos: 0.001 a 0.1. Más bajo = más lento pero más preciso</div>
+              </div>
+
+              <div class="form-group">
+                <label>Regularización L2</label>
+                <input type="number" id="l2Input" value="0" min="0" max="1" step="0.0001">
+                <div class="hint">Previene overfitting. Valores típicos: 0 a 0.01</div>
+              </div>
+
+              <div class="form-group">
+                <label>Número de épocas</label>
+                <input type="number" id="epochsInput" value="100" min="10" max="10000" step="10">
+                <div class="hint">Cuántas veces entrenar con todo el dataset</div>
+              </div>
+
+              <div class="form-group">
+                <label>Función de activación</label>
+                <select id="actFnSelect">
+                  <option value="relu">ReLU (recomendado)</option>
+                  <option value="sigmoid">Sigmoid</option>
+                  <option value="tanh">Tanh</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="btn-group">
+              <button class="btn btn-primary" onclick="showSection(3)">▶ Siguiente Paso</button>
+              <button class="btn btn-secondary" onclick="showSection(1)">◀ Anterior</button>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Nombres de las características de entrada (separadas por coma)</label>
-            <input type="text" id="featureNames" placeholder="longitud_texto, n_links, n_mayusculas, tiene_asunto" />
-            <div class="form-hint">// Una columna por característica numérica</div>
+        </div>
+
+        <!-- PASO 4: ENTRENAMIENTO -->
+        <div class="section">
+          <div class="card">
+            <h2 class="card-title">4. Entrenar Red</h2>
+            <p class="card-desc">Inicia el entrenamiento y monitorea el progreso en tiempo real.</p>
+
+            <div id="trainingStatus" class="status-badge" style="display: none;">
+              <span class="pulse"></span>
+              <span id="statusText">Entrenando…</span>
+            </div>
+
+            <div class="metrics">
+              <div class="metric-box">
+                <div class="metric-label">Época</div>
+                <div class="metric-value" id="epochMetric">0</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-label">Loss</div>
+                <div class="metric-value" id="lossMetric">-</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-label">Tiempo</div>
+                <div class="metric-value" id="timeMetric">0s</div>
+              </div>
+            </div>
+
+            <canvas id="lossCanvas"></canvas>
+
+            <h3 style="color: var(--txt); margin: 20px 0 12px; font-size: 14px;">Log de entrenamiento:</h3>
+            <div class="log-container" id="trainingLog">
+              <div class="log-line">Listo para entrenar. Haz clic en "Iniciar Entrenamiento"</div>
+            </div>
+
+            <div class="btn-group">
+              <button class="btn btn-primary" id="btnTrain" onclick="startTraining()">▶ Iniciar Entrenamiento</button>
+              <button class="btn btn-secondary" id="btnPause" onclick="pauseTraining()" style="display:none;">⏸ Pausar</button>
+              <button class="btn btn-danger" id="btnStop" onclick="stopTraining(false)" style="display:none;">⏹ Detener</button>
+              <button class="btn btn-secondary" onclick="showSection(4)">▶ Siguiente Paso</button>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="btn-row" style="margin-top:8px">
-        <button class="btn btn-accent" onclick="initContext()">Definir contexto →</button>
-      </div>
-    </div>
 
-    <!-- ── STEP 2: Data ── -->
-    <div class="card" id="panelData" style="display:none">
-      <div class="section-head">
-        <div class="card-label" style="margin-bottom:0">Paso 2 — Datos de entrenamiento</div>
-        <div id="dataCount" class="badge">0 muestras</div>
-      </div>
+        <!-- PASO 5: PREDICCIÓN -->
+        <div class="section">
+          <div class="card">
+            <h2 class="card-title">5. Hacer Predicciones</h2>
+            <p class="card-desc">Usa el modelo entrenado para predecir nuevos datos.</p>
 
-      <div id="dataInputArea">
-        <div class="form-group">
-          <label>Añadir muestra — valores de entrada (separados por coma)</label>
-          <div style="display:flex;gap:8px">
-            <input type="text" id="sampleInputs" placeholder="0.8, 3, 12, 1" style="flex:1" />
-            <select id="sampleLabel" style="min-width:120px; flex-shrink:0"></select>
-            <button class="btn btn-accent" onclick="addSample()" style="flex-shrink:0">+ Añadir</button>
+            <div id="predictionSection" style="display: none;">
+              <div id="predictionInputs" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 20px;">
+              </div>
+
+              <div class="btn-group">
+                <button class="btn btn-primary" onclick="predict()">🔮 Predecir</button>
+              </div>
+
+              <div id="predictionResult" style="margin-top: 20px; display: none;">
+                <h3 style="color: var(--txt); margin-bottom: 12px;">Resultado:</h3>
+                <div style="background: var(--s1); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 20px;">
+                  <div style="font-size: 24px; color: var(--accent); font-weight: bold; margin-bottom: 12px;" id="predClass">-</div>
+                  <div id="predProbs"></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="noPredictionMsg" style="padding: 20px; background: var(--s1); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--txt2);">
+              Entrena la red primero para poder hacer predicciones
+            </div>
+
+            <div class="btn-group" style="margin-top: 20px;">
+              <button class="btn btn-secondary" onclick="showSection(3)">◀ Anterior</button>
+              <button class="btn btn-secondary" onclick="initialize()">🔄 Reiniciar Todo</button>
+            </div>
           </div>
-          <div class="form-hint" id="inputHint">// Introduce un valor por cada característica</div>
         </div>
 
-        <div class="form-group">
-          <label>O pega un CSV (primera columna = clase/valor, resto = características)</label>
-          <textarea id="csvInput" rows="3"
-            placeholder="spam,0.8,3,12,1&#10;no-spam,0.2,0,2,0&#10;spam,0.9,5,20,1"></textarea>
-          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
-            <button class="btn" onclick="loadCSV()">↑ Importar CSV (texto)</button>
-            <label style="all:unset;cursor:pointer">
-              <span class="btn">📂 Cargar archivo .csv
-                <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none" onchange="loadCSVFile(event)" />
-              </span>
-            </label>
-          </div>
-          <div class="form-hint" id="csvFileHint">// También puedes arrastrar un archivo .csv al campo de texto</div>
-        </div>
-      </div>
-
-      <div class="data-table-wrap" id="dataTableWrap" style="display:none">
-        <table>
-          <thead id="dataTableHead"></thead>
-          <tbody id="dataTableBody"></tbody>
-        </table>
-      </div>
-
-      <div class="btn-row" style="margin-top:16px">
-        <button class="btn btn-accent" onclick="goToArch()">Configurar arquitectura →</button>
-        <button class="btn btn-danger" onclick="clearData()">Limpiar datos</button>
-        <button class="btn" onclick="exportTrainingCSV()" id="btnExportTraining">↓ Exportar datos CSV</button>
-      </div>
-    </div>
-
-    <!-- ── STEP 3: Architecture ── -->
-    <div class="card" id="panelArch" style="display:none">
-      <div class="card-label">Paso 3 — Arquitectura de la red</div>
-
-      <div class="grid-3">
-        <div class="form-group">
-          <label>Capas ocultas</label>
-          <input type="number" id="hiddenLayers" value="2" min="1" max="6" />
-        </div>
-        <div class="form-group">
-          <label>Neuronas por capa</label>
-          <input type="number" id="hiddenNeurons" value="8" min="2" max="64" />
-        </div>
-        <div class="form-group">
-          <label>Función de activación</label>
-          <select id="activation">
-            <option value="relu">ReLU</option>
-            <option value="sigmoid">Sigmoid</option>
-            <option value="tanh">Tanh</option>
-            <option value="leaky">Leaky ReLU</option>
-          </select>
-        </div>
-      </div>
-      <div class="grid-3">
-        <div class="form-group">
-          <label>Tasa de aprendizaje</label>
-          <input type="number" id="lr" value="0.05" min="0.0001" max="1" step="0.001" />
-        </div>
-        <div class="form-group">
-          <label>Épocas</label>
-          <input type="number" id="epochs" value="500" min="50" max="10000" />
-        </div>
-        <div class="form-group">
-          <label>Regularización L2 (λ)</label>
-          <input type="number" id="l2lambda" value="0.0001" min="0" max="0.1" step="0.0001" />
-        </div>
-      </div>
-
-      <div id="archPreview" class="arch-pills" style="margin-bottom:16px"></div>
-
-      <div class="btn-row">
-        <button class="btn btn-accent" onclick="buildNetwork()">Construir red →</button>
-      </div>
-    </div>
-
-    <!-- ── STEP 4: Training ── -->
-    <div class="card" id="panelTrain" style="display:none">
-      <div class="section-head">
-        <div class="card-label" style="margin-bottom:0">Paso 4 — Entrenamiento</div>
-        <div id="statusBadge" class="badge"><span class="pulse" style="display:none"></span><span
-            id="statusText">Listo</span></div>
-      </div>
-
-      <div class="metrics">
-        <div class="metric-box">
-          <div class="metric-label">Época</div>
-          <div class="metric-value" id="metEpoch">—</div>
-        </div>
-        <div class="metric-box">
-          <div class="metric-label">Loss</div>
-          <div class="metric-value warn" id="metLoss">—</div>
-        </div>
-        <div class="metric-box">
-          <div class="metric-label">Precisión</div>
-          <div class="metric-value accent" id="metAcc">—</div>
-        </div>
-        <div class="metric-box">
-          <div class="metric-label">Tiempo</div>
-          <div class="metric-value" id="metTime">—</div>
-        </div>
-      </div>
-
-      <!-- Network visualization -->
-      <div class="card-label">Visualización de la red</div>
-      <canvas id="netCanvas"></canvas>
-
-      <!-- Loss chart -->
-      <div class="card-label" style="margin-top:12px">Curva de pérdida</div>
-      <canvas id="lossCanvas"></canvas>
-
-      <!-- Log -->
-      <div class="card-label" style="margin-top:12px">Log de entrenamiento</div>
-      <div id="trainingLog"></div>
-
-      <div class="btn-row" style="margin-top:16px">
-        <button class="btn btn-accent" id="btnTrain" onclick="startTraining()">▶ Entrenar</button>
-        <button class="btn" id="btnPause" onclick="pauseTraining()" disabled>⏸ Pausar</button>
-        <button class="btn btn-danger" onclick="resetTraining()">↺ Reiniciar pesos</button>
-        <button class="btn btn-accent" onclick="goToPredict()">Hacer predicciones →</button>
-        <button class="btn" onclick="showExportModal()" id="btnExportResults">↓ Exportar resultados</button>
-      </div>
-    </div>
-
-    <!-- ── STEP 5: Predict ── -->
-    <div class="card" id="panelPredict" style="display:none">
-      <div class="card-label">Paso 5 — Predicción</div>
-
-      <div class="form-group">
-        <label id="predictLabel">Valores de entrada (separados por coma)</label>
-        <div style="display:flex;gap:8px">
-          <input type="text" id="predictInput" placeholder="0.7, 2, 8, 1" style="flex:1"
-            onkeydown="if(event.key==='Enter')predict()" />
-          <button class="btn btn-accent" onclick="predict()">→ Predecir</button>
-        </div>
-        <div class="form-hint" id="predictHint"></div>
-      </div>
-
-      <div class="pred-result" id="predResult">
-        <div class="pred-label">Resultado</div>
-        <div id="predTopResult"
-          style="font-family:'Instrument Serif',serif;font-size:1.6rem;font-weight:400;color:var(--txt);margin-bottom:12px;">
-        </div>
-        <div class="pred-bars" id="predBars"></div>
-      </div>
-    </div>
-
-  </div><!-- /page -->
-
-  <!-- Export Modal -->
-  <div id="exportModal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;">
-    <div style="background:var(--s0);border:1px solid var(--border2);border-radius:var(--radius);padding:28px 32px;max-width:420px;width:90%;position:relative">
-      <div class="card-label" style="margin-bottom:18px">Exportar datos</div>
-      <p style="font-size:13px;color:var(--txt2);margin-bottom:18px;">Elige qué deseas exportar:</p>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px">
-        <label style="all:unset;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--txt2);">
-          <input type="checkbox" id="expTraining" checked style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;" />
-          <span>CSV de entrenamiento</span><span style="font-size:11px;color:var(--txt3);font-family:'JetBrains Mono',monospace">— datos originales</span>
-        </label>
-        <label style="all:unset;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--txt2);">
-          <input type="checkbox" id="expResults" checked style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;" />
-          <span>CSV de resultados</span><span style="font-size:11px;color:var(--txt3);font-family:'JetBrains Mono',monospace">— métricas de entrenamiento</span>
-        </label>
-        <label style="all:unset;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--txt2);">
-          <input type="checkbox" id="expJSON" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;" />
-          <span>JSON del modelo</span><span style="font-size:11px;color:var(--txt3);font-family:'JetBrains Mono',monospace">— pesos y configuración</span>
-        </label>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-accent" onclick="doExport()">↓ Descargar</button>
-        <button class="btn" onclick="closeExportModal()">Cancelar</button>
       </div>
     </div>
   </div>
 
-  <!-- Tooltip -->
-  <div class="tooltip" id="tooltip"></div>
-
   <script>
-    /* ═══════════════════════════════════════════════
-       STATE
-    ═══════════════════════════════════════════════ */
+    // ═══════════════════════════════════════════════
+    // ESTADO GLOBAL
+    // ═══════════════════════════════════════════════
     let ctx = {
-      desc: '', taskType: 'classification',
-      classes: [], features: [],
-      data: []
+      data: [],
+      features: [],
+      classes: [],
+      desc: '',
+      taskType: 'classification'
     };
 
     let net = null;
     let lossHistory = [];
-    let trainInterval = null;
-    let trainPaused = false;
-    let trainStart = 0;
     let currentEpoch = 0;
-    let targetEpochs = 500;
+    let trainInterval = null;
+    let trainStart = 0;
+    let trainPaused = false;
+    let normStats = null;
 
-    /* ═══════════════════════════════════════════════
-       STEP 1 — CONTEXT
-    ═══════════════════════════════════════════════ */
-    function initContext() {
-      const desc = document.getElementById('contextDesc').value.trim();
-      const taskType = document.getElementById('taskType').value;
-      const classTxt = document.getElementById('classNames').value.trim();
-      const featTxt = document.getElementById('featureNames').value.trim();
-
-      if (!classTxt || !featTxt) { alert('Define las clases y características primero.'); return; }
-
-      ctx.desc = desc;
-      ctx.taskType = taskType;
-      ctx.classes = classTxt.split(',').map(s => s.trim()).filter(Boolean);
-      ctx.features = featTxt.split(',').map(s => s.trim()).filter(Boolean);
-
-      // Populate label select
-      const sel = document.getElementById('sampleLabel');
-      sel.innerHTML = '';
-      ctx.classes.forEach(c => {
-        const o = document.createElement('option');
-        o.value = c; o.textContent = c;
-        sel.appendChild(o);
+    // ═══════════════════════════════════════════════
+    // FUNCIONES DE UI
+    // ═══════════════════════════════════════════════
+    function showSection(n) {
+      document.querySelectorAll('.section').forEach((s, i) => {
+        s.classList.remove('visible');
+        if (i === n) s.classList.add('visible');
       });
 
-      document.getElementById('inputHint').textContent = `// ${ctx.features.length} característica(s): ${ctx.features.join(', ')}`;
+      document.querySelectorAll('.step').forEach((s, i) => {
+        s.classList.remove('active');
+        if (i === n) s.classList.add('active');
+      });
 
-      setStep(1);
-      show('panelData');
-      setStepDone(0);
-      activateStep(1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    /* ═══════════════════════════════════════════════
-       STEP 2 — DATA
-    ═══════════════════════════════════════════════ */
-    function addSample() {
-      const rawInputs = document.getElementById('sampleInputs').value.trim();
-      const label = document.getElementById('sampleLabel').value;
-
-      const inputs = rawInputs.split(',').map(s => parseFloat(s.trim()));
-      if (inputs.length !== ctx.features.length || inputs.some(isNaN)) {
-        alert(`Necesito exactamente ${ctx.features.length} valor(es) numérico(s).`); return;
-      }
-      ctx.data.push({ inputs, label });
-      document.getElementById('sampleInputs').value = '';
-      renderDataTable();
-      updateDataCount();
+    function log(msg, type = '') {
+      const logEl = document.getElementById('trainingLog');
+      const line = document.createElement('div');
+      line.className = 'log-line' + (type ? ' log-' + type : '');
+      const ts = new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      line.textContent = `[${ts}] ${msg}`;
+      logEl.appendChild(line);
+      logEl.scrollTop = logEl.scrollHeight;
     }
 
-    function loadCSV() {
+    function showStatus(text, show = true) {
+      const badge = document.getElementById('trainingStatus');
+      badge.style.display = show ? 'flex' : 'none';
+      document.getElementById('statusText').textContent = text;
+    }
+
+    // ═══════════════════════════════════════════════
+    // CSV IMPORT
+    // ═══════════════════════════════════════════════
+    function loadCSVFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('csvInput').value = e.target.result;
+        document.getElementById('csvHint').textContent = `✓ Archivo cargado: ${file.name}`;
+      };
+      reader.readAsText(file);
+    }
+
+    function showExample() {
+      const example = `especie,longitud,peso,color
+gato,45,4.5,1
+perro,60,8.2,0
+gato,48,4.8,1
+perro,58,7.9,0
+gato,42,4.2,1
+perro,65,9.1,0`;
+      document.getElementById('csvInput').value = example;
+      document.getElementById('csvHint').textContent = '← Ejemplo de datos (gatos vs perros)';
+    }
+
+    function importCSV() {
       const csv = document.getElementById('csvInput').value.trim();
-      if (!csv) return;
-      let added = 0;
-      csv.split('\n').forEach(line => {
-        line = line.trim();
-        if (!line) return;
-        const parts = line.split(',').map(s => s.trim());
-        if (parts.length < 2) return;
-        const label = parts[0];
-        const inputs = parts.slice(1).map(Number);
-        if (inputs.some(isNaN)) return;
-        if (!ctx.classes.includes(label)) return;
-        ctx.data.push({ inputs, label });
-        added++;
-      });
-      document.getElementById('csvInput').value = '';
-      renderDataTable();
-      updateDataCount();
-      log(`↑ ${added} muestras importadas desde CSV`, 'ok');
-    }
+      if (!csv) {
+        alert('Por favor ingresa datos CSV');
+        return;
+      }
 
-    function clearData() {
-      if (!confirm('¿Borrar todos los datos?')) return;
+      const lines = csv.split('\n').filter(l => l.trim());
+      if (lines.length < 2) {
+        alert('Necesitas al menos una fila de datos además del encabezado');
+        return;
+      }
+
+      // Parse header
+      const header = lines[0].split(',').map(h => h.trim());
+      ctx.features = header.slice(1);
+      ctx.classes = [];
       ctx.data = [];
-      renderDataTable();
-      updateDataCount();
+
+      // Parse data
+      const classSet = new Set();
+      for (let i = 1; i < lines.length; i++) {
+        const vals = lines[i].split(',').map(v => v.trim());
+        if (vals.length !== header.length) continue;
+
+        const label = vals[0];
+        classSet.add(label);
+
+        const inputs = vals.slice(1).map(v => {
+          const num = parseFloat(v);
+          return isNaN(num) ? 0 : num;
+        });
+
+        ctx.data.push({ label, inputs });
+      }
+
+      ctx.classes = Array.from(classSet).sort();
+      ctx.taskType = ctx.classes.length <= 2 ? 'classification' : 'classification';
+
+      // Show preview
+      const tbody = document.querySelector('#previewTable tbody') || document.createElement('tbody');
+      tbody.innerHTML = '';
+      
+      const table = document.getElementById('previewTable');
+      table.innerHTML = '';
+      
+      // Header
+      const thead = document.createElement('thead');
+      const tr = document.createElement('tr');
+      header.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        tr.appendChild(th);
+      });
+      thead.appendChild(tr);
+      table.appendChild(thead);
+
+      // Data (primeras 5 filas)
+      const tbody2 = document.createElement('tbody');
+      ctx.data.slice(0, 5).forEach(d => {
+        const tr = document.createElement('tr');
+        const td1 = document.createElement('td');
+        td1.textContent = d.label;
+        tr.appendChild(td1);
+        d.inputs.forEach(v => {
+          const td = document.createElement('td');
+          td.textContent = v.toFixed(2);
+          tr.appendChild(td);
+        });
+        tbody2.appendChild(tr);
+      });
+      table.appendChild(tbody2);
+
+      document.getElementById('dataPreview').style.display = 'block';
+
+      // Update metrics
+      document.getElementById('inputSizeMetric').textContent = ctx.features.length;
+      document.getElementById('outputSizeMetric').textContent = ctx.classes.length;
+
+      log(`✓ Datos importados: ${ctx.data.length} muestras, ${ctx.features.length} características, ${ctx.classes.length} clases`, 'info');
+      
+      // Auto advance
+      setTimeout(() => showSection(1), 800);
     }
 
-    function renderDataTable() {
-      const head = document.getElementById('dataTableHead');
-      const body = document.getElementById('dataTableBody');
-      const wrap = document.getElementById('dataTableWrap');
-
-      if (ctx.data.length === 0) { wrap.style.display = 'none'; return; }
-      wrap.style.display = 'block';
-
-      head.innerHTML = '<tr><th>#</th><th>Clase</th>' +
-        ctx.features.map(f => `<th>${f}</th>`).join('') +
-        '<th></th></tr>';
-
-      body.innerHTML = ctx.data.map((d, i) =>
-        `<tr>
-      <td>${i + 1}</td>
-      <td style="color:var(--accent)">${d.label}</td>
-      ${d.inputs.map(v => `<td>${v}</td>`).join('')}
-      <td><span onclick="removeSample(${i})" style="cursor:pointer;color:var(--txt3);font-size:14px">×</span></td>
-    </tr>`
-      ).join('');
-    }
-
-    function removeSample(i) {
-      ctx.data.splice(i, 1);
-      renderDataTable();
-      updateDataCount();
-    }
-
-    function updateDataCount() {
-      const el = document.getElementById('dataCount');
-      el.textContent = `${ctx.data.length} muestra${ctx.data.length !== 1 ? 's' : ''}`;
-      el.className = ctx.data.length > 0 ? 'badge done' : 'badge';
-    }
-
-    function goToArch() {
-      if (ctx.data.length < 4) { alert('Añade al menos 4 muestras para entrenar.'); return; }
-      updateArchPreview();
-      show('panelArch');
-      setStepDone(1);
-      activateStep(2);
-    }
-
-    /* ═══════════════════════════════════════════════
-       STEP 3 — ARCHITECTURE
-    ═══════════════════════════════════════════════ */
-    function updateArchPreview() {
-      const hidL = parseInt(document.getElementById('hiddenLayers').value);
-      const hidN = parseInt(document.getElementById('hiddenNeurons').value);
-      const act = document.getElementById('activation').value;
-
-      const layers = [ctx.features.length, ...Array(hidL).fill(hidN), ctx.classes.length];
-
-      document.getElementById('archPreview').innerHTML =
-        layers.map((n, i) => {
-          const isIn = i === 0;
-          const isOut = i === layers.length - 1;
-          return `<div class="arch-pill ${isIn || isOut ? 'highlight' : ''}">
-        ${isIn ? '🔵 Entrada' : isOut ? '🟢 Salida' : `⚫ Capa ${i}`}
-        <strong>${n}</strong>
-      </div>`;
-        }).join('<div style="color:var(--txt3);font-size:18px;align-self:center">→</div>') +
-        `<div class="arch-pill">${act.toUpperCase()}</div>`;
-    }
-
-    ['hiddenLayers', 'hiddenNeurons', 'activation'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener('change', updateArchPreview);
-    });
-
+    // ═══════════════════════════════════════════════
+    // ARQUITECTURA
+    // ═══════════════════════════════════════════════
     function buildNetwork() {
-      const hidL = parseInt(document.getElementById('hiddenLayers').value);
-      const hidN = parseInt(document.getElementById('hiddenNeurons').value);
-      const act = document.getElementById('activation').value;
-      const lr = parseFloat(document.getElementById('lr').value);
-      const ep = parseInt(document.getElementById('epochs').value);
-      const l2 = parseFloat(document.getElementById('l2lambda').value);
+      if (ctx.data.length === 0) {
+        alert('Primero importa los datos');
+        return;
+      }
 
-      targetEpochs = ep;
+      const archStr = document.getElementById('archInput').value.trim();
+      const hiddenLayers = archStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
 
-      const layerSizes = [ctx.features.length, ...Array(hidL).fill(hidN), ctx.classes.length];
-      net = createNetwork(layerSizes, act, lr, l2);
+      if (hiddenLayers.length === 0) {
+        alert('Define al menos una capa oculta');
+        return;
+      }
 
-      lossHistory = [];
-      currentEpoch = 0;
+      const sizes = [ctx.features.length, ...hiddenLayers, ctx.classes.length];
+      const lr = parseFloat(document.getElementById('lrInput').value) || 0.01;
+      const l2 = parseFloat(document.getElementById('l2Input').value) || 0;
+      const actFn = document.getElementById('actFnSelect').value || 'relu';
 
-      show('panelTrain');
-      setStepDone(2);
-      activateStep(3);
+      // Initialize network
+      net = {
+        sizes,
+        actFn,
+        lr,
+        l2,
+        weights: [],
+        biases: []
+      };
+
+      // Initialize weights & biases
+      for (let i = 0; i < sizes.length - 1; i++) {
+        const w = [];
+        const b = [];
+        for (let j = 0; j < sizes[i]; j++) {
+          w[j] = [];
+          for (let k = 0; k < sizes[i + 1]; k++) {
+            w[j][k] = (Math.random() - 0.5) * 2 / Math.sqrt(sizes[i]);
+          }
+        }
+        for (let k = 0; k < sizes[i + 1]; k++) {
+          b[k] = 0;
+        }
+        net.weights.push(w);
+        net.biases.push(b);
+      }
+
+      // Calculate params
+      let params = 0;
+      for (let i = 0; i < sizes.length - 1; i++) {
+        params += sizes[i] * sizes[i + 1] + sizes[i + 1];
+      }
+      document.getElementById('paramsMetric').textContent = params.toLocaleString();
 
       drawNetwork();
-      log('Red construida: ' + layerSizes.join(' → '), 'ok');
+      log(`✓ Red construida: ${sizes.join(' → ')} (${params.toLocaleString()} parámetros)`, 'info');
     }
 
-    /* ═══════════════════════════════════════════════
-       NEURAL NETWORK CORE
-    ═══════════════════════════════════════════════ */
-    function createNetwork(sizes, actFn, lr, l2) {
-      const weights = [];
-      const biases = [];
+    function drawNetwork() {
+      const canvas = document.getElementById('netCanvas');
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      const W = canvas.parentElement.clientWidth - 16;
+      const H = 300;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
 
-      for (let l = 0; l < sizes.length - 1; l++) {
-        const rows = sizes[l + 1], cols = sizes[l];
-        // He init for relu, Xavier for others
-        const scale = (actFn === 'relu' || actFn === 'leaky')
-          ? Math.sqrt(2 / cols)
-          : Math.sqrt(1 / cols);
+      if (!net) return;
 
-        weights.push(Array.from({ length: rows }, () =>
-          Array.from({ length: cols }, () => randn() * scale)
-        ));
-        biases.push(Array(rows).fill(0));
+      const c = canvas.getContext('2d');
+      c.scale(dpr, dpr);
+      c.fillStyle = 'var(--s1)';
+      c.fillRect(0, 0, W, H);
+      c.clearRect(0, 0, W, H);
+
+      const L = net.sizes.length;
+      const padX = 30, padY = 40;
+      const usableW = W - padX * 2;
+      const usableH = H - padY * 2;
+
+      // Draw connections
+      const pos = [];
+      for (let li = 0; li < L; li++) {
+        pos[li] = [];
+        const size = net.sizes[li];
+        const maxSize = Math.max(...net.sizes);
+        const nodeGap = usableH / (maxSize + 1);
+        const layerX = padX + (li / (L - 1)) * usableW;
+
+        for (let ni = 0; ni < size; ni++) {
+          const offsetY = (maxSize - size) / 2 * nodeGap;
+          const nodeY = padY + (ni + 1) * nodeGap + offsetY;
+          pos[li].push({ x: layerX, y: nodeY });
+        }
       }
 
-      return {
-        sizes, weights, biases, actFn, lr, l2,
-        activations: sizes.map(s => Array(s).fill(0)),
-        zs: sizes.map(s => Array(s).fill(0))
-      };
+      // Draw edges
+      c.strokeStyle = 'rgba(82,86,106,0.2)';
+      c.lineWidth = 0.5;
+      for (let li = 0; li < L - 1; li++) {
+        for (let i = 0; i < pos[li].length; i++) {
+          for (let j = 0; j < pos[li + 1].length; j++) {
+            c.beginPath();
+            c.moveTo(pos[li][i].x, pos[li][i].y);
+            c.lineTo(pos[li + 1][j].x, pos[li + 1][j].y);
+            c.stroke();
+          }
+        }
+      }
+
+      // Draw nodes
+      pos.forEach((layer, li) => {
+        layer.forEach(node => {
+          c.beginPath();
+          c.arc(node.x, node.y, 5, 0, Math.PI * 2);
+          c.fillStyle = li === 0 ? 'rgba(74,222,128,0.6)' : li === L - 1 ? 'rgba(248,113,113,0.6)' : 'rgba(139,144,168,0.6)';
+          c.fill();
+          c.strokeStyle = 'rgba(82,86,106,0.8)';
+          c.lineWidth = 1;
+          c.stroke();
+        });
+      });
+
+      // Draw labels
+      c.fillStyle = 'rgba(82,86,106,0.8)';
+      c.font = "10px 'JetBrains Mono'";
+      c.textAlign = 'center';
+      pos.forEach((layer, li) => {
+        const label = li === 0 ? 'Entrada' : li === L - 1 ? 'Salida' : `Capa ${li}`;
+        if (layer.length > 0) {
+          c.fillText(label, layer[0].x, padY - 12);
+          c.fillText(`(${net.sizes[li]})`, layer[0].x, H - 12);
+        }
+      });
     }
 
-    function randn() {
-      // Box-Muller
-      const u1 = Math.random() || 1e-10, u2 = Math.random();
-      return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    // ═══════════════════════════════════════════════
+    // RED NEURONAL
+    // ═══════════════════════════════════════════════
+    function activation(x, fn) {
+      if (fn === 'relu') return Math.max(0, x);
+      if (fn === 'sigmoid') return 1 / (1 + Math.exp(-x));
+      if (fn === 'tanh') return Math.tanh(x);
+      return x;
     }
 
-    const actFns = {
-      relu: x => Math.max(0, x),
-      sigmoid: x => 1 / (1 + Math.exp(-x)),
-      tanh: x => Math.tanh(x),
-      leaky: x => x >= 0 ? x : 0.01 * x
-    };
-    const actDerivs = {
-      relu: x => x > 0 ? 1 : 0,
-      sigmoid: x => { const s = 1 / (1 + Math.exp(-x)); return s * (1 - s); },
-      tanh: x => 1 - Math.tanh(x) ** 2,
-      leaky: x => x >= 0 ? 1 : 0.01
-    };
-
-    function softmax(arr) {
-      const mx = Math.max(...arr);
-      const exps = arr.map(v => Math.exp(v - mx));
-      const sum = exps.reduce((a, b) => a + b, 0);
-      return exps.map(v => v / sum);
+    function activationDerivative(x, fn) {
+      if (fn === 'relu') return x > 0 ? 1 : 0;
+      if (fn === 'sigmoid') { const s = 1 / (1 + Math.exp(-x)); return s * (1 - s); }
+      if (fn === 'tanh') { const t = Math.tanh(x); return 1 - t * t; }
+      return 1;
     }
 
-    function forward(net, input) {
-      net.activations[0] = [...input];
-      let a = [...input];
-
+    function forward(inputs) {
+      let a = inputs;
       for (let l = 0; l < net.weights.length; l++) {
         const z = [];
-        for (let j = 0; j < net.weights[l].length; j++) {
+        for (let j = 0; j < net.weights[l][0].length; j++) {
           let sum = net.biases[l][j];
-          for (let k = 0; k < a.length; k++) sum += net.weights[l][k === a.length ? k : k] * a[k] +
-            (net.weights[l][j] ? net.weights[l][j][k] * a[k] - net.weights[l][j][k] * a[k] : 0);
-          // redo properly
-          sum = net.biases[l][j];
-          for (let k = 0; k < a.length; k++) sum += net.weights[l][j][k] * a[k];
-          z.push(sum);
+          for (let i = 0; i < a.length; i++) {
+            sum += a[i] * net.weights[l][i][j];
+          }
+          z[j] = sum;
         }
-        net.zs[l + 1] = z;
-
-        let nextA;
-        if (l === net.weights.length - 1 && ctx.taskType === 'classification') {
-          nextA = softmax(z);
-        } else {
-          nextA = z.map(v => actFns[net.actFn](v));
-        }
-        net.activations[l + 1] = nextA;
-        a = nextA;
+        a = l < net.weights.length - 1 ? z.map(x => activation(x, net.actFn)) : softmax(z);
       }
       return a;
     }
 
-    function backward(net, target) {
-      const L = net.weights.length;
-      const deltas = Array(L).fill(null).map(() => []);
+    function softmax(z) {
+      const m = Math.max(...z);
+      const exp = z.map(x => Math.exp(x - m));
+      const sum = exp.reduce((a, b) => a + b, 0);
+      return exp.map(x => x / sum);
+    }
 
-      // Output delta
-      const outA = net.activations[L];
-      if (ctx.taskType === 'classification') {
-        // Cross-entropy + softmax: delta = output - target
-        deltas[L - 1] = outA.map((a, i) => a - target[i]);
-      } else {
-        deltas[L - 1] = outA.map((a, i) => (a - target[i]) * actDerivs[net.actFn](net.zs[L][i]));
+    // ═══════════════════════════════════════════════
+    // ENTRENAMIENTO
+    // ═══════════════════════════════════════════════
+    function startTraining() {
+      if (!net || ctx.data.length === 0) {
+        alert('Construye la red primero');
+        return;
       }
 
-      // Hidden deltas
-      for (let l = L - 2; l >= 0; l--) {
-        deltas[l] = net.weights[l + 1][0].map((_, k) => {
-          let err = 0;
-          for (let j = 0; j < net.weights[l + 1].length; j++) {
-            err += net.weights[l + 1][j][k] * deltas[l + 1][j];
-          }
-          return err * actDerivs[net.actFn](net.zs[l + 1][k]);
-        });
-      }
+      buildNetwork(); // Rebuild with current params
+      normStats = normalizeData(ctx.data);
+      lossHistory = [];
+      currentEpoch = 0;
 
-      // Update weights
-      for (let l = 0; l < L; l++) {
-        for (let j = 0; j < net.weights[l].length; j++) {
-          for (let k = 0; k < net.weights[l][j].length; k++) {
-            net.weights[l][j][k] -= net.lr * (
-              deltas[l][j] * net.activations[l][k] +
-              net.l2 * net.weights[l][j][k]
-            );
-          }
-          net.biases[l][j] -= net.lr * deltas[l][j];
+      document.getElementById('btnTrain').style.display = 'none';
+      document.getElementById('btnPause').style.display = 'inline-flex';
+      document.getElementById('btnStop').style.display = 'inline-flex';
+
+      showStatus('Entrenando…', true);
+      log('🚀 Iniciando entrenamiento...', 'info');
+
+      const targetEpochs = parseInt(document.getElementById('epochsInput').value) || 100;
+      trainStart = performance.now();
+      trainPaused = false;
+      let currentIter = 0;
+
+      const BATCH = 8;
+      const epPerTick = Math.max(1, Math.round(targetEpochs / 200));
+
+      trainInterval = setInterval(() => {
+        if (trainPaused) return;
+        if (currentEpoch >= targetEpochs) {
+          finishTraining();
+          return;
         }
+
+        for (let ep = 0; ep < epPerTick && currentEpoch < targetEpochs; ep++) {
+          // Shuffle data
+          const indices = ctx.data.map((_, i) => i).sort(() => Math.random() - 0.5);
+
+          for (let b = 0; b < indices.length; b += BATCH) {
+            const batch = indices.slice(b, b + BATCH);
+            let totalLoss = 0;
+
+            for (const idx of batch) {
+              const d = ctx.data[idx];
+              const inputs = normalize(d.inputs, normStats);
+              const target = oneHot(d.label);
+
+              // Forward
+              let a = inputs;
+              const activations = [a];
+              const zs = [];
+
+              for (let l = 0; l < net.weights.length; l++) {
+                const z = [];
+                for (let j = 0; j < net.weights[l][0].length; j++) {
+                  let sum = net.biases[l][j];
+                  for (let i = 0; i < a.length; i++) {
+                    sum += a[i] * net.weights[l][i][j];
+                  }
+                  z[j] = sum;
+                }
+                zs.push(z);
+                a = l < net.weights.length - 1 ? z.map(x => activation(x, net.actFn)) : softmax(z);
+                activations.push(a);
+              }
+
+              // Loss
+              const loss = -target.reduce((s, t, i) => s + t * Math.log(Math.max(a[i], 1e-10)), 0) / target.length;
+              totalLoss += loss;
+
+              // Backward
+              let delta = a.map((v, i) => v - target[i]);
+              for (let l = net.weights.length - 1; l >= 0; l--) {
+                const newDelta = Array(activations[l].length).fill(0);
+
+                for (let j = 0; j < net.biases[l].length; j++) {
+                  let d = delta[j];
+                  if (l < net.weights.length - 1) {
+                    d *= activationDerivative(zs[l][j], net.actFn);
+                  }
+
+                  for (let i = 0; i < activations[l].length; i++) {
+                    const grad = activations[l][i] * d + net.l2 * net.weights[l][i][j];
+                    net.weights[l][i][j] -= net.lr * grad / batch.length;
+                    newDelta[i] += net.weights[l][i][j] * d;
+                  }
+
+                  net.biases[l][j] -= net.lr * d / batch.length;
+                }
+
+                delta = newDelta;
+              }
+            }
+
+            lossHistory.push(totalLoss / batch.length);
+          }
+
+          currentEpoch++;
+        }
+
+        // Update UI
+        const elapsed = Math.round((performance.now() - trainStart) / 1000);
+        document.getElementById('epochMetric').textContent = currentEpoch;
+        document.getElementById('lossMetric').textContent = lossHistory[lossHistory.length - 1].toFixed(4);
+        document.getElementById('timeMetric').textContent = elapsed + 's';
+
+        drawLossChart();
+      }, 50);
+    }
+
+    function pauseTraining() {
+      trainPaused = !trainPaused;
+      document.getElementById('btnPause').textContent = trainPaused ? '▶ Reanudar' : '⏸ Pausar';
+      showStatus(trainPaused ? 'Pausado' : 'Entrenando…', !trainPaused);
+    }
+
+    function stopTraining(finished) {
+      clearInterval(trainInterval);
+      trainInterval = null;
+
+      document.getElementById('btnTrain').style.display = 'inline-flex';
+      document.getElementById('btnPause').style.display = 'none';
+      document.getElementById('btnStop').style.display = 'none';
+
+      showStatus('', false);
+
+      if (finished) {
+        log(`✓ ¡Entrenamiento completado! Loss final: ${lossHistory[lossHistory.length - 1].toFixed(4)}`, 'info');
+        activateStep(4);
+      } else {
+        log('⏹ Entrenamiento detenido', 'warn');
       }
     }
 
-    function oneHot(label) {
-      return ctx.classes.map(c => c === label ? 1 : 0);
+    function finishTraining() {
+      stopTraining(true);
+      
+      // Enable prediction section
+      document.getElementById('noPredictionMsg').style.display = 'none';
+      document.getElementById('predictionSection').style.display = 'block';
+
+      // Build prediction inputs
+      const inputDiv = document.getElementById('predictionInputs');
+      inputDiv.innerHTML = '';
+      ctx.features.forEach((feat, i) => {
+        const group = document.createElement('div');
+        group.className = 'form-group';
+        group.innerHTML = `
+          <label>${feat}</label>
+          <input type="number" id="pred_${i}" value="0" step="0.1">
+        `;
+        inputDiv.appendChild(group);
+      });
     }
 
-    // Normalize data
+    function drawLossChart() {
+      const canvas = document.getElementById('lossCanvas');
+      if (!canvas || lossHistory.length < 2) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      const W = canvas.parentElement.clientWidth - 16;
+      const H = 200;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+
+      const c = canvas.getContext('2d');
+      c.scale(dpr, dpr);
+      c.clearRect(0, 0, W, H);
+
+      const padX = 40, padY = 16;
+      const usableW = W - padX - 16;
+      const usableH = H - padY - 24;
+
+      const maxL = Math.max(...lossHistory);
+      const minL = Math.min(...lossHistory);
+      const range = maxL - minL || 0.001;
+
+      // Grid
+      c.strokeStyle = 'rgba(42,45,58,0.3)';
+      c.lineWidth = 1;
+      [0, 0.5, 1].forEach(t => {
+        const y = padY + (1 - t) * usableH;
+        c.beginPath();
+        c.moveTo(padX, y);
+        c.lineTo(W - 16, y);
+        c.stroke();
+      });
+
+      // Curve
+      const grad = c.createLinearGradient(0, padY, 0, padY + usableH);
+      grad.addColorStop(0, 'rgba(74,222,128,0.3)');
+      grad.addColorStop(1, 'rgba(74,222,128,0)');
+
+      c.beginPath();
+      lossHistory.forEach((v, i) => {
+        const x = padX + (i / (lossHistory.length - 1)) * usableW;
+        const y = padY + (1 - (v - minL) / range) * usableH;
+        if (i === 0) c.moveTo(x, y);
+        else c.lineTo(x, y);
+      });
+      c.lineTo(padX + usableW, padY + usableH);
+      c.lineTo(padX, padY + usableH);
+      c.closePath();
+      c.fillStyle = grad;
+      c.fill();
+
+      // Line
+      c.beginPath();
+      lossHistory.forEach((v, i) => {
+        const x = padX + (i / (lossHistory.length - 1)) * usableW;
+        const y = padY + (1 - (v - minL) / range) * usableH;
+        if (i === 0) c.moveTo(x, y);
+        else c.lineTo(x, y);
+      });
+      c.strokeStyle = 'rgba(74,222,128,0.9)';
+      c.lineWidth = 2;
+      c.stroke();
+    }
+
+    // ═══════════════════════════════════════════════
+    // PREDICCIÓN
+    // ═══════════════════════════════════════════════
+    function predict() {
+      if (!net) return;
+
+      const inputs = ctx.features.map((_, i) => parseFloat(document.getElementById(`pred_${i}`).value) || 0);
+      const normalized = normalize(inputs, normStats);
+      const output = forward(normalized);
+
+      const pred = output.indexOf(Math.max(...output));
+      const predClass = ctx.classes[pred];
+
+      document.getElementById('predClass').textContent = predClass;
+
+      const probs = document.getElementById('predProbs');
+      probs.innerHTML = '';
+      ctx.classes.forEach((c, i) => {
+        const div = document.createElement('div');
+        div.style.marginBottom = '10px';
+        const pct = (output[i] * 100).toFixed(1);
+        div.innerHTML = `
+          <div style="font-size: 12px; color: var(--txt2); margin-bottom: 4px;">${c}: ${pct}%</div>
+          <div style="width: 100%; height: 6px; background: var(--s2); border-radius: 3px; overflow: hidden;">
+            <div style="width: ${pct}%; height: 100%; background: var(--accent);"></div>
+          </div>
+        `;
+        probs.appendChild(div);
+      });
+
+      document.getElementById('predictionResult').style.display = 'block';
+      log(`🔮 Predicción: ${predClass} (confianza: ${(output[pred] * 100).toFixed(1)}%)`, 'info');
+    }
+
+    // ═══════════════════════════════════════════════
+    // HELPERS
+    // ═══════════════════════════════════════════════
     function normalizeData(data) {
       const n = ctx.features.length;
       const min = Array(n).fill(Infinity);
@@ -1308,494 +1288,45 @@
       return inputs.map((v, i) => (v - stats.min[i]) / stats.range[i]);
     }
 
-    let normStats = null;
-
-    /* ═══════════════════════════════════════════════
-       STEP 4 — TRAINING
-    ═══════════════════════════════════════════════ */
-    function startTraining() {
-      if (!net) return;
-      if (trainInterval) return;
-
-      trainPaused = false;
-      trainStart = performance.now();
-      normStats = normalizeData(ctx.data);
-
-      document.getElementById('btnTrain').disabled = true;
-      document.getElementById('btnPause').disabled = false;
-      setStatus('running', 'Entrenando…');
-
-      const BATCH = 8;
-      const epPerTick = Math.max(1, Math.round(targetEpochs / 500));
-
-      trainInterval = setInterval(() => {
-        if (trainPaused) return;
-        if (currentEpoch >= targetEpochs) {
-          stopTraining(true);
-          return;
-        }
-
-        let totalLoss = 0;
-        for (let ep = 0; ep < epPerTick && currentEpoch < targetEpochs; ep++) {
-          // Shuffle
-          const shuffled = [...ctx.data].sort(() => Math.random() - .5);
-          let epochLoss = 0;
-
-          for (let b = 0; b < shuffled.length; b += BATCH) {
-            const batch = shuffled.slice(b, b + BATCH);
-            batch.forEach(sample => {
-              const inp = normalize(sample.inputs, normStats);
-              const target = oneHot(sample.label);
-              const out = forward(net, inp);
-              // Cross-entropy loss
-              const loss = -target.reduce((s, t, i) => s + (t ? Math.log(Math.max(out[i], 1e-9)) : 0), 0);
-              epochLoss += loss;
-              backward(net, target);
-            });
-          }
-          totalLoss = epochLoss / ctx.data.length;
-          currentEpoch++;
-        }
-
-        lossHistory.push(totalLoss);
-
-        // Accuracy
-        let correct = 0;
-        ctx.data.forEach(sample => {
-          const inp = normalize(sample.inputs, normStats);
-          const out = forward(net, inp);
-          const pred = ctx.classes[out.indexOf(Math.max(...out))];
-          if (pred === sample.label) correct++;
-        });
-        const acc = (correct / ctx.data.length * 100).toFixed(1);
-        const elapsed = ((performance.now() - trainStart) / 1000).toFixed(1);
-
-        document.getElementById('metEpoch').textContent = currentEpoch;
-        document.getElementById('metLoss').textContent = totalLoss.toFixed(4);
-        document.getElementById('metAcc').textContent = acc + '%';
-        document.getElementById('metTime').textContent = elapsed + 's';
-
-        if (currentEpoch % Math.max(1, Math.round(targetEpochs / 20)) === 0) {
-          log(`Época ${currentEpoch}/${targetEpochs} — loss: ${totalLoss.toFixed(4)} — acc: ${acc}%`, 'ok');
-        }
-
-        drawNetwork();
-        drawLoss();
-
-      }, 30);
+    function oneHot(label) {
+      return ctx.classes.map(c => c === label ? 1 : 0);
     }
-
-    function pauseTraining() {
-      trainPaused = !trainPaused;
-      const btn = document.getElementById('btnPause');
-      btn.textContent = trainPaused ? '▶ Reanudar' : '⏸ Pausar';
-      setStatus(trainPaused ? '' : 'running', trainPaused ? 'Pausado' : 'Entrenando…');
-    }
-
-    function stopTraining(done) {
-      clearInterval(trainInterval);
-      trainInterval = null;
-      document.getElementById('btnTrain').disabled = false;
-      document.getElementById('btnPause').disabled = true;
-      document.getElementById('btnPause').textContent = '⏸ Pausar';
-      if (done) {
-        setStatus('done', 'Completado');
-        log('✓ Entrenamiento completado', 'ok');
-      }
-    }
-
-    function resetTraining() {
-      stopTraining(false);
-      buildNetwork();
-      lossHistory = [];
-      currentEpoch = 0;
-      ['metEpoch', 'metLoss', 'metAcc', 'metTime'].forEach(id => document.getElementById(id).textContent = '—');
-      setStatus('', 'Listo');
-      drawNetwork();
-      drawLoss();
-      log('↺ Pesos reiniciados', 'warn');
-    }
-
-    /* ═══════════════════════════════════════════════
-       STEP 5 — PREDICT
-    ═══════════════════════════════════════════════ */
-    function goToPredict() {
-      if (!net) { alert('Entrena la red primero.'); return; }
-      document.getElementById('predictHint').textContent =
-        `// ${ctx.features.length} valor(es): ${ctx.features.join(', ')}`;
-      show('panelPredict');
-      setStepDone(3);
-      activateStep(4);
-    }
-
-    function predict() {
-      if (!net || !normStats) { alert('Entrena la red primero.'); return; }
-      const raw = document.getElementById('predictInput').value.trim();
-      const inputs = raw.split(',').map(s => parseFloat(s.trim()));
-
-      if (inputs.length !== ctx.features.length || inputs.some(isNaN)) {
-        alert(`Necesito ${ctx.features.length} valor(es) numérico(s).`); return;
-      }
-
-      const inp = normalize(inputs, normStats);
-      const out = forward(net, inp);
-
-      const result = document.getElementById('predResult');
-      const topIdx = out.indexOf(Math.max(...out));
-      result.classList.add('visible');
-
-      document.getElementById('predTopResult').innerHTML =
-        `<span style="color:var(--accent)">${ctx.classes[topIdx]}</span>` +
-        `<span style="font-size:1rem;color:var(--txt3);margin-left:12px">${(out[topIdx] * 100).toFixed(1)}% confianza</span>`;
-
-      document.getElementById('predBars').innerHTML = ctx.classes.map((c, i) =>
-        `<div class="pred-bar-row">
-      <div class="pred-bar-name">${c}</div>
-      <div class="pred-bar-track"><div class="pred-bar-fill" style="width:${(out[i] * 100).toFixed(1)}%;background:${i === topIdx ? 'var(--accent)' : 'var(--border2)'}"></div></div>
-      <div class="pred-bar-pct">${(out[i] * 100).toFixed(1)}%</div>
-    </div>`
-      ).join('');
-    }
-
-    /* ═══════════════════════════════════════════════
-       VISUALIZATIONS
-    ═══════════════════════════════════════════════ */
-    function drawNetwork() {
-      if (!net) return;
-      const canvas = document.getElementById('netCanvas');
-      const dpr = window.devicePixelRatio || 1;
-      const W = canvas.parentElement.clientWidth - 48;
-      const H = 280;
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
-      canvas.style.width = W + 'px';
-      canvas.style.height = H + 'px';
-
-      const c = canvas.getContext('2d');
-      c.scale(dpr, dpr);
-      c.clearRect(0, 0, W, H);
-
-      const sizes = net.sizes;
-      const L = sizes.length;
-      const padX = 40, padY = 20;
-      const usableW = W - padX * 2;
-      const usableH = H - padY * 2;
-
-      // Pre-compute positions
-      const pos = sizes.map((n, li) => {
-        const x = padX + (li / (L - 1)) * usableW;
-        const displayN = Math.min(n, 12);
-        const step = displayN > 1 ? usableH / (displayN - 1) : 0;
-        const startY = displayN > 1 ? padY : H / 2;
-        return Array.from({ length: displayN }, (_, ni) => ({
-          x, y: startY + ni * step,
-          real: ni,
-          a: net.activations[li][ni] || 0
-        }));
-      });
-
-      // Draw connections
-      for (let li = 0; li < L - 1; li++) {
-        const fromNodes = pos[li];
-        const toNodes = pos[li + 1];
-
-        fromNodes.forEach(from => {
-          toNodes.forEach((to, tj) => {
-            const w = net.weights[li] && net.weights[li][tj] && net.weights[li][tj][from.real] || 0;
-            const norm = Math.min(1, Math.abs(w));
-            const alpha = 0.06 + norm * 0.35;
-            const r = w > 0 ? 74 : 248;
-            const g = w > 0 ? 222 : 113;
-            const b = w > 0 ? 128 : 113;
-            c.beginPath();
-            c.moveTo(from.x, from.y);
-            c.lineTo(to.x, to.y);
-            c.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
-            c.lineWidth = 0.5 + norm * 1.5;
-            c.stroke();
-          });
-        });
-      }
-
-      // Draw nodes
-      sizes.forEach((n, li) => {
-        const nodes = pos[li];
-        const isMore = n > 12;
-        nodes.forEach((node, ni) => {
-          const a = Math.max(0, Math.min(1, node.a));
-          const r = Math.round(13 + a * 61);
-          const g = Math.round(20 + a * 202);
-          const b = Math.round(26 + a * 102);
-
-          c.beginPath();
-          c.arc(node.x, node.y, 7, 0, Math.PI * 2);
-          c.fillStyle = `rgb(${r},${g},${b})`;
-          c.strokeStyle = a > 0.3 ? 'rgba(74,222,128,0.6)' : 'rgba(42,45,58,0.8)';
-          c.lineWidth = 1.5;
-          c.fill();
-          c.stroke();
-
-          // Glow for active
-          if (a > 0.5) {
-            c.beginPath();
-            c.arc(node.x, node.y, 11, 0, Math.PI * 2);
-            c.strokeStyle = `rgba(74,222,128,${a * 0.3})`;
-            c.lineWidth = 2;
-            c.stroke();
-          }
-        });
-
-        // Label
-        const label = li === 0 ? 'Entrada' : li === L - 1 ? 'Salida' : `Capa ${li}`;
-        c.fillStyle = 'rgba(82,86,106,0.8)';
-        c.font = `9px 'JetBrains Mono'`;
-        c.textAlign = 'center';
-        c.fillText(label, pos[li][0].x, padY - 8);
-        c.fillText(sizes[li], pos[li][0].x, H - 4);
-
-        if (isMore) {
-          c.fillStyle = 'rgba(82,86,106,0.6)';
-          c.fillText('…', pos[li][0].x, pos[li][pos[li].length - 1].y + 14);
-        }
-      });
-    }
-
-    function drawLoss() {
-      const canvas = document.getElementById('lossCanvas');
-      const dpr = window.devicePixelRatio || 1;
-      const W = canvas.parentElement.clientWidth - 48;
-      const H = 160;
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
-      canvas.style.width = W + 'px';
-      canvas.style.height = H + 'px';
-
-      const c = canvas.getContext('2d');
-      c.scale(dpr, dpr);
-      c.clearRect(0, 0, W, H);
-
-      if (lossHistory.length < 2) return;
-
-      const padX = 48, padY = 16;
-      const usableW = W - padX - 16;
-      const usableH = H - padY - 24;
-
-      const maxL = Math.max(...lossHistory, 0.01);
-      const minL = Math.min(...lossHistory);
-      const range = maxL - minL || 0.001;
-
-      // Grid lines
-      c.strokeStyle = 'rgba(42,45,58,0.6)';
-      c.lineWidth = 1;
-      [0, .25, .5, .75, 1].forEach(t => {
-        const y = padY + (1 - t) * usableH;
-        c.beginPath(); c.moveTo(padX, y); c.lineTo(W - 16, y); c.stroke();
-        const val = minL + t * range;
-        c.fillStyle = 'rgba(82,86,106,0.7)';
-        c.font = "9px 'JetBrains Mono'";
-        c.textAlign = 'right';
-        c.fillText(val.toFixed(3), padX - 4, y + 3);
-      });
-
-      // Loss curve
-      const grad = c.createLinearGradient(0, padY, 0, padY + usableH);
-      grad.addColorStop(0, 'rgba(74,222,128,0.4)');
-      grad.addColorStop(1, 'rgba(74,222,128,0)');
-
-      // Fill
-      c.beginPath();
-      lossHistory.forEach((v, i) => {
-        const x = padX + (i / (lossHistory.length - 1)) * usableW;
-        const y = padY + (1 - (v - minL) / range) * usableH;
-        if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
-      });
-      c.lineTo(padX + usableW, padY + usableH);
-      c.lineTo(padX, padY + usableH);
-      c.closePath();
-      c.fillStyle = grad;
-      c.fill();
-
-      // Line
-      c.beginPath();
-      lossHistory.forEach((v, i) => {
-        const x = padX + (i / (lossHistory.length - 1)) * usableW;
-        const y = padY + (1 - (v - minL) / range) * usableH;
-        if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
-      });
-      c.strokeStyle = 'rgba(74,222,128,0.85)';
-      c.lineWidth = 1.5;
-      c.stroke();
-
-      // X axis label
-      c.fillStyle = 'rgba(82,86,106,0.7)';
-      c.font = "9px 'JetBrains Mono'";
-      c.textAlign = 'center';
-      c.fillText('época 0', padX, H - 4);
-      c.fillText(`época ${currentEpoch}`, W - 16, H - 4);
-    }
-
-    /* ═══════════════════════════════════════════════
-       UI HELPERS
-    ═══════════════════════════════════════════════ */
-    function show(id) {
-      const el = document.getElementById(id);
-      el.style.display = 'block';
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    function setStatus(type, text) {
-      const badge = document.getElementById('statusBadge');
-      const pulse = badge.querySelector('.pulse');
-      badge.className = 'badge' + (type ? ' ' + type : '');
-      badge.querySelector('#statusText').textContent = text;
-      pulse.style.display = type === 'running' ? 'block' : 'none';
-    }
-
-    function log(msg, type) {
-      const logEl = document.getElementById('trainingLog');
-      const line = document.createElement('div');
-      line.className = 'log-line' + (type ? ' log-' + type : '');
-      const ts = new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      line.textContent = `[${ts}] ${msg}`;
-      logEl.appendChild(line);
-      logEl.scrollTop = logEl.scrollHeight;
-    }
-
-    function setStep(n) { }
 
     function activateStep(n) {
       document.querySelectorAll('.step').forEach((s, i) => {
-        s.classList.remove('active');
-        if (i === n) s.classList.add('active');
+        s.classList.remove('active', 'done');
+        if (i < n) s.classList.add('done');
+        else if (i === n) s.classList.add('active');
       });
     }
-    function setStepDone(n) {
-      const steps = document.querySelectorAll('.step');
-      steps[n].classList.add('done');
-      steps[n].classList.remove('active');
+
+    function initialize() {
+      ctx = { data: [], features: [], classes: [], desc: '', taskType: 'classification' };
+      net = null;
+      lossHistory = [];
+      currentEpoch = 0;
+      trainInterval = null;
+
+      document.getElementById('csvInput').value = '';
+      document.getElementById('csvFile').value = '';
+      document.getElementById('csvHint').textContent = '// Carga un archivo CSV para comenzar';
+      document.getElementById('trainingLog').innerHTML = '<div class="log-line">Sistema listo</div>';
+      document.getElementById('archInput').value = '64,32,16';
+      document.getElementById('dataPreview').style.display = 'none';
+      document.getElementById('noPredictionMsg').style.display = 'block';
+      document.getElementById('predictionSection').style.display = 'none';
+
+      showStatus('', false);
+      showSection(0);
+      activateStep(0);
+
+      log('🔄 Sistema reiniciado', 'info');
     }
 
-    /* ═══════════════════════════════════════════════
-       CSV FILE IMPORT
-    ═══════════════════════════════════════════════ */
-    function loadCSVFile(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        document.getElementById('csvInput').value = e.target.result;
-        document.getElementById('csvFileHint').textContent = `// Archivo cargado: ${file.name} — haz clic en "Importar CSV (texto)" para procesar`;
-        // Auto-import
-        loadCSV();
-        document.getElementById('csvFileHint').textContent = `// ✓ Archivo importado: ${file.name}`;
-      };
-      reader.onerror = function() {
-        document.getElementById('csvFileHint').textContent = '// ✗ Error al leer el archivo';
-      };
-      reader.readAsText(file);
-      // Reset input so same file can be re-selected
-      event.target.value = '';
-    }
-
-    // Drag & drop on textarea
-    document.addEventListener('DOMContentLoaded', function() {
-      const ta = document.getElementById('csvInput');
-      if (!ta) return;
-      ta.addEventListener('dragover', e => { e.preventDefault(); ta.style.borderColor = 'var(--accent)'; });
-      ta.addEventListener('dragleave', () => { ta.style.borderColor = ''; });
-      ta.addEventListener('drop', e => {
-        e.preventDefault();
-        ta.style.borderColor = '';
-        const file = e.dataTransfer.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = ev => {
-          ta.value = ev.target.result;
-          loadCSV();
-          document.getElementById('csvFileHint').textContent = `// ✓ Archivo importado: ${file.name}`;
-        };
-        reader.readAsText(file);
-      });
+    // Init
+    window.addEventListener('load', () => {
+      drawNetwork();
     });
-
-    /* ═══════════════════════════════════════════════
-       EXPORT FUNCTIONS
-    ═══════════════════════════════════════════════ */
-    function downloadBlob(content, filename, mime) {
-      const blob = new Blob([content], { type: mime });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
-    function exportTrainingCSV() {
-      if (ctx.data.length === 0) { alert('No hay datos de entrenamiento para exportar.'); return; }
-      const header = ['clase', ...ctx.features].join(',');
-      const rows = ctx.data.map(d => [d.label, ...d.inputs].join(','));
-      downloadBlob([header, ...rows].join('\n'), 'entrenamiento.csv', 'text/csv');
-      log('↓ CSV de entrenamiento exportado', 'ok');
-    }
-
-    function exportResultsCSV() {
-      if (lossHistory.length === 0) { alert('No hay resultados de entrenamiento todavía.'); return; }
-      const header = 'tick,loss';
-      const rows = lossHistory.map((v, i) => `${i + 1},${v}`);
-      downloadBlob([header, ...rows].join('\n'), 'resultados_loss.csv', 'text/csv');
-      log('↓ CSV de resultados exportado', 'ok');
-    }
-
-    function exportModelJSON() {
-      if (!net) { alert('No hay modelo entrenado todavía.'); return; }
-      const data = {
-        meta: {
-          desc: ctx.desc, taskType: ctx.taskType,
-          classes: ctx.classes, features: ctx.features,
-          epoch: currentEpoch, finalLoss: lossHistory[lossHistory.length - 1] || null
-        },
-        arch: { sizes: net.sizes, actFn: net.actFn, lr: net.lr, l2: net.l2 },
-        weights: net.weights, biases: net.biases,
-        normStats: normStats
-      };
-      downloadBlob(JSON.stringify(data, null, 2), 'modelo.json', 'application/json');
-      log('↓ JSON del modelo exportado', 'ok');
-    }
-
-    function showExportModal() {
-      const modal = document.getElementById('exportModal');
-      modal.style.display = 'flex';
-    }
-
-    function closeExportModal() {
-      document.getElementById('exportModal').style.display = 'none';
-    }
-
-    function doExport() {
-      const expTraining = document.getElementById('expTraining').checked;
-      const expResults = document.getElementById('expResults').checked;
-      const expJSON = document.getElementById('expJSON').checked;
-      if (!expTraining && !expResults && !expJSON) { alert('Selecciona al menos una opción.'); return; }
-      if (expTraining) exportTrainingCSV();
-      if (expResults) exportResultsCSV();
-      if (expJSON) exportModelJSON();
-      closeExportModal();
-    }
-
-    // Close modal on backdrop click
-    window.addEventListener('DOMContentLoaded', function() {
-      const modal = document.getElementById('exportModal');
-      if (modal) modal.addEventListener('click', function(e) {
-        if (e.target === this) closeExportModal();
-      });
-    });
-
-    // Redraw on resize
-    window.addEventListener('resize', () => { drawNetwork(); drawLoss(); });
   </script>
-  <script src="/chatbot-widget.js"></script>
 </body>
-
 </html>
