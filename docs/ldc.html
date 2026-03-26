@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,63 +10,73 @@
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
+
 <body>
-<div class="page">
-  <a href="math.html" class="back-link">← Volver</a>
-  <h1 class="page-title">Ley del <em>Coseno</em></h1>
+  <div class="page">
+    <a href="trig.html" class="back-link">← Volver</a>
+    <h1 class="page-title">Ley del <em>Coseno</em></h1>
 
-  <div class="card">
-    <div class="card-label">Definición</div>
-    <p class="math-block">$$ \alpha = \sqrt{b^2+c^2-2bc\cos A} $$</p>
-    <p>La Ley del Coseno relaciona los tres lados de un triángulo cualquiera con el coseno de uno de sus ángulos. Generaliza el Teorema de Pitágoras a triángulos oblicuángulos (que no tienen ángulo recto). Para las tres variantes:</p>
-    <p class="math-block">$$ a^2=b^2+c^2-2bc\cos A \qquad b^2=a^2+c^2-2ac\cos B \qquad c^2=a^2+b^2-2ab\cos C $$</p>
-    <div class="info-box">
-      <p>Para \( A=90° \), \( \cos90°=0 \) y se recupera el Teorema de Pitágoras: \( a^2=b^2+c^2 \).</p>
+    <div class="card">
+      <div class="card-label">Definición</div>
+      <p class="math-block">$$ \alpha = \sqrt{b^2+c^2-2bc\cos A} $$</p>
+      <p>La Ley del Coseno relaciona los tres lados de un triángulo cualquiera con el coseno de uno de sus ángulos.
+        Generaliza el Teorema de Pitágoras a triángulos oblicuángulos (que no tienen ángulo recto). Para las tres
+        variantes:</p>
+      <p class="math-block">$$ a^2=b^2+c^2-2bc\cos A \qquad b^2=a^2+c^2-2ac\cos B \qquad c^2=a^2+b^2-2ab\cos C $$</p>
+      <div class="info-box">
+        <p>Para \( A=90° \), \( \cos90°=0 \) y se recupera el Teorema de Pitágoras: \( a^2=b^2+c^2 \).</p>
+      </div>
     </div>
-  </div>
 
-  <div class="card">
-    <div class="card-label">Cálculo de ángulos</div>
-    <p>Si se conocen los tres lados, se puede hallar cualquier ángulo:</p>
-    <p class="math-block">$$ \cos A=\frac{b^2+c^2-a^2}{2bc} \qquad A=\arccos\!\left(\frac{b^2+c^2-a^2}{2bc}\right) $$</p>
-  </div>
+    <div class="card">
+      <div class="card-label">Cálculo de ángulos</div>
+      <p>Si se conocen los tres lados, se puede hallar cualquier ángulo:</p>
+      <p class="math-block">$$ \cos A=\frac{b^2+c^2-a^2}{2bc} \qquad A=\arccos\!\left(\frac{b^2+c^2-a^2}{2bc}\right) $$
+      </p>
+    </div>
 
-  <div class="card">
-    <div class="card-label">Aplicaciones</div>
-    <ul>
-      <li><strong>GPS y posicionamiento:</strong> triangulación de señales para determinar posición cuando los ángulos y distancias no son rectos.</li>
-      <li><strong>Cartografía avanzada:</strong> cálculo de distancias en terrenos irregulares.</li>
-      <li><strong>Geometría molecular:</strong> longitudes de enlace y ángulos en moléculas.</li>
-      <li><strong>Navegación astronómica:</strong> distancias angulares entre estrellas y planetas.</li>
-      <li><strong>Robótica:</strong> cinemática de brazos articulados con ángulos arbitrarios.</li>
-    </ul>
-  </div>
+    <div class="card">
+      <div class="card-label">Aplicaciones</div>
+      <ul>
+        <li><strong>GPS y posicionamiento:</strong> triangulación de señales para determinar posición cuando los ángulos
+          y distancias no son rectos.</li>
+        <li><strong>Cartografía avanzada:</strong> cálculo de distancias en terrenos irregulares.</li>
+        <li><strong>Geometría molecular:</strong> longitudes de enlace y ángulos en moléculas.</li>
+        <li><strong>Navegación astronómica:</strong> distancias angulares entre estrellas y planetas.</li>
+        <li><strong>Robótica:</strong> cinemática de brazos articulados con ángulos arbitrarios.</li>
+      </ul>
+    </div>
 
-  <div class="card">
-    <div class="card-label">Ejemplo — Antenas parabólicas y GPS</div>
-    <p>Se desconoce la distancia entre dos antenas parabólicas. Un satélite GPS mide el ángulo entre ellas trazando un arco a \( 0.15 \) rad/s durante 2 s:</p>
-    <p class="math-block">$$ A=0.15\times2=0.3\;\text{rad}\approx17.19° $$</p>
-    <p>Sus distancias al satélite se calculan multiplicando el tiempo de ida y vuelta de un ping por \( c=3\times10^5 \) km/s:</p>
-    <p class="math-block">$$ b=3.2\times10^{-3}\times3\times10^5=960\;\text{km} \qquad c=3.4\times10^{-3}\times3\times10^5=1020\;\text{km} $$</p>
-    <p class="math-block">$$ \alpha=\sqrt{960^2+1020^2-2(960)(1020)\cos(17.19°)}\approx\boxed{303\;\text{km}} $$</p>
-    <p>Las antenas están separadas 303 km en línea recta — un 0.75% de la circunferencia terrestre, perfectamente dentro de la bóveda celeste de cada una.</p>
-  </div>
+    <div class="card">
+      <div class="card-label">Ejemplo — Antenas parabólicas y GPS</div>
+      <p>Se desconoce la distancia entre dos antenas parabólicas. Un satélite GPS mide el ángulo entre ellas trazando un
+        arco a \( 0.15 \) rad/s durante 2 s:</p>
+      <p class="math-block">$$ A=0.15\times2=0.3\;\text{rad}\approx17.19° $$</p>
+      <p>Sus distancias al satélite se calculan multiplicando el tiempo de ida y vuelta de un ping por \( c=3\times10^5
+        \) km/s:</p>
+      <p class="math-block">$$ b=3.2\times10^{-3}\times3\times10^5=960\;\text{km} \qquad
+        c=3.4\times10^{-3}\times3\times10^5=1020\;\text{km} $$</p>
+      <p class="math-block">$$ \alpha=\sqrt{960^2+1020^2-2(960)(1020)\cos(17.19°)}\approx\boxed{303\;\text{km}} $$</p>
+      <p>Las antenas están separadas 303 km en línea recta — un 0.75% de la circunferencia terrestre, perfectamente
+        dentro de la bóveda celeste de cada una.</p>
+    </div>
 
-  <div class="card">
-    <div class="card-label">Notación</div>
-    <ul>
-      <li>\( a,\,b,\,c \) — longitudes de los lados del triángulo</li>
-      <li>\( A,\,B,\,C \) — ángulos opuestos a los lados \( a,\,b,\,c \) respectivamente</li>
-      <li>\( \alpha \) — lado opuesto al ángulo \( A \) (forma alternativa)</li>
-      <li>\( \cos \) — función coseno</li>
-      <li>\( \arccos \) — arcocoseno (función inversa del coseno)</li>
-    </ul>
-  </div>
+    <div class="card">
+      <div class="card-label">Notación</div>
+      <ul>
+        <li>\( a,\,b,\,c \) — longitudes de los lados del triángulo</li>
+        <li>\( A,\,B,\,C \) — ángulos opuestos a los lados \( a,\,b,\,c \) respectivamente</li>
+        <li>\( \alpha \) — lado opuesto al ángulo \( A \) (forma alternativa)</li>
+        <li>\( \cos \) — función coseno</li>
+        <li>\( \arccos \) — arcocoseno (función inversa del coseno)</li>
+      </ul>
+    </div>
 
-  <footer class="site-footer">
-    <p><a href="index.html">Inicio</a></p>
-  </footer>
-</div>
+    <footer class="site-footer">
+      <p><a href="index.html">Inicio</a></p>
+    </footer>
+  </div>
   <script src="/chatbot-widget.js"></script>
 </body>
+
 </html>

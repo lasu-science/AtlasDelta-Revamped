@@ -6,17 +6,160 @@
   <title>Química — AtlasDelta</title>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    /* ── Selector buttons ───────────────────────────────── */
+    .sel-row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+    .sel-row:last-child { margin-bottom:0; }
+    .sel-lbl { font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.18em; text-transform:uppercase; min-width:54px; flex-shrink:0; }
+    .atom-btn { font-family:'JetBrains Mono',monospace; font-size:11px; padding:4px 10px; border-radius:6px; background:var(--s2); border:1px solid var(--border); color:var(--txt2); cursor:pointer; transition:all .15s; letter-spacing:.04em; }
+    .atom-btn:hover { border-color:var(--border2); color:var(--txt); }
+    .atom-btn.on-a { background:rgba(251,191,36,.10); border-color:rgba(251,191,36,.55); color:#fbbf24; }
+    .atom-btn.on-b { background:rgba(96,165,250,.10); border-color:rgba(96,165,250,.55); color:#60a5fa; }
+
+    /* ── Canvas wrapper ─────────────────────────────────── */
+    .canvas-wrap { background:#080910; border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; }
+    #simCanvas { display:block; width:100%; height:auto; }
+
+    /* ── Param table ────────────────────────────────────── */
+    .pt-row { display:flex; justify-content:space-between; align-items:baseline; padding:4px 0; border-bottom:1px solid rgba(42,45,58,.5); }
+    .pt-row:last-child { border-bottom:none; }
+    .pt-name { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--txt3); letter-spacing:.05em; }
+    .pt-val { font-family:'JetBrains Mono',monospace; font-size:11px; }
+    .pt-a { color:#fbbf24; } .pt-b { color:#60a5fa; }
+
+    /* ── Energy bar ─────────────────────────────────────── */
+    .e-track { height:4px; background:var(--s2); border-radius:2px; margin:8px 0 4px; position:relative; overflow:hidden; }
+    .e-center { position:absolute; left:50%; top:0; bottom:0; width:1px; background:rgba(255,255,255,.1); }
+    .e-fill { position:absolute; top:0; height:100%; border-radius:2px; transition:left .12s, width .12s, background .12s; }
+    .e-labels { display:flex; justify-content:space-between; }
+    .e-lbl { font-family:'JetBrains Mono',monospace; font-size:8px; letter-spacing:.1em; text-transform:uppercase; color:var(--txt3); }
+    .e-head { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:2px; }
+    .e-num { font-family:'JetBrains Mono',monospace; font-size:24px; color:var(--txt); letter-spacing:-.02em; }
+    .e-sub { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--txt3); letter-spacing:.1em; }
+    .e-kind { font-family:'JetBrains Mono',monospace; font-size:9px; text-align:right; letter-spacing:.08em; line-height:1.7; }
+    .dist-tag { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); text-align:center; margin-top:6px; }
+
+    /* ── Bond section (inline, animated) ───────────────── */
+    .bond-section {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease;
+      background: var(--s1);
+      border: 1px solid rgba(74,222,128,0.18);
+      border-radius: var(--radius-sm, 8px);
+      margin-top: 0;
+    }
+    .bond-section.visible {
+      max-height: 800px;
+      opacity: 1;
+      margin-top: 12px;
+    }
+    .bond-section-inner { padding: 16px; }
+    .bs-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; }
+    .bs-formula { font-family:'JetBrains Mono',monospace; font-size:30px; font-weight:700; color:#4ade80; letter-spacing:-.02em; line-height:1; }
+    .bs-iupac { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--txt3); letter-spacing:.07em; text-transform:uppercase; margin-top:5px; }
+    .bs-badges { margin-top: 10px; margin-bottom:14px; }
+    .bs-row { display:flex; justify-content:space-between; align-items:baseline; padding:4px 0; border-bottom:1px solid rgba(42,45,58,.4); font-family:'JetBrains Mono',monospace; }
+    .bs-row:last-of-type { border-bottom:none; }
+    .bs-row span:first-child { font-size:9px; color:var(--txt3); letter-spacing:.05em; }
+    .bs-row span:last-child { font-size:11px; color:var(--txt); }
+    .bs-note { font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.65; color:var(--txt2); margin-top:12px; padding-top:10px; border-top:1px solid rgba(42,45,58,.4); }
+    .bs-indicator {
+      font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.10em;
+      text-transform:uppercase; color:#4ade80; opacity:.7;
+      display:flex; align-items:center; gap:5px;
+    }
+    .bs-indicator::before {
+      content:''; display:inline-block; width:6px; height:6px; border-radius:50%;
+      background:#4ade80; animation: bspulse 1.6s ease-in-out infinite;
+    }
+    @keyframes bspulse { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1.2)} }
+    .bs-two-col { display:grid; grid-template-columns:1fr 1fr; gap:0 24px; }
+
+    /* ── Periodic table ─────────────────────────────────── */
+    .ptable-grid {
+      display: grid;
+      grid-template-columns: repeat(18, minmax(0, 1fr));
+      grid-template-rows: repeat(7, auto) 10px repeat(2, auto);
+      gap: 2px;
+      margin-top: 10px;
+      overflow-x: auto;
+    }
+    .ptcell {
+      aspect-ratio: 4/5;
+      min-width: 22px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(var(--clr-rgb, 82,86,106), 0.18);
+      border-radius: 3px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: background .12s, border-color .12s, box-shadow .12s;
+      overflow: hidden;
+    }
+    .ptcell::before { content:''; position:absolute; inset:0; background:var(--clr,#555); opacity:0.07; pointer-events:none; }
+    .ptcell:hover { border-color:var(--clr,#888); box-shadow:0 0 8px rgba(255,255,255,0.05); }
+    .ptcell-empty { background:transparent; border-color:transparent; cursor:default; }
+    .ptcell-empty:hover { border-color:transparent; box-shadow:none; }
+    .ptcell-placeholder {
+      background:transparent;
+      border:1px dashed rgba(82,86,106,0.35);
+      cursor:default;
+      aspect-ratio:4/5; min-width:22px;
+      border-radius:3px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .ptcell-placeholder span { font-family:'JetBrains Mono',monospace; font-size:6px; color:rgba(255,255,255,.18); }
+    .ptcell-z { font-family:'JetBrains Mono',monospace; font-size:6px; color:rgba(255,255,255,.22); line-height:1; align-self:flex-start; padding:2px 2px 0; }
+    .ptcell-sym { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; color:var(--clr,#ccc); line-height:1; }
+    .ptcell-nm { font-family:'JetBrains Mono',monospace; font-size:5px; color:rgba(255,255,255,.18); line-height:1; margin-top:1px; }
+    .ptcell.nodata { opacity:0.40; cursor:not-allowed; }
+    .ptcell.nodata:hover { border-color:rgba(var(--clr-rgb,82,86,106),0.18); box-shadow:none; }
+    .ptcell.sel-a { background:rgba(251,191,36,.12); border-color:rgba(251,191,36,.70); box-shadow:0 0 12px rgba(251,191,36,.22); }
+    .ptcell.sel-b { background:rgba(96,165,250,.12); border-color:rgba(96,165,250,.70); box-shadow:0 0 12px rgba(96,165,250,.22); }
+    .ptcell.blocked { opacity:0.22; cursor:not-allowed; }
+    .ptcell-period-lbl {
+      display:flex; align-items:center; justify-content:flex-end; padding-right:3px;
+      font-family:'JetBrains Mono',monospace; font-size:7px; color:rgba(255,255,255,.18);
+    }
+
+    /* Family legend */
+    .pt-legend { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+    .pt-leg-item { display:flex; align-items:center; gap:4px; font-family:'JetBrains Mono',monospace; font-size:8px; color:var(--txt3); letter-spacing:.04em; }
+    .pt-leg-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+
+    .pt-mode-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+    .pt-mode-btn { font-family:'JetBrains Mono',monospace; font-size:10px; padding:4px 12px; border-radius:6px; background:var(--s2); border:1px solid var(--border); color:var(--txt3); cursor:pointer; transition:all .15s; letter-spacing:.06em; }
+    .pt-mode-btn.active-a { background:rgba(251,191,36,.12); border-color:rgba(251,191,36,.55); color:#fbbf24; }
+    .pt-mode-btn.active-b { background:rgba(96,165,250,.12); border-color:rgba(96,165,250,.55); color:#60a5fa; }
+    .pt-current { font-family:'JetBrains Mono',monospace; font-size:12px; margin-left:auto; }
+
+    /* ── Incompatible warning ───────────────────────────── */
+    .incompat-warn { display:none; align-items:center; gap:8px; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.35); border-radius:6px; padding:8px 12px; margin-top:8px; }
+    .incompat-warn-icon { font-size:16px; }
+    .incompat-warn-txt { font-family:'JetBrains Mono',monospace; font-size:10px; color:#f87171; letter-spacing:.04em; line-height:1.5; }
+
+    /* ── Badges ─────────────────────────────────────────── */
+    .modal-badge { display:inline-block; padding:2px 7px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; margin-right:4px; }
+    .badge-ionic    { background:rgba(251,191,36,.12); color:#fbbf24; border:1px solid rgba(251,191,36,.3); }
+    .badge-covalent { background:rgba(96,165,250,.12); color:#60a5fa; border:1px solid rgba(96,165,250,.3); }
+    .badge-polar    { background:rgba(167,139,250,.12); color:#a78bfa; border:1px solid rgba(167,139,250,.3); }
+    .badge-metal    { background:rgba(251,146,60,.12); color:#fb923c; border:1px solid rgba(251,146,60,.3); }
+    .badge-gas      { background:rgba(74,222,128,.10); color:#4ade80; border:1px solid rgba(74,222,128,.3); }
+    .badge-solid    { background:rgba(148,163,184,.10); color:#94a3b8; border:1px solid rgba(148,163,184,.3); }
+    .badge-liquid   { background:rgba(56,189,248,.10); color:#38bdf8; border:1px solid rgba(56,189,248,.3); }
+  </style>
 </head>
 <body>
 <div class="page">
-
   <a href="index.html" class="back-link">← Volver</a>
   <h1 class="page-title">Química</h1>
 
   <div class="card">
     <div class="card-label">Temas disponibles</div>
     <div class="menu-list">
-
       <a href="thermo.html" class="menu-item">
         <h3>Termoquímica</h3>
         <p>Rama de la fisicoquímica que estudia los intercambios de energía —en forma de calor— que acompañan a las reacciones químicas y los cambios físicos como la fusión o vaporización.</p>
@@ -33,15 +176,912 @@
         <h3>Gases</h3>
         <p>Modelo teórico que describe el comportamiento de un gas asumiendo que sus partículas no tienen volumen propio ni interacciones entre sí. Base de la ecuación PV = nRT.</p>
       </a>
-
     </div>
   </div>
 
-  <footer class="site-footer">
-    <p><a href="index.html">Inicio</a></p>
-  </footer>
+  <hr>
+  <h1 class="page-title">Interacción <em>Atómica</em></h1>
+
+  <!-- Periodic Table Selector -->
+  <div class="card">
+    <div class="card-label">Selección de átomos — tabla periódica completa</div>
+    <div class="pt-mode-row">
+      <button id="modeA" class="pt-mode-btn active-a">Seleccionando <strong>A</strong></button>
+      <button id="modeB" class="pt-mode-btn">Seleccionando <strong>B</strong></button>
+      <span class="pt-current">
+        <span id="curA" style="color:#fbbf24">Ne</span>
+        <span style="color:var(--txt3)"> · </span>
+        <span id="curB" style="color:#60a5fa">Ar</span>
+      </span>
+    </div>
+    <div id="ptableGrid" class="ptable-grid"></div>
+    <div class="pt-legend" id="ptLegend"></div>
+  </div>
+
+  <!-- Description -->
+  <div class="card">
+    <div class="card-label">Sobre el simulador</div>
+    <p>Acerca dos átomos con el slider y observa cómo se deforma el campo de interacción. La malla de puntos visualiza el potencial análogo al gravitacional. Los parámetros —<strong>apantallamiento (σ)</strong>, <strong>carga nuclear efectiva (Z<sub>eff</sub>)</strong> y <strong>polarizabilidad (α)</strong>— determinan la intensidad y alcance de la atracción de London y la repulsión de Pauli. Los elementos sin datos de simulación aparecen atenuados.</p>
+  </div>
+
+  <!-- Canvas -->
+  <div class="card" style="padding:16px">
+    <div class="card-label">Campo de interacción</div>
+    <div class="canvas-wrap">
+      <canvas id="simCanvas" width="800" height="300"></canvas>
+    </div>
+    <div class="incompat-warn" id="incompatWarn">
+      <span class="incompat-warn-icon">⚠</span>
+      <span class="incompat-warn-txt">PAR INCOMPATIBLE — Los gases nobles no forman enlaces estables con otros elementos.<br>La simulación muestra la interacción de dispersión de London, pero no existe compuesto.</span>
+    </div>
+    <div class="dist-tag" id="distTag">— Å</div>
+  </div>
+
+  <!-- Slider -->
+  <div class="card">
+    <div class="card-label">Distancia internuclear</div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Lejos</span>
+      <input type="range" id="distSlider" min="0" max="100" value="22">
+      <span class="ctrl-label" style="text-align:right">Cerca</span>
+    </div>
+  </div>
+
+  <!-- Params -->
+  <div class="two-col">
+    <div class="mini-card">
+      <div class="mc-label" style="color:#fbbf24">Átomo A — <span id="nameA"></span></div>
+      <div id="paramsA"></div>
+    </div>
+    <div class="mini-card">
+      <div class="mc-label" style="color:#60a5fa">Átomo B — <span id="nameB"></span></div>
+      <div id="paramsB"></div>
+    </div>
+  </div>
+
+  <!-- Energy -->
+  <div class="card">
+    <div class="card-label">Energía de interacción · potencial Lennard-Jones</div>
+    <div class="e-head">
+      <div>
+        <div class="e-num" id="eNum">—</div>
+        <div class="e-sub">U.R. · FUERZAS DE DISPERSIÓN</div>
+      </div>
+      <div class="e-kind" id="eKind"></div>
+    </div>
+    <div class="e-track">
+      <div class="e-center"></div>
+      <div class="e-fill" id="eFill"></div>
+    </div>
+    <div class="e-labels">
+      <span class="e-lbl" style="color:#f87171">↑ Repulsión (Pauli)</span>
+      <span class="e-lbl">Equilibrio</span>
+      <span class="e-lbl" style="color:#4ade80">Atracción (London) ↑</span>
+    </div>
+
+    <!-- Bond info section — animated reveal at energy minimum -->
+    <div class="bond-section" id="bondSection">
+      <div class="bond-section-inner">
+        <div class="bs-indicator" style="margin-bottom:10px;">Mínimo de energía alcanzado · enlace formado</div>
+        <div class="bs-header">
+          <div>
+            <div class="bs-formula" id="bsFormula"></div>
+            <div class="bs-iupac" id="bsIupac"></div>
+          </div>
+        </div>
+        <div class="bs-badges" id="bsBadges"></div>
+        <div class="bs-two-col">
+          <div id="bsRowsLeft"></div>
+          <div id="bsRowsRight"></div>
+        </div>
+        <div class="bs-note" id="bsNote"></div>
+      </div>
+    </div>
+  </div>
 
 </div>
-  <script src="/chatbot-widget.js"></script>
+
+<footer class="site-footer">
+  <p><a href="index.html">Inicio</a></p>
+</footer>
+
+</div>
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════════
+   ATOM DATA  —  includes EN (Pauling electronegativity)
+══════════════════════════════════════════════════════════════════ */
+const ATOMS = {
+  'H' : {Z:1,  name:'Hidrógeno', shells:[1],     sigma:0.00,  Zeff:1.00, alpha:0.667, r:53,  IE:13.60, EN:2.20, color:'#d4d8f0', n:1, l:0, ml: 0, ms:+0.5, config:'1s¹'},
+  'He': {Z:2,  name:'Helio',     shells:[2],     sigma:0.31,  Zeff:1.69, alpha:0.205, r:31,  IE:24.59, EN:null, color:'#67e8f9', n:1, l:0, ml: 0, ms:-0.5, config:'1s²'},
+  'Li': {Z:3,  name:'Litio',     shells:[2,1],   sigma:1.72,  Zeff:1.28, alpha:24.30, r:167, IE:5.39,  EN:0.98, color:'#f87171', n:2, l:0, ml: 0, ms:+0.5, config:'2s¹'},
+  'C' : {Z:6,  name:'Carbono',   shells:[2,4],   sigma:2.86,  Zeff:3.14, alpha:1.760, r:77,  IE:11.26, EN:2.55, color:'#fbbf24', n:2, l:1, ml:-1, ms:+0.5, config:'2p²'},
+  'N' : {Z:7,  name:'Nitrógeno', shells:[2,5],   sigma:3.17,  Zeff:3.83, alpha:1.100, r:75,  IE:14.53, EN:3.04, color:'#a78bfa', n:2, l:1, ml:+1, ms:+0.5, config:'2p³'},
+  'O' : {Z:8,  name:'Oxígeno',   shells:[2,6],   sigma:3.55,  Zeff:4.45, alpha:0.802, r:73,  IE:13.62, EN:3.44, color:'#4ade80', n:2, l:1, ml:-1, ms:-0.5, config:'2p⁴'},
+  'F' : {Z:9,  name:'Flúor',     shells:[2,7],   sigma:3.90,  Zeff:5.10, alpha:0.557, r:71,  IE:17.42, EN:3.98, color:'#34d399', n:2, l:1, ml: 0, ms:-0.5, config:'2p⁵'},
+  'Ne': {Z:10, name:'Neón',      shells:[2,8],   sigma:4.15,  Zeff:5.85, alpha:0.396, r:38,  IE:21.56, EN:null, color:'#38bdf8', n:2, l:1, ml:+1, ms:-0.5, config:'2p⁶'},
+  'Na': {Z:11, name:'Sodio',     shells:[2,8,1], sigma:8.49,  Zeff:2.51, alpha:24.10, r:186, IE:5.14,  EN:0.93, color:'#fb923c', n:3, l:0, ml: 0, ms:+0.5, config:'3s¹'},
+  'Cl': {Z:17, name:'Cloro',     shells:[2,8,7], sigma:10.88, Zeff:6.12, alpha:2.180, r:99,  IE:12.97, EN:3.16, color:'#86efac', n:3, l:1, ml: 0, ms:-0.5, config:'3p⁵'},
+  'Ar': {Z:18, name:'Argón',     shells:[2,8,8], sigma:11.24, Zeff:6.76, alpha:1.640, r:71,  IE:15.76, EN:null, color:'#93c5fd', n:3, l:1, ml:+1, ms:-0.5, config:'3p⁶'},
+};
+
+/* ══════════════════════════════════════════════════════════════════
+   FULL PERIODIC TABLE — 118 elements
+   Format: {sym, Z, p(period/row), g(group/col), f(family), name}
+   f-block: lanthanides row=9, actinides row=10
+══════════════════════════════════════════════════════════════════ */
+const FAMILY_COLOR = {
+  AM:'#ef4444', AE:'#f97316', TM:'#eab308', PT:'#84cc16',
+  MT:'#10b981', NM:'#38bdf8', HL:'#22d3ee', NG:'#818cf8',
+  LN:'#a855f7', AN:'#ec4899', UK:'#94a3b8',
+};
+const FAMILY_NAME = {
+  AM:'Metal alcalino',     AE:'Metal alcalino-térreo', TM:'Metal de transición',
+  PT:'Metal post-transic.',MT:'Metaloide',              NM:'No metal reactivo',
+  HL:'Halógeno',           NG:'Gas noble',              LN:'Lantánido',
+  AN:'Actínido',           UK:'Sintético',
+};
+
+const PT_ALL = [
+  // Period 1
+  {sym:'H', Z:1,p:1,g:1,f:'NM',name:'Hidrógeno'},{sym:'He',Z:2,p:1,g:18,f:'NG',name:'Helio'},
+  // Period 2
+  {sym:'Li',Z:3,p:2,g:1,f:'AM',name:'Litio'},{sym:'Be',Z:4,p:2,g:2,f:'AE',name:'Berilio'},
+  {sym:'B',Z:5,p:2,g:13,f:'MT',name:'Boro'},{sym:'C',Z:6,p:2,g:14,f:'NM',name:'Carbono'},
+  {sym:'N',Z:7,p:2,g:15,f:'NM',name:'Nitrógeno'},{sym:'O',Z:8,p:2,g:16,f:'NM',name:'Oxígeno'},
+  {sym:'F',Z:9,p:2,g:17,f:'HL',name:'Flúor'},{sym:'Ne',Z:10,p:2,g:18,f:'NG',name:'Neón'},
+  // Period 3
+  {sym:'Na',Z:11,p:3,g:1,f:'AM',name:'Sodio'},{sym:'Mg',Z:12,p:3,g:2,f:'AE',name:'Magnesio'},
+  {sym:'Al',Z:13,p:3,g:13,f:'PT',name:'Aluminio'},{sym:'Si',Z:14,p:3,g:14,f:'MT',name:'Silicio'},
+  {sym:'P',Z:15,p:3,g:15,f:'NM',name:'Fósforo'},{sym:'S',Z:16,p:3,g:16,f:'NM',name:'Azufre'},
+  {sym:'Cl',Z:17,p:3,g:17,f:'HL',name:'Cloro'},{sym:'Ar',Z:18,p:3,g:18,f:'NG',name:'Argón'},
+  // Period 4
+  {sym:'K',Z:19,p:4,g:1,f:'AM',name:'Potasio'},{sym:'Ca',Z:20,p:4,g:2,f:'AE',name:'Calcio'},
+  {sym:'Sc',Z:21,p:4,g:3,f:'TM',name:'Escandio'},{sym:'Ti',Z:22,p:4,g:4,f:'TM',name:'Titanio'},
+  {sym:'V',Z:23,p:4,g:5,f:'TM',name:'Vanadio'},{sym:'Cr',Z:24,p:4,g:6,f:'TM',name:'Cromo'},
+  {sym:'Mn',Z:25,p:4,g:7,f:'TM',name:'Manganeso'},{sym:'Fe',Z:26,p:4,g:8,f:'TM',name:'Hierro'},
+  {sym:'Co',Z:27,p:4,g:9,f:'TM',name:'Cobalto'},{sym:'Ni',Z:28,p:4,g:10,f:'TM',name:'Níquel'},
+  {sym:'Cu',Z:29,p:4,g:11,f:'TM',name:'Cobre'},{sym:'Zn',Z:30,p:4,g:12,f:'TM',name:'Cinc'},
+  {sym:'Ga',Z:31,p:4,g:13,f:'PT',name:'Galio'},{sym:'Ge',Z:32,p:4,g:14,f:'MT',name:'Germanio'},
+  {sym:'As',Z:33,p:4,g:15,f:'MT',name:'Arsénico'},{sym:'Se',Z:34,p:4,g:16,f:'NM',name:'Selenio'},
+  {sym:'Br',Z:35,p:4,g:17,f:'HL',name:'Bromo'},{sym:'Kr',Z:36,p:4,g:18,f:'NG',name:'Criptón'},
+  // Period 5
+  {sym:'Rb',Z:37,p:5,g:1,f:'AM',name:'Rubidio'},{sym:'Sr',Z:38,p:5,g:2,f:'AE',name:'Estroncio'},
+  {sym:'Y',Z:39,p:5,g:3,f:'TM',name:'Itrio'},{sym:'Zr',Z:40,p:5,g:4,f:'TM',name:'Circonio'},
+  {sym:'Nb',Z:41,p:5,g:5,f:'TM',name:'Niobio'},{sym:'Mo',Z:42,p:5,g:6,f:'TM',name:'Molibdeno'},
+  {sym:'Tc',Z:43,p:5,g:7,f:'TM',name:'Tecnecio'},{sym:'Ru',Z:44,p:5,g:8,f:'TM',name:'Rutenio'},
+  {sym:'Rh',Z:45,p:5,g:9,f:'TM',name:'Rodio'},{sym:'Pd',Z:46,p:5,g:10,f:'TM',name:'Paladio'},
+  {sym:'Ag',Z:47,p:5,g:11,f:'TM',name:'Plata'},{sym:'Cd',Z:48,p:5,g:12,f:'TM',name:'Cadmio'},
+  {sym:'In',Z:49,p:5,g:13,f:'PT',name:'Indio'},{sym:'Sn',Z:50,p:5,g:14,f:'PT',name:'Estaño'},
+  {sym:'Sb',Z:51,p:5,g:15,f:'MT',name:'Antimonio'},{sym:'Te',Z:52,p:5,g:16,f:'MT',name:'Telurio'},
+  {sym:'I',Z:53,p:5,g:17,f:'HL',name:'Yodo'},{sym:'Xe',Z:54,p:5,g:18,f:'NG',name:'Xenón'},
+  // Period 6 (La-Lu in f-block row 9)
+  {sym:'Cs',Z:55,p:6,g:1,f:'AM',name:'Cesio'},{sym:'Ba',Z:56,p:6,g:2,f:'AE',name:'Bario'},
+  {sym:'Hf',Z:72,p:6,g:4,f:'TM',name:'Hafnio'},{sym:'Ta',Z:73,p:6,g:5,f:'TM',name:'Tántalo'},
+  {sym:'W',Z:74,p:6,g:6,f:'TM',name:'Wolframio'},{sym:'Re',Z:75,p:6,g:7,f:'TM',name:'Renio'},
+  {sym:'Os',Z:76,p:6,g:8,f:'TM',name:'Osmio'},{sym:'Ir',Z:77,p:6,g:9,f:'TM',name:'Iridio'},
+  {sym:'Pt',Z:78,p:6,g:10,f:'TM',name:'Platino'},{sym:'Au',Z:79,p:6,g:11,f:'TM',name:'Oro'},
+  {sym:'Hg',Z:80,p:6,g:12,f:'TM',name:'Mercurio'},{sym:'Tl',Z:81,p:6,g:13,f:'PT',name:'Talio'},
+  {sym:'Pb',Z:82,p:6,g:14,f:'PT',name:'Plomo'},{sym:'Bi',Z:83,p:6,g:15,f:'PT',name:'Bismuto'},
+  {sym:'Po',Z:84,p:6,g:16,f:'MT',name:'Polonio'},{sym:'At',Z:85,p:6,g:17,f:'HL',name:'Ástato'},
+  {sym:'Rn',Z:86,p:6,g:18,f:'NG',name:'Radón'},
+  // Period 7 (Ac-Lr in f-block row 10)
+  {sym:'Fr',Z:87,p:7,g:1,f:'AM',name:'Francio'},{sym:'Ra',Z:88,p:7,g:2,f:'AE',name:'Radio'},
+  {sym:'Rf',Z:104,p:7,g:4,f:'TM',name:'Rutherfordio'},{sym:'Db',Z:105,p:7,g:5,f:'TM',name:'Dubnio'},
+  {sym:'Sg',Z:106,p:7,g:6,f:'TM',name:'Seaborgio'},{sym:'Bh',Z:107,p:7,g:7,f:'TM',name:'Bohrio'},
+  {sym:'Hs',Z:108,p:7,g:8,f:'TM',name:'Hasio'},{sym:'Mt',Z:109,p:7,g:9,f:'UK',name:'Meitnerio'},
+  {sym:'Ds',Z:110,p:7,g:10,f:'UK',name:'Darmstadtio'},{sym:'Rg',Z:111,p:7,g:11,f:'UK',name:'Roentgenio'},
+  {sym:'Cn',Z:112,p:7,g:12,f:'TM',name:'Copernicio'},{sym:'Nh',Z:113,p:7,g:13,f:'UK',name:'Nihonio'},
+  {sym:'Fl',Z:114,p:7,g:14,f:'UK',name:'Flerovio'},{sym:'Mc',Z:115,p:7,g:15,f:'UK',name:'Moscovio'},
+  {sym:'Lv',Z:116,p:7,g:16,f:'UK',name:'Livermorio'},{sym:'Ts',Z:117,p:7,g:17,f:'HL',name:'Teneso'},
+  {sym:'Og',Z:118,p:7,g:18,f:'NG',name:'Oganesón'},
+  // Lanthanides — row 9, cols 3–17
+  {sym:'La',Z:57,p:9,g:3,f:'LN',name:'Lantano'},{sym:'Ce',Z:58,p:9,g:4,f:'LN',name:'Cerio'},
+  {sym:'Pr',Z:59,p:9,g:5,f:'LN',name:'Praseodimio'},{sym:'Nd',Z:60,p:9,g:6,f:'LN',name:'Neodimio'},
+  {sym:'Pm',Z:61,p:9,g:7,f:'LN',name:'Prometio'},{sym:'Sm',Z:62,p:9,g:8,f:'LN',name:'Samario'},
+  {sym:'Eu',Z:63,p:9,g:9,f:'LN',name:'Europio'},{sym:'Gd',Z:64,p:9,g:10,f:'LN',name:'Gadolinio'},
+  {sym:'Tb',Z:65,p:9,g:11,f:'LN',name:'Terbio'},{sym:'Dy',Z:66,p:9,g:12,f:'LN',name:'Disprosio'},
+  {sym:'Ho',Z:67,p:9,g:13,f:'LN',name:'Holmio'},{sym:'Er',Z:68,p:9,g:14,f:'LN',name:'Erbio'},
+  {sym:'Tm',Z:69,p:9,g:15,f:'LN',name:'Tulio'},{sym:'Yb',Z:70,p:9,g:16,f:'LN',name:'Iterbio'},
+  {sym:'Lu',Z:71,p:9,g:17,f:'LN',name:'Lutecio'},
+  // Actinides — row 10, cols 3–17
+  {sym:'Ac',Z:89,p:10,g:3,f:'AN',name:'Actinio'},{sym:'Th',Z:90,p:10,g:4,f:'AN',name:'Torio'},
+  {sym:'Pa',Z:91,p:10,g:5,f:'AN',name:'Protactinio'},{sym:'U',Z:92,p:10,g:6,f:'AN',name:'Uranio'},
+  {sym:'Np',Z:93,p:10,g:7,f:'AN',name:'Neptunio'},{sym:'Pu',Z:94,p:10,g:8,f:'AN',name:'Plutonio'},
+  {sym:'Am',Z:95,p:10,g:9,f:'AN',name:'Americio'},{sym:'Cm',Z:96,p:10,g:10,f:'AN',name:'Curio'},
+  {sym:'Bk',Z:97,p:10,g:11,f:'AN',name:'Berkelio'},{sym:'Cf',Z:98,p:10,g:12,f:'AN',name:'Californio'},
+  {sym:'Es',Z:99,p:10,g:13,f:'AN',name:'Einstenio'},{sym:'Fm',Z:100,p:10,g:14,f:'AN',name:'Fermio'},
+  {sym:'Md',Z:101,p:10,g:15,f:'AN',name:'Mendelevio'},{sym:'No',Z:102,p:10,g:16,f:'AN',name:'Nobelio'},
+  {sym:'Lr',Z:103,p:10,g:17,f:'AN',name:'Laurencio'},
+];
+
+/* ── Noble gases set ───────────────────────────────────────── */
+const NOBLES = new Set(['He','Ne','Ar','Kr','Xe','Rn']);
+function bondKey(kA,kB){ return [kA,kB].sort().join('-'); }
+function isCompatible(kA,kB){
+  const aN=NOBLES.has(kA),bN=NOBLES.has(kB);
+  if(aN&&bN) return true;
+  if(aN||bN) return false;
+  return true;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   COMPOUNDS DATABASE
+══════════════════════════════════════════════════════════════════ */
+const BONDS = {
+  'H-H':   {formula:'H₂',   name:'Hidrógeno molecular',      type:'Covalente no polar',    state:'gas',    Tm:-259.2,Tb:-252.9, note:'El gas más ligero. Triple punto a solo 14 K. Principal combustible de fusión estelar y pilas de hidrógeno.'},
+  'Cl-H':  {formula:'HCl',  name:'Cloruro de hidrógeno',     type:'Covalente polar',       state:'gas',    Tm:-114.2,Tb:-85.1,  note:'Gas irritante; en solución acuosa forma ácido clorhídrico, uno de los ácidos fuertes más industrializados.'},
+  'F-H':   {formula:'HF',   name:'Fluoruro de hidrógeno',    type:'Covalente polar',       state:'gas',    Tm:-83.6, Tb:19.5,   note:'Único ácido capaz de disolver vidrio (SiO₂ → SiF₄). Su Tb roza la temperatura ambiente por puentes de H fuertes.'},
+  'H-N':   {formula:'NH₃',  name:'Amoníaco',                 type:'Covalente polar',       state:'gas',    Tm:-77.7, Tb:-33.4,  note:'Molécula piramidal con par libre muy activo. Base de toda la industria de fertilizantes nitrogenados (Proceso Haber).'},
+  'H-O':   {formula:'H₂O',  name:'Agua',                     type:'Covalente polar',       state:'líquido',Tm:0.0,   Tb:100.0,  note:'Ángulo H-O-H de 104.5°. Red de puentes de hidrógeno explica su alta Tb, tensión superficial y carácter de solvente universal.'},
+  'C-H':   {formula:'CH₄',  name:'Metano',                   type:'Covalente no polar',    state:'gas',    Tm:-182.5,Tb:-161.5, note:'Geometría tetraédrica perfecta (sp³). Principal componente del gas natural. Potente gas de efecto invernadero (GWP×25).'},
+  'H-Li':  {formula:'LiH',  name:'Hidruro de litio',         type:'Iónico',                state:'sólido', Tm:688,   Tb:900,    note:'El hidruro metálico más ligero. Reacciona explosivamente con agua. Usado como fuente de H₂ en síntesis.'},
+  'H-Na':  {formula:'NaH',  name:'Hidruro de sodio',         type:'Iónico',                state:'sólido', Tm:800,   Tb:null,   note:'Se descompone antes de hervir. Agente reductor fuerte (NaH → Na⁺ + H⁻). Reacciona con agua generando H₂.'},
+  'Cl-Li': {formula:'LiCl', name:'Cloruro de litio',         type:'Iónico',                state:'sólido', Tm:605,   Tb:1383,   note:'Sal muy soluble e higroscópica. Acumula agua de la humedad ambiental. Usado en baterías de Li y deshumidificadores.'},
+  'Cl-Na': {formula:'NaCl', name:'Cloruro de sodio',         type:'Iónico',                state:'sólido', Tm:801,   Tb:1413,   note:'Sal de mesa. Red cúbica FCC. Energía de red 787 kJ/mol. Esencial en la bioquímica y la industria cloro-álcali.'},
+  'F-Li':  {formula:'LiF',  name:'Fluoruro de litio',        type:'Iónico',                state:'sólido', Tm:848,   Tb:1676,   note:'Mayor energía de red entre halogenuros alcalinos. Transparente de UV a IR. Usado en óptica de láseres excímero.'},
+  'F-Na':  {formula:'NaF',  name:'Fluoruro de sodio',        type:'Iónico',                state:'sólido', Tm:993,   Tb:1704,   note:'Fuente terapéutica de F⁻. Eficaz contra caries a ~1 ppm. Tóxico sistémico a dosis altas (inhibe enzimas con Mg²⁺).'},
+  'Li-O':  {formula:'Li₂O', name:'Óxido de litio',           type:'Iónico',                state:'sólido', Tm:1438,  Tb:2600,   note:'Sólido blanco cúbico. Reacciona con agua → LiOH. Componente de vidrios cerámicos Zerodur de baja expansión térmica.'},
+  'Na-O':  {formula:'Na₂O', name:'Óxido de sodio',           type:'Iónico',                state:'sólido', Tm:1275,  Tb:null,   note:'Inestable en exceso de O₂ (forma Na₂O₂). Reacciona violentamente con agua → 2 NaOH + calor. Óxido básico fuerte.'},
+  'Li-N':  {formula:'Li₃N', name:'Nitruro de litio',         type:'Iónico',                state:'sólido', Tm:813,   Tb:null,   note:'Único metal alcalino que reacciona directamente con N₂ a temperatura ambiente. Conductor iónico sólido excepcional.'},
+  'C-O':   {formula:'CO₂',  name:'Dióxido de carbono',       type:'Covalente no polar',    state:'gas',    Tm:-78.5, Tb:-56.6,  note:'Molécula lineal (hibridación sp). Sublima a -78.5°C (hielo seco). Principal gas de efecto invernadero antropogénico.'},
+  'C-F':   {formula:'CF₄',  name:'Tetrafluoruro de carbono', type:'Covalente no polar',    state:'gas',    Tm:-183.6,Tb:-128.0, note:'GWP de 6500 respecto al CO₂ a 100 años. Inerte químicamente. Usado en limpieza de reactores de deposición de silicio.'},
+  'C-Cl':  {formula:'CCl₄', name:'Tetracloruro de carbono',  type:'Covalente no polar',    state:'líquido',Tm:-22.9, Tb:76.7,   note:'Disolvente aprótico muy denso (1.59 g/mL). Hepatotóxico. Destructor de la capa de ozono; su uso está restringido.'},
+  'C-N':   {formula:'C₂N₂', name:'Cianógeno',                type:'Covalente',             state:'gas',    Tm:-27.9, Tb:-21.2,  note:'Pseudohalógeno (N≡C−C≡N). Gas tóxico muy reactivo. El más simple de los dicicloalquinos; arde con llama violeta-rosada.'},
+  'F-N':   {formula:'NF₃',  name:'Trifluoruro de nitrógeno', type:'Covalente polar',       state:'gas',    Tm:-206.8,Tb:-129.0, note:'Paradoja: dipolo más pequeño de lo esperado porque el par libre del N y los 3 enlaces N−F se contrarrestan casi totalmente.'},
+  'F-O':   {formula:'OF₂',  name:'Difluoruro de oxígeno',    type:'Covalente polar',       state:'gas',    Tm:-223.8,Tb:-144.8, note:'Único compuesto estable donde el oxígeno tiene estado de oxidación +2. Potente oxidante y agente fluorante.'},
+  'Cl-N':  {formula:'NCl₃', name:'Tricloruro de nitrógeno',  type:'Covalente polar',       state:'líquido',Tm:-40.0, Tb:71.0,   note:'Aceite amarillo oleoso. Extremadamente sensible a calor y luz. Usado con precaución en cloración de piscinas.'},
+  'Cl-O':  {formula:'Cl₂O', name:'Monóxido de dicloro',      type:'Covalente polar',       state:'gas',    Tm:-120.6,Tb:2.0,    note:'Anhídrido del ácido hipocloroso. Agente blanqueante y desinfectante activo. Ángulo Cl-O-Cl de 111°.'},
+  'N-O':   {formula:'NO',   name:'Óxido nítrico',            type:'Covalente',             state:'gas',    Tm:-163.6,Tb:-151.7, note:'Radical libre paramagnético. Neurotransmisor y vasodilatador endógeno (relajación del músculo liso). Intermediario en lluvia ácida.'},
+  'F-F':   {formula:'F₂',   name:'Flúor molecular',          type:'Covalente no polar',    state:'gas',    Tm:-219.7,Tb:-188.1, note:'El elemento más electronegativo (3.98). Su enlace F−F es anormalmente débil (159 kJ/mol) por repulsión de pares libres solapados.'},
+  'Cl-Cl': {formula:'Cl₂',  name:'Cloro molecular',          type:'Covalente no polar',    state:'gas',    Tm:-101.0,Tb:-34.0,  note:'Gas amarillo-verdoso tóxico. Desinfectante de agua potable a escala global. Base de la industria del PVC.'},
+  'N-N':   {formula:'N₂',   name:'Nitrógeno molecular',      type:'Covalente no polar',    state:'gas',    Tm:-210.0,Tb:-195.8, note:'Triple enlace N≡N (945 kJ/mol), el más fuerte en diatómicas. Representa el 78% del aire. Inerte a temperatura ambiente.'},
+  'O-O':   {formula:'O₂',   name:'Oxígeno molecular',        type:'Covalente no polar',    state:'gas',    Tm:-218.8,Tb:-183.0, note:'Paramagnético: 2 e⁻ desapareados en orbitales π* antienlazantes. Esencial para respiración aeróbica y combustión.'},
+  'C-C':   {formula:'C₂',   name:'Dicarbono',                type:'Covalente (cuádruplo)', state:'gas',    Tm:null,  Tb:null,   note:'Especie de alta energía, inestable en condiciones normales. Detectado en llamas de carbono y en fotósferas de estrellas frías.'},
+  'Li-Li': {formula:'Li₂',  name:'Litio molecular',          type:'Covalente no polar',    state:'gas',    Tm:null,  Tb:null,   note:'Dímero estable solo en fase gaseosa a alta temperatura. Enlace σ muy débil (105 kJ/mol). Estudiado por espectroscopía de haz.'},
+  'Na-Na': {formula:'Na₂',  name:'Sodio molecular',          type:'Covalente no polar',    state:'gas',    Tm:null,  Tb:null,   note:'Dímero aún más débil que Li₂ (72 kJ/mol). Enlace σ 3s elongado. Observado en vapor de sodio de lámparas de descarga.'},
+  'Cl-F':  {formula:'ClF',  name:'Monofluoruro de cloro',    type:'Covalente polar',       state:'gas',    Tm:-155.6,Tb:-100.1, note:'Interhalógeno altamente reactivo. Agente fluorante violento que reacciona con casi todos los materiales, incluyendo vidrio.'},
+  'N-Na':  {formula:'NaN₃', name:'Azida de sodio',           type:'Iónico',                state:'sólido', Tm:275,   Tb:null,   note:'Se descompone explosivamente: 2 NaN₃ → 2 Na + 3 N₂. Carga las bolsas de aire de automóviles; reacciona en <30 ms.'},
+  'Li-Na': {formula:'LiNa', name:'Aleación litio–sodio',     type:'Metálico',              state:'sólido', Tm:null,  Tb:null,   note:'No forma compuesto estequiométrico estable, sino una aleación de punto de fusión mínimo (~150°C). Usado en baterías experimentales.'},
+  'C-Na':  {formula:'Na₂C₂',name:'Acetiluro de sodio',       type:'Iónico',                state:'sólido', Tm:null,  Tb:null,   note:'Contiene el anión dicarbanuro [C≡C]²⁻. Reacciona con agua generando acetileno (HC≡CH). Intermediario en síntesis orgánica.'},
+  'Li-C':  {formula:'Li₂C₂',name:'Acetiluro de litio',       type:'Iónico',                state:'sólido', Tm:null,  Tb:null,   note:'Contiene el anión [C≡C]²⁻. Hidroliza con agua → HC≡CH (acetileno). Reactivo en adiciones de Favorskii.'},
+  'F-Cl':  {formula:'ClF',  name:'Monofluoruro de cloro',    type:'Covalente polar',       state:'gas',    Tm:-155.6,Tb:-100.1, note:'Interhalógeno con momento dipolar significativo (0.88 D). Reactivo como agente de fluoración electrofílica.'},
+};
+
+/* ── State ─────────────────────────────────────────────────── */
+let selA = ATOMS['Ne'];
+let selB = ATOMS['Ar'];
+let sliderV   = 22;
+let animT     = 0;
+let ptMode    = 'A';
+let bondSectionVisible = false;
+
+/* ── Helpers ────────────────────────────────────────────────── */
+function rgba(hex, a) {
+  const n = parseInt(hex.replace('#',''), 16);
+  return `rgba(${n>>16},${(n>>8)&0xff},${n&0xff},${a})`;
+}
+function keyOf(atom){ return Object.keys(ATOMS).find(k => ATOMS[k]===atom); }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+function lerp_color(c1,c2,t){
+  const n1=parseInt(c1.replace('#',''),16), n2=parseInt(c2.replace('#',''),16);
+  return `rgb(${Math.round(lerp(n1>>16,n2>>16,t))},${Math.round(lerp((n1>>8)&0xff,(n2>>8)&0xff,t))},${Math.round(lerp(n1&0xff,n2&0xff,t))})`;
+}
+
+/* ── Physics ────────────────────────────────────────────────── */
+function london_C6(a,b){ return 1.5*a.alpha*b.alpha*a.IE*b.IE/(a.IE+b.IE); }
+function r_contact(a,b){ return (a.r+b.r)/100; }
+function lj_energy(a,b,r){
+  const c6=london_C6(a,b), rc=r_contact(a,b);
+  const c12=c6*Math.pow(rc,6)/2, r6=Math.pow(r,6);
+  return c12/(r6*r6)-c6/r6;
+}
+function sliderToR(v){
+  const rc=r_contact(selA,selB), rmin=rc*0.80, rmax=9.0;
+  const t=v/100;
+  return rmax*Math.pow(rmin/rmax,t);
+}
+
+/* ── Canvas setup ───────────────────────────────────────────── */
+const canvas = document.getElementById('simCanvas');
+const ctx    = canvas.getContext('2d');
+const CW=800, CH=300;
+const DPR=Math.min(window.devicePixelRatio||1,2);
+canvas.width=CW*DPR; canvas.height=CH*DPR;
+ctx.scale(DPR,DPR);
+
+/* ── Background ─────────────────────────────────────────────── */
+function drawBG(){
+  ctx.fillStyle='#080910'; ctx.fillRect(0,0,CW,CH);
+  ctx.strokeStyle='rgba(42,45,58,0.3)'; ctx.lineWidth=0.5;
+  for(let x=0;x<CW;x+=44){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,CH);ctx.stroke();}
+  for(let y=0;y<CH;y+=44){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(CW,y);ctx.stroke();}
+}
+
+/* ── Field mesh ─────────────────────────────────────────────── */
+function drawFieldMesh(xA,yA,xB,yB,E,eEq){
+  const attractive=E<0;
+  const norm=clamp(Math.abs(E)/(Math.abs(eEq)+1e-9),0,3);
+  if(norm<0.02){
+    for(let i=0;i<=22;i++) for(let j=0;j<=10;j++){
+      ctx.fillStyle='rgba(42,45,58,0.22)';
+      ctx.beginPath();ctx.arc(i*CW/22,j*CH/10,1,0,Math.PI*2);ctx.fill();
+    }
+    return;
+  }
+  const maxDisp=clamp(norm*22,0,28), sign=attractive?1:-0.7;
+  for(let i=0;i<=22;i++){
+    for(let j=0;j<=10;j++){
+      const ox=i*CW/22, oy=j*CH/10;
+      const dAx=xA-ox,dAy=yA-oy,dA=Math.sqrt(dAx*dAx+dAy*dAy)+1;
+      const dBx=xB-ox,dBy=yB-oy,dB=Math.sqrt(dBx*dBx+dBy*dBy)+1;
+      if(dA<30||dB<30) continue;
+      const wA=sign*maxDisp*selA.Zeff/dA, wB=sign*maxDisp*selB.Zeff/dB;
+      const nx=ox+dAx/dA*wA+dBx/dB*wB, ny=oy+dAy/dA*wA+dBy/dB*wB;
+      const disp=Math.sqrt((nx-ox)**2+(ny-oy)**2);
+      const alpha=clamp(0.06+disp*0.016,0,0.5);
+      const tA=1/(1+dA*0.05),tB=1/(1+dB*0.05);
+      const brightness=clamp((tA+tB)*2,0,1);
+      if(attractive&&brightness>0.15) ctx.fillStyle=rgba(lerp_color(selA.color,selB.color,dB/(dA+dB)),alpha*0.8);
+      else ctx.fillStyle=`rgba(82,86,106,${alpha})`;
+      ctx.beginPath();ctx.arc(nx,ny,1.1,0,Math.PI*2);ctx.fill();
+    }
+  }
+}
+
+/* ── Field lines ─────────────────────────────────────────────── */
+function drawFieldLines(xA,yA,xB,yB,E,eEq){
+  const norm=clamp(Math.abs(E)/(Math.abs(eEq)+1e-9),0,2.5);
+  if(norm<0.03) return;
+  const attractive=E<0;
+  const nLines=Math.min(16,Math.floor(norm*14+3));
+  ctx.save();
+  for(let i=0;i<nLines;i++){
+    const t=(i+0.5)/nLines-0.5, spread=t*80*(1-norm*0.3);
+    ctx.beginPath(); ctx.moveTo(xA,yA);
+    ctx.quadraticCurveTo((xA+xB)/2,(yA+yB)/2+spread,xB,yB);
+    const alpha=norm*0.28;
+    if(attractive){
+      const g=ctx.createLinearGradient(xA,yA,xB,yB);
+      g.addColorStop(0,rgba(selA.color,alpha));
+      g.addColorStop(0.5,rgba('#ffffff',alpha*0.25));
+      g.addColorStop(1,rgba(selB.color,alpha));
+      ctx.strokeStyle=g;
+    } else { ctx.strokeStyle=rgba('#f87171',alpha*0.7); }
+    ctx.lineWidth=0.5+norm*1.2; ctx.stroke();
+  }
+  if(attractive&&norm>0.35){
+    const g=ctx.createLinearGradient(xA,yA,xB,yB);
+    g.addColorStop(0,rgba(selA.color,0)); g.addColorStop(0.15,rgba(selA.color,norm*0.20));
+    g.addColorStop(0.5,rgba('#ffffff',norm*0.08)); g.addColorStop(0.85,rgba(selB.color,norm*0.20));
+    g.addColorStop(1,rgba(selB.color,0));
+    ctx.beginPath(); ctx.moveTo(xA,yA); ctx.lineTo(xB,yB);
+    ctx.strokeStyle=g; ctx.lineWidth=14*clamp(norm-0.35,0,1); ctx.stroke();
+  }
+  if(attractive){
+    const bondFrac=clamp(1-Math.abs(E-eEq)/(Math.abs(eEq)*2),0,1);
+    if(bondFrac>0.3){
+      const pulse=0.5+0.5*Math.sin(animT*4);
+      const gBond=ctx.createLinearGradient(xA,yA,xB,yB);
+      gBond.addColorStop(0,rgba(selA.color,0)); gBond.addColorStop(0.3,rgba(selA.color,bondFrac*0.12*pulse));
+      gBond.addColorStop(0.7,rgba(selB.color,bondFrac*0.12*pulse)); gBond.addColorStop(1,rgba(selB.color,0));
+      ctx.beginPath(); ctx.moveTo(xA,yA); ctx.lineTo(xB,yB);
+      ctx.strokeStyle=gBond; ctx.lineWidth=20*bondFrac; ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ORBITAL RENDERING  — gaussian cloud spaghettification
+   No separate lobes. Single stretched elliptical cloud that
+   elongates toward the bond partner, like tidal spaghettification.
+══════════════════════════════════════════════════════════════════ */
+
+function drawShieldingCore(ax,ay,atom,shieldR){
+  if(atom.sigma<0.05) return;
+  ctx.save(); ctx.translate(ax,ay);
+  const coreOpacity=clamp(0.08+atom.sigma*0.024,0.08,0.52);
+  const gCore=ctx.createRadialGradient(0,0,0,0,0,shieldR);
+  gCore.addColorStop(0,`rgba(200,215,255,${coreOpacity})`);
+  gCore.addColorStop(0.45,`rgba(180,200,255,${coreOpacity*0.60})`);
+  gCore.addColorStop(0.80,rgba(atom.color,coreOpacity*0.28));
+  gCore.addColorStop(1,rgba(atom.color,0));
+  ctx.fillStyle=gCore; ctx.beginPath(); ctx.arc(0,0,shieldR,0,Math.PI*2); ctx.fill();
+  const ringOpacity=clamp(atom.sigma*0.025,0.05,0.32);
+  ctx.strokeStyle=`rgba(180,210,255,${ringOpacity})`; ctx.lineWidth=0.8;
+  ctx.setLineDash([2,5]); ctx.beginPath(); ctx.arc(0,0,shieldR,0,Math.PI*2); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+/* ─ s-orbital: spherical gaussian cloud → stretches into ellipse ─ */
+function drawSOrbital(ax,ay,atom,outerR,shiftX,elongX,squishY){
+  const peakA=clamp(0.44-atom.Zeff*0.020,0.12,0.42);
+  ctx.save();
+  ctx.translate(ax+shiftX,ay);
+  ctx.scale(elongX,squishY);
+
+  // Outer diffuse tail
+  const gTail=ctx.createRadialGradient(0,0,outerR*0.5,0,0,outerR*1.75);
+  gTail.addColorStop(0,rgba(atom.color,peakA*0.09));
+  gTail.addColorStop(1,rgba(atom.color,0));
+  ctx.fillStyle=gTail; ctx.beginPath(); ctx.arc(0,0,outerR*1.75,0,Math.PI*2); ctx.fill();
+
+  // Main gaussian blob
+  const g=ctx.createRadialGradient(0,0,0,0,0,outerR);
+  g.addColorStop(0,   rgba(atom.color,peakA));
+  g.addColorStop(0.28,rgba(atom.color,peakA*0.75));
+  g.addColorStop(0.58,rgba(atom.color,peakA*0.35));
+  g.addColorStop(0.82,rgba(atom.color,peakA*0.08));
+  g.addColorStop(1,   rgba(atom.color,0));
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,outerR,0,Math.PI*2); ctx.fill();
+
+  ctx.restore();
+}
+
+/* ─ p-orbital: single round cloud → teardrop spaghettification ─ */
+function drawPOrbital(ax,ay,atom,outerR,shiftX,elongX,squishY,lobeAngle,asymm){
+  const peakA=clamp(0.38-atom.Zeff*0.012,0.13,0.34);
+  ctx.save();
+  ctx.translate(ax+shiftX,ay);
+  ctx.rotate(lobeAngle);
+
+  // Center shifts toward bond partner as asymm grows (tidal distortion)
+  const cx=asymm*outerR*0.32;
+  ctx.scale(elongX*1.06,squishY*0.88);
+
+  // Outer halo
+  const gH=ctx.createRadialGradient(cx,0,outerR*0.35,cx,0,outerR*1.75);
+  gH.addColorStop(0,rgba(atom.color,peakA*0.10));
+  gH.addColorStop(1,rgba(atom.color,0));
+  ctx.fillStyle=gH; ctx.beginPath(); ctx.arc(cx,0,outerR*1.75,0,Math.PI*2); ctx.fill();
+
+  // Main gaussian blob (elongated, shifted center)
+  const g=ctx.createRadialGradient(cx,0,0,cx,0,outerR);
+  g.addColorStop(0,   rgba(atom.color,peakA*1.05));
+  g.addColorStop(0.30,rgba(atom.color,peakA*0.68));
+  g.addColorStop(0.62,rgba(atom.color,peakA*0.26));
+  g.addColorStop(0.88,rgba(atom.color,peakA*0.05));
+  g.addColorStop(1,   rgba(atom.color,0));
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,0,outerR,0,Math.PI*2); ctx.fill();
+
+  ctx.restore();
+}
+
+/* ─ drawAtom — main entry ─ */
+function drawAtom(ax,ay,atom,vR,distFrac,dir,r){
+  const breathe=1+0.012*Math.sin(animT*1.8+dir*0.6);
+
+  // Orbital radius: moderate Bohr scaling — stays proportional
+  const outerR=vR*clamp((atom.n*atom.n)/(atom.Zeff*0.88),0.60,1.80)*breathe;
+
+  // Shielding core radius
+  const shieldR=vR*clamp(0.16+atom.sigma*0.038,0.16,1.10);
+
+  // Polarization (London dipole induction)
+  const alphaFactor=clamp(atom.alpha/24.3,0.03,1.0);
+  let shiftX =distFrac*outerR*0.24*alphaFactor*dir;
+  let elongX =1+distFrac*0.22*alphaFactor;
+  let squishY=1-distFrac*0.09*alphaFactor;
+
+  // Close-range tidal spaghettification (r < 2.8 Å)
+  const GRAV_THRESHOLD=2.8;
+  if(r!==undefined&&r<GRAV_THRESHOLD){
+    const gravFrac =clamp((GRAV_THRESHOLD-r)/GRAV_THRESHOLD,0,1);
+    const gravBoost=gravFrac*gravFrac;
+    elongX  +=gravBoost*1.50*Math.max(alphaFactor,0.35);
+    squishY  =Math.max(0.42,squishY-gravBoost*0.28);
+    shiftX  +=gravBoost*outerR*0.55*dir;
+  }
+  // Cap to avoid wild distortion
+  elongX=Math.min(elongX,2.6);
+
+  // 1. Shielding core
+  drawShieldingCore(ax,ay,atom,shieldR);
+
+  // 2. Valence orbital cloud
+  if(atom.l===0){
+    drawSOrbital(ax,ay,atom,outerR,shiftX,elongX,squishY);
+  } else {
+    const mlAngle  =atom.ml===0?Math.PI/2:(atom.ml>0?Math.PI/5:4*Math.PI/5);
+    const bondAngle=dir>0?0.0:Math.PI;
+    const lobeAngle=lerp(mlAngle,bondAngle,distFrac*distFrac*0.80);
+    const asymm    =distFrac*0.35*(-dir)*alphaFactor;
+    drawPOrbital(ax,ay,atom,outerR,shiftX,elongX,squishY,lobeAngle,asymm);
+  }
+
+  // 3. Nucleus
+  const shieldFrac=clamp(atom.sigma/(atom.Z*0.95),0,0.88);
+  ctx.save(); ctx.translate(ax,ay);
+  const nucR=Math.max(1.8,vR*0.038);
+  const nucA=1-shieldFrac*0.70;
+  const gGlow=ctx.createRadialGradient(0,0,nucR,0,0,nucR*5.0);
+  gGlow.addColorStop(0,`rgba(255,255,255,${nucA*0.22})`);
+  gGlow.addColorStop(0.4,rgba(atom.color,nucA*0.16));
+  gGlow.addColorStop(1,rgba(atom.color,0));
+  ctx.fillStyle=gGlow; ctx.beginPath(); ctx.arc(0,0,nucR*5.0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=`rgba(255,255,255,${nucA})`;
+  ctx.beginPath(); ctx.arc(0,0,nucR,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+
+  // 4. Labels
+  const labelY=ay+outerR*1.18+20;
+  ctx.textAlign='center';
+  ctx.font='bold 12px "JetBrains Mono",monospace';
+  ctx.fillStyle=rgba(atom.color,0.80);
+  ctx.fillText(keyOf(atom),ax,labelY);
+  ctx.font='9px "JetBrains Mono",monospace';
+  ctx.fillStyle=rgba(atom.color,0.40);
+  ctx.fillText(`${atom.config}  ·  Zeff ${atom.Zeff.toFixed(2)}  ·  σ ${atom.sigma.toFixed(2)}`,ax,labelY+13);
+}
+
+/* ── Mini V(r) curve ────────────────────────────────────────── */
+function drawMiniCurve(rCur){
+  const rc=r_contact(selA,selB), rMin=rc*0.75, rMax=9.0;
+  const PW=115,PH=58,PX=CW-PW-12,PY=CH-PH-12;
+  ctx.save();
+  ctx.fillStyle='rgba(8,9,16,0.90)'; ctx.strokeStyle='rgba(42,45,58,0.75)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.roundRect(PX,PY,PW,PH,5); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='rgba(82,86,106,0.7)'; ctx.font='7px "JetBrains Mono",monospace'; ctx.textAlign='left';
+  ctx.fillText('V(r)  ·  Lennard-Jones',PX+7,PY+11);
+  const M={l:10,r:8,t:15,b:9};
+  const iW=PW-M.l-M.r, iH=PH-M.t-M.b;
+  let eMin=Infinity,eMax=-Infinity;
+  for(let s=1;s<=80;s++){
+    const r=rMin+(rMax-rMin)*s/80, e=lj_energy(selA,selB,r);
+    if(e<eMin)eMin=e; if(e>eMax)eMax=e;
+  }
+  const cap=Math.abs(eMin)*2.8; eMax=Math.min(eMax,cap);
+  const eRange=(eMax-eMin)||1;
+  const toX=r=>PX+M.l+(r-rMin)/(rMax-rMin)*iW;
+  const toY=e=>PY+M.t+iH-clamp((e-eMin)/eRange,0,1)*iH;
+  ctx.setLineDash([2,3]); ctx.strokeStyle='rgba(82,86,106,0.28)'; ctx.lineWidth=0.5;
+  ctx.beginPath(); ctx.moveTo(PX+M.l,toY(0)); ctx.lineTo(PX+M.l+iW,toY(0)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath(); let first=true;
+  for(let s=1;s<=80;s++){
+    const r=rMin+(rMax-rMin)*s/80, e=lj_energy(selA,selB,r);
+    const x2=toX(r),y2=toY(e);
+    if(first){ctx.moveTo(x2,y2);first=false;}else ctx.lineTo(x2,y2);
+  }
+  ctx.strokeStyle='rgba(74,222,128,0.65)'; ctx.lineWidth=1.5; ctx.stroke();
+  const eCur=lj_energy(selA,selB,rCur);
+  const dotX=toX(rCur), dotY=clamp(toY(eCur),PY+M.t+2,PY+M.t+iH-2);
+  ctx.strokeStyle='rgba(74,222,128,0.22)'; ctx.lineWidth=0.5;
+  ctx.beginPath(); ctx.moveTo(dotX,PY+M.t); ctx.lineTo(dotX,PY+M.t+iH); ctx.stroke();
+  ctx.fillStyle='#4ade80'; ctx.beginPath(); ctx.arc(dotX,dotY,3.2,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+/* ── Distance annotation ────────────────────────────────────── */
+function drawDistAnnotation(xA,xB,midY,vRA,vRB,r){
+  const y=midY+Math.max(vRA,vRB)*2.1+20;
+  ctx.textAlign='center'; ctx.font='9px "JetBrains Mono",monospace';
+  ctx.fillStyle='rgba(82,86,106,0.65)';
+  ctx.fillText(`◂ ${r.toFixed(2)} Å ▸`,(xA+xB)/2,y);
+}
+
+/* ── Energy UI ──────────────────────────────────────────────── */
+function updateEnergyUI(E,eEq){
+  document.getElementById('eNum').textContent=E.toFixed(3);
+  const fill=document.getElementById('eFill'), eKind=document.getElementById('eKind');
+  const norm=clamp(Math.abs(E)/(Math.abs(eEq)+1e-9),0,3);
+  const pct=clamp(norm*38,0,50);
+  if(E<0){
+    fill.style.left='50%'; fill.style.width=pct+'%';
+    fill.style.background='linear-gradient(90deg,#4ade80,#34d399)';
+    eKind.innerHTML='<span style="color:#4ade80">ATRACTIVA</span><br><span style="color:var(--txt3)">LONDON DISPERSION</span>';
+  } else {
+    fill.style.left=(50-pct)+'%'; fill.style.width=pct+'%';
+    fill.style.background='linear-gradient(90deg,#ef4444,#f87171)';
+    eKind.innerHTML='<span style="color:#f87171">REPULSIVA</span><br><span style="color:var(--txt3)">PAULI EXCLUSION</span>';
+  }
+}
+
+/* ── Bond polarity ──────────────────────────────────────────── */
+function bondPolarityDesc(dEN){
+  if(dEN<0.4)  return {label:'No polar',              color:'#60a5fa'};
+  if(dEN<0.8)  return {label:'Ligeramente polar',      color:'#93c5fd'};
+  if(dEN<1.4)  return {label:'Polar covalente',        color:'#a78bfa'};
+  if(dEN<1.8)  return {label:'Muy polar',              color:'#c084fc'};
+  if(dEN<2.5)  return {label:'Principalmente iónico',  color:'#fb923c'};
+  return        {label:'Iónico',                       color:'#fbbf24'};
+}
+
+function typeBadgeClass(type){
+  const t=type.toLowerCase();
+  if(t.includes('iónico'))    return 'badge-ionic';
+  if(t.includes('polar'))     return 'badge-polar';
+  if(t.includes('no polar'))  return 'badge-covalent';
+  if(t.includes('covalente')) return 'badge-covalent';
+  if(t.includes('metálico'))  return 'badge-metal';
+  return 'badge-covalent';
+}
+function stateBadgeClass(s){
+  if(s==='gas')     return 'badge-gas';
+  if(s==='sólido')  return 'badge-solid';
+  if(s==='líquido') return 'badge-liquid';
+  return 'badge-covalent';
+}
+
+/* ── Bond section (inline) ──────────────────────────────────── */
+function updateBondSection(){
+  const kA=keyOf(selA), kB=keyOf(selB);
+  const bk=bondKey(kA,kB);
+  const bond=BONDS[bk];
+  if(!bond) return;
+
+  const rc   =r_contact(selA,selB);
+  const C6   =london_C6(selA,selB);
+  const enA  =selA.EN, enB=selB.EN;
+  const dEN  =(enA!=null&&enB!=null)?Math.abs(enA-enB):null;
+  const polar=dEN!==null?bondPolarityDesc(dEN):null;
+
+  document.getElementById('bsFormula').textContent=bond.formula;
+  document.getElementById('bsIupac').textContent=bond.name;
+  document.getElementById('bsBadges').innerHTML=
+    `<span class="modal-badge ${typeBadgeClass(bond.type)}">${bond.type}</span>`
+    +`<span class="modal-badge ${stateBadgeClass(bond.state)}">${bond.state} a 25 °C</span>`;
+
+  const Tm=bond.Tm!=null?bond.Tm+' °C':'se descompone';
+  const Tb=bond.Tb!=null?bond.Tb+' °C':'—';
+  const rcPm=(rc*100).toFixed(0);
+
+  document.getElementById('bsRowsLeft').innerHTML=
+    `<div class="bs-row"><span>Fórmula</span><span style="color:#4ade80;font-weight:700">${bond.formula}</span></div>`
+   +`<div class="bs-row"><span>Punto de fusión</span><span>${Tm}</span></div>`
+   +`<div class="bs-row"><span>Punto de ebullición</span><span>${Tb}</span></div>`
+   +`<div class="bs-row"><span>Dist. equilibrio</span><span>${rcPm} pm</span></div>`;
+
+  let rightRows=
+    `<div class="bs-row"><span>Estado (25 °C)</span><span>${bond.state}</span></div>`
+   +`<div class="bs-row"><span>Coef. dispersión C₆</span><span>${C6.toFixed(3)} eV·Å⁶</span></div>`
+   +`<div class="bs-row"><span>Energía mínima LJ</span><span>${lj_energy(selA,selB,rc).toFixed(4)} u.r.</span></div>`;
+  if(dEN!==null){
+    rightRows+=`<div class="bs-row"><span>ΔEN Pauling</span><span style="color:${polar.color}">${dEN.toFixed(2)} · ${polar.label}</span></div>`;
+  }
+  document.getElementById('bsRowsRight').innerHTML=rightRows;
+  document.getElementById('bsNote').textContent=bond.note;
+}
+
+/* ── Param cards ────────────────────────────────────────────── */
+function renderParams(elId,atom,cls){
+  const lName=['s','p','d','f'][atom.l]??'?';
+  const msStr=atom.ms>0?'+½ ↑':'−½ ↓';
+  const mlSign=atom.ml>=0?(atom.ml>0?'+':''):'';
+  document.getElementById(elId).innerHTML=`
+    <div class="pt-row"><span class="pt-name">Config. electrónica</span><span class="pt-val ${cls}">${atom.config}</span></div>
+    <div class="pt-row"><span class="pt-name">n  (cuántico principal)</span><span class="pt-val ${cls}">${atom.n}</span></div>
+    <div class="pt-row"><span class="pt-name">l  (momento angular)</span><span class="pt-val ${cls}">${atom.l} · orbital ${lName}</span></div>
+    <div class="pt-row"><span class="pt-name">m<sub>l</sub>  (magnético)</span><span class="pt-val ${cls}">${mlSign}${atom.ml}</span></div>
+    <div class="pt-row"><span class="pt-name">m<sub>s</sub>  (espín)</span><span class="pt-val ${cls}">${msStr}</span></div>
+    <div class="pt-row"><span class="pt-name">Z  (número atómico)</span><span class="pt-val ${cls}">${atom.Z}</span></div>
+    <div class="pt-row"><span class="pt-name">σ  (apantallamiento)</span><span class="pt-val ${cls}">${atom.sigma.toFixed(2)}</span></div>
+    <div class="pt-row"><span class="pt-name">Z<sub>eff</sub>  (carga nuclear efectiva)</span><span class="pt-val ${cls}">${atom.Zeff.toFixed(2)}</span></div>
+    <div class="pt-row"><span class="pt-name">α  (polarizabilidad, Å³)</span><span class="pt-val ${cls}">${atom.alpha.toFixed(3)}</span></div>
+    <div class="pt-row"><span class="pt-name">IE  (energía ioniz., eV)</span><span class="pt-val ${cls}">${atom.IE.toFixed(2)}</span></div>
+    <div class="pt-row"><span class="pt-name">EN  (electronegatividad)</span><span class="pt-val ${cls}">${atom.EN!=null?atom.EN.toFixed(2):'—'}</span></div>
+    <div class="pt-row"><span class="pt-name">Radio atómico (pm)</span><span class="pt-val ${cls}">${atom.r}</span></div>
+  `;
+}
+function updateParams(){
+  document.getElementById('nameA').textContent=selA.name;
+  document.getElementById('nameB').textContent=selB.name;
+  renderParams('paramsA',selA,'pt-a');
+  renderParams('paramsB',selB,'pt-b');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FULL PERIODIC TABLE BUILD — 118 elements, 10 rows
+   CSS grid: rows 1–7 = periods 1–7; row 8 = gap; rows 9–10 = f-block
+══════════════════════════════════════════════════════════════════ */
+function buildPeriodicTable(){
+  const grid=document.getElementById('ptableGrid');
+  if(!grid) return;
+
+  // Map: "row-col" → PT_ALL entry  (using css row, not period directly)
+  // periods 9/10 stay as-is for f-block
+  const posMap={};
+  PT_ALL.forEach(el=>{
+    posMap[`${el.p}-${el.g}`]=el;
+  });
+
+  // Simulator atoms set (key lookup)
+  const simKeys=new Set(Object.keys(ATOMS));
+
+  grid.innerHTML='';
+
+  // Rows 1–7 (main table) + placeholders at (6,3) and (7,3)
+  for(let row=1;row<=7;row++){
+    for(let col=1;col<=18;col++){
+      const key=`${row}-${col}`;
+      const el=posMap[key];
+      const cell=document.createElement('div');
+      cell.style.cssText=`grid-row:${row};grid-column:${col};`;
+
+      if(el){
+        const clr=FAMILY_COLOR[el.f]||'#888';
+        const n=parseInt(clr.replace('#',''),16);
+        const rC=n>>16,gC=(n>>8)&0xff,bC=n&0xff;
+        const hasSim=simKeys.has(el.sym);
+        cell.className='ptcell'+(hasSim?'':' nodata');
+        cell.dataset.key=el.sym;
+        cell.dataset.z=el.Z;
+        cell.style.cssText+=`--clr:${clr};--clr-rgb:${rC},${gC},${bC};`;
+        cell.innerHTML=
+          `<span class="ptcell-z">${el.Z}</span>`
+         +`<span class="ptcell-sym">${el.sym}</span>`
+         +`<span class="ptcell-nm">${el.name.slice(0,5)}</span>`;
+        if(hasSim) cell.addEventListener('click',()=>handlePTClick(el.sym));
+      } else if((row===6&&col===3)||(row===7&&col===3)){
+        // f-block placeholder
+        const lblRow=(row===6)?'57–71':'89–103';
+        const fClr=(row===6)?FAMILY_COLOR.LN:FAMILY_COLOR.AN;
+        cell.className='ptcell-placeholder';
+        cell.style.cssText+=`grid-row:${row};grid-column:${col};`;
+        cell.innerHTML=`<span style="font-family:'JetBrains Mono',monospace;font-size:5.5px;color:${fClr};opacity:.6;">${lblRow}</span>`;
+      } else {
+        cell.className='ptcell-empty';
+      }
+      grid.appendChild(cell);
+    }
+  }
+
+  // Row 8 is the CSS gap row (auto 10px) — no elements to add
+
+  // Rows 9–10: lanthanides & actinides
+  for(let frow=9;frow<=10;frow++){
+    // Period label (col 2)
+    const lblCell=document.createElement('div');
+    const perLbl=frow===9?'6':'7';
+    lblCell.style.cssText=`grid-row:${frow};grid-column:2;display:flex;align-items:center;justify-content:flex-end;padding-right:2px;`;
+    lblCell.innerHTML=`<span style="font-family:'JetBrains Mono',monospace;font-size:7px;color:rgba(255,255,255,.2);">${perLbl}</span>`;
+    grid.appendChild(lblCell);
+
+    for(let col=3;col<=17;col++){
+      const key=`${frow}-${col}`;
+      const el=posMap[key];
+      const cell=document.createElement('div');
+      cell.style.cssText=`grid-row:${frow};grid-column:${col};`;
+      if(el){
+        const clr=FAMILY_COLOR[el.f]||'#888';
+        const n=parseInt(clr.replace('#',''),16);
+        const rC=n>>16,gC=(n>>8)&0xff,bC=n&0xff;
+        cell.className='ptcell nodata';
+        cell.dataset.z=el.Z;
+        cell.style.cssText+=`--clr:${clr};--clr-rgb:${rC},${gC},${bC};`;
+        cell.innerHTML=
+          `<span class="ptcell-z">${el.Z}</span>`
+         +`<span class="ptcell-sym">${el.sym}</span>`
+         +`<span class="ptcell-nm">${el.name.slice(0,5)}</span>`;
+      } else {
+        cell.className='ptcell-empty';
+      }
+      grid.appendChild(cell);
+    }
+  }
+
+  // Family legend
+  const legend=document.getElementById('ptLegend');
+  if(legend){
+    legend.innerHTML=Object.entries(FAMILY_NAME).map(([k,v])=>
+      `<span class="pt-leg-item"><span class="pt-leg-dot" style="background:${FAMILY_COLOR[k]}22;border:1px solid ${FAMILY_COLOR[k]}66;"></span>${v}</span>`
+    ).join('');
+  }
+
+  // Mode buttons
+  document.getElementById('modeA').addEventListener('click',()=>{ptMode='A';updatePTDisplay();});
+  document.getElementById('modeB').addEventListener('click',()=>{ptMode='B';updatePTDisplay();});
+}
+
+function handlePTClick(sym){
+  if(!ATOMS[sym]) return;
+  if(ptMode==='A'){
+    selA=ATOMS[sym];
+    if(selA===selB) selB=ATOMS[sym==='Ne'?'Ar':'Ne'];
+    ptMode='B';
+  } else {
+    if(ATOMS[sym]===selA){ ptMode='A'; updatePTDisplay(); return; }
+    selB=ATOMS[sym];
+    ptMode='A';
+  }
+  bondSectionVisible=false;
+  document.getElementById('bondSection').classList.remove('visible');
+  updatePTDisplay();
+  updateParams();
+}
+
+function updatePTDisplay(){
+  const kA=keyOf(selA), kB=keyOf(selB);
+  document.getElementById('modeA').className='pt-mode-btn'+(ptMode==='A'?' active-a':'');
+  document.getElementById('modeB').className='pt-mode-btn'+(ptMode==='B'?' active-b':'');
+  document.getElementById('curA').textContent=kA;
+  document.getElementById('curB').textContent=kB;
+
+  document.querySelectorAll('.ptcell[data-key]').forEach(cell=>{
+    const k=cell.dataset.key;
+    cell.classList.remove('sel-a','sel-b','blocked');
+    if(k===kA)           cell.classList.add('sel-a');
+    else if(k===kB)      cell.classList.add('sel-b');
+    else if(ptMode==='B'&&!isCompatible(kA,k)) cell.classList.add('blocked');
+  });
+
+  const incompat=!isCompatible(kA,kB);
+  document.getElementById('incompatWarn').style.display=incompat?'flex':'none';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN RENDER LOOP
+══════════════════════════════════════════════════════════════════ */
+function render(){
+  drawBG();
+
+  const rc     =r_contact(selA,selB);
+  const rmin   =rc*0.80, rmax=9.0;
+  const r      =sliderToR(sliderV);
+  const distFrac=clamp(1-(r-rmin)/(rmax-rmin),0,1);
+
+  const maxRpm =Math.max(selA.r,selB.r,38);
+  const vscale =58/maxRpm;
+  const vRA    =Math.max(17,selA.r*vscale);
+  const vRB    =Math.max(17,selB.r*vscale);
+
+  const minSep =vRA+vRB+12, maxSep=CW*0.62;
+  const sep    =minSep+(maxSep-minSep)*(1-distFrac);
+  const midY   =CH/2;
+  const xA     =CW/2-sep/2, xB=CW/2+sep/2;
+
+  const E  =lj_energy(selA,selB,r);
+  const eEq=lj_energy(selA,selB,rc);
+
+  const fOnA=selB.Zeff/(r*r), fOnB=selA.Zeff/(r*r);
+  const distA=clamp(selA.alpha*fOnA*0.016*distFrac,0,0.80);
+  const distB=clamp(selB.alpha*fOnB*0.016*distFrac,0,0.80);
+
+  drawFieldMesh(xA,midY,xB,midY,E,eEq);
+  drawFieldLines(xA,midY,xB,midY,E,eEq);
+  drawAtom(xA,midY,selA,vRA,distA,+1,r);
+  drawAtom(xB,midY,selB,vRB,distB,-1,r);
+  drawMiniCurve(r);
+  drawDistAnnotation(xA,xB,midY,vRA,vRB,r);
+
+  const kA=keyOf(selA), kB=keyOf(selB);
+  if(!isCompatible(kA,kB)){
+    ctx.save(); ctx.fillStyle='rgba(239,68,68,0.06)';
+    ctx.fillRect(0,0,CW,CH); ctx.restore();
+  }
+
+  updateEnergyUI(E,eEq);
+  document.getElementById('distTag').textContent=`d = ${r.toFixed(3)} Å`;
+
+  // Bond section: reveal only at energy absolute maximum (within 12% of equilibrium)
+  const bk=bondKey(kA,kB);
+  const hasBond=isCompatible(kA,kB)&&!!BONDS[bk];
+  const atEquil=hasBond&&E<0&&E<=eEq*0.88;
+  if(atEquil!==bondSectionVisible){
+    bondSectionVisible=atEquil;
+    const sect=document.getElementById('bondSection');
+    if(atEquil){ updateBondSection(); sect.classList.add('visible'); }
+    else        { sect.classList.remove('visible'); }
+  }
+
+  animT+=0.016;
+  requestAnimationFrame(render);
+}
+
+/* ── Init ───────────────────────────────────────────────────── */
+buildPeriodicTable();
+updatePTDisplay();
+updateParams();
+
+document.getElementById('distSlider').addEventListener('input',e=>{
+  sliderV=+e.target.value;
+});
+
+render();
+</script>
 </body>
 </html>

@@ -248,16 +248,22 @@ function makeChart(canvasId, initView, layers, opts = {}) {
     const fontSize = Math.round(Math.max(8, Math.min(10, W / 50)));
     ctx.fillStyle = C.txt; ctx.font = `${fontSize}px JetBrains Mono, monospace`;
     ctx.textAlign = 'center';
+    let prevPx = -99;
     for (let x = Math.ceil(xMin/labelStep)*labelStep; x <= xMax; x += labelStep) {
       if (Math.abs(x) < gs * 0.05) continue;
       const px = toX(x); if (px < fontSize || px > W - fontSize) continue;
+      if (px - prevPx < 30) continue;
+      prevPx = px;
       const axY = toY(0); const ly = axY > H - 14 ? axY - 5 : axY < 12 ? axY + 10 : axY + 11;
       ctx.fillText(fmtNum(x), px, ly);
     }
     ctx.textAlign = 'right';
+    let prevPy = H + 99;
     for (let y = Math.ceil(yMin/labelStep)*labelStep; y <= yMax; y += labelStep) {
       if (Math.abs(y) < gs * 0.05) continue;
       const py = toY(y); if (py < 8 || py > H - 6) continue;
+      if (prevPy - py < 13) continue;
+      prevPy = py;
       const axX = toX(0); const lx = axX < 24 ? axX + 28 : axX > W - 8 ? W - 4 : axX - 4;
       ctx.fillText(fmtNum(y), lx, py + 3);
     }
