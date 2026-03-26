@@ -17,7 +17,7 @@
     .atom-btn.on-b { background:rgba(96,165,250,.10); border-color:rgba(96,165,250,.55); color:#60a5fa; }
 
     /* ── Canvas wrapper ─────────────────────────────────── */
-    .canvas-wrap { background:#080910; border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; }
+    .canvas-wrap { background:#080910; border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; position:relative; }
     #simCanvas { display:block; width:100%; height:auto; }
 
     /* ── Param table ────────────────────────────────────── */
@@ -28,9 +28,9 @@
     .pt-a { color:#fbbf24; } .pt-b { color:#60a5fa; }
 
     /* ── Energy bar ─────────────────────────────────────── */
-    .e-track { height:4px; background:var(--s2); border-radius:2px; margin:8px 0 4px; position:relative; overflow:hidden; }
-    .e-center { position:absolute; left:50%; top:0; bottom:0; width:1px; background:rgba(255,255,255,.1); }
-    .e-fill { position:absolute; top:0; height:100%; border-radius:2px; transition:left .12s, width .12s, background .12s; }
+    .e-track { height:6px; background:var(--s2); border-radius:3px; margin:8px 0 4px; position:relative; overflow:hidden; }
+    .e-center { position:absolute; left:50%; top:0; bottom:0; width:1px; background:rgba(255,255,255,.15); }
+    .e-fill { position:absolute; top:0; height:100%; border-radius:3px; transition:left .12s, width .12s, background .12s; }
     .e-labels { display:flex; justify-content:space-between; }
     .e-lbl { font-family:'JetBrains Mono',monospace; font-size:8px; letter-spacing:.1em; text-transform:uppercase; color:var(--txt3); }
     .e-head { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:2px; }
@@ -39,97 +39,58 @@
     .e-kind { font-family:'JetBrains Mono',monospace; font-size:9px; text-align:right; letter-spacing:.08em; line-height:1.7; }
     .dist-tag { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); text-align:center; margin-top:6px; }
 
+    /* ── Force display ──────────────────────────────────── */
+    .force-row { display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:8px; border-top:1px solid rgba(42,45,58,.5); }
+    .force-lbl { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--txt3); letter-spacing:.08em; text-transform:uppercase; }
+    .force-val { font-family:'JetBrains Mono',monospace; font-size:13px; }
+    .force-rep { color:#f87171; }
+    .force-att { color:#4ade80; }
+    .force-zero { color:var(--txt3); }
+
     /* ── Bond section (inline, animated) ───────────────── */
     .bond-section {
-      max-height: 0;
-      overflow: hidden;
-      opacity: 0;
+      max-height: 0; overflow: hidden; opacity: 0;
       transition: max-height 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease;
-      background: var(--s1);
-      border: 1px solid rgba(74,222,128,0.18);
-      border-radius: var(--radius-sm, 8px);
-      margin-top: 0;
+      background: var(--s1); border: 1px solid rgba(74,222,128,0.18);
+      border-radius: var(--radius-sm, 8px); margin-top: 0;
     }
-    .bond-section.visible {
-      max-height: 800px;
-      opacity: 1;
-      margin-top: 12px;
-    }
+    .bond-section.visible { max-height: 900px; opacity: 1; margin-top: 12px; }
     .bond-section-inner { padding: 16px; }
     .bs-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; }
     .bs-formula { font-family:'JetBrains Mono',monospace; font-size:30px; font-weight:700; color:#4ade80; letter-spacing:-.02em; line-height:1; }
     .bs-iupac { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--txt3); letter-spacing:.07em; text-transform:uppercase; margin-top:5px; }
-    .bs-badges { margin-top: 10px; margin-bottom:14px; }
+    .bs-badges { margin-top:10px; margin-bottom:14px; }
     .bs-row { display:flex; justify-content:space-between; align-items:baseline; padding:4px 0; border-bottom:1px solid rgba(42,45,58,.4); font-family:'JetBrains Mono',monospace; }
     .bs-row:last-of-type { border-bottom:none; }
     .bs-row span:first-child { font-size:9px; color:var(--txt3); letter-spacing:.05em; }
     .bs-row span:last-child { font-size:11px; color:var(--txt); }
     .bs-note { font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.65; color:var(--txt2); margin-top:12px; padding-top:10px; border-top:1px solid rgba(42,45,58,.4); }
-    .bs-indicator {
-      font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.10em;
-      text-transform:uppercase; color:#4ade80; opacity:.7;
-      display:flex; align-items:center; gap:5px;
-    }
-    .bs-indicator::before {
-      content:''; display:inline-block; width:6px; height:6px; border-radius:50%;
-      background:#4ade80; animation: bspulse 1.6s ease-in-out infinite;
-    }
+    .bs-indicator { font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.10em; text-transform:uppercase; color:#4ade80; opacity:.7; display:flex; align-items:center; gap:5px; }
+    .bs-indicator::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:#4ade80; animation:bspulse 1.6s ease-in-out infinite; }
     @keyframes bspulse { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1.2)} }
     .bs-two-col { display:grid; grid-template-columns:1fr 1fr; gap:0 24px; }
 
     /* ── Periodic table ─────────────────────────────────── */
-    .ptable-grid {
-      display: grid;
-      grid-template-columns: repeat(18, minmax(0, 1fr));
-      grid-template-rows: repeat(7, auto) 10px repeat(2, auto);
-      gap: 2px;
-      margin-top: 10px;
-      overflow-x: auto;
-    }
-    .ptcell {
-      aspect-ratio: 4/5;
-      min-width: 22px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(var(--clr-rgb, 82,86,106), 0.18);
-      border-radius: 3px;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      cursor: pointer;
-      position: relative;
-      transition: background .12s, border-color .12s, box-shadow .12s;
-      overflow: hidden;
-    }
+    .ptable-grid { display:grid; grid-template-columns:repeat(18,minmax(0,1fr)); grid-template-rows:repeat(7,auto) 10px repeat(2,auto); gap:2px; margin-top:10px; overflow-x:auto; }
+    .ptcell { aspect-ratio:4/5; min-width:22px; background:rgba(255,255,255,0.03); border:1px solid rgba(var(--clr-rgb,82,86,106),0.18); border-radius:3px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; position:relative; transition:background .12s,border-color .12s,box-shadow .12s,transform .1s; overflow:hidden; }
     .ptcell::before { content:''; position:absolute; inset:0; background:var(--clr,#555); opacity:0.07; pointer-events:none; }
-    .ptcell:hover { border-color:var(--clr,#888); box-shadow:0 0 8px rgba(255,255,255,0.05); }
+    .ptcell:hover { border-color:var(--clr,#888); box-shadow:0 0 10px rgba(255,255,255,0.07); background:rgba(255,255,255,0.08); transform:scale(1.12); z-index:2; }
     .ptcell-empty { background:transparent; border-color:transparent; cursor:default; }
-    .ptcell-empty:hover { border-color:transparent; box-shadow:none; }
-    .ptcell-placeholder {
-      background:transparent;
-      border:1px dashed rgba(82,86,106,0.35);
-      cursor:default;
-      aspect-ratio:4/5; min-width:22px;
-      border-radius:3px;
-      display:flex; align-items:center; justify-content:center;
-    }
+    .ptcell-empty:hover { border-color:transparent; box-shadow:none; transform:none; }
+    .ptcell-placeholder { background:transparent; border:1px dashed rgba(82,86,106,0.35); cursor:default; aspect-ratio:4/5; min-width:22px; border-radius:3px; display:flex; align-items:center; justify-content:center; }
     .ptcell-placeholder span { font-family:'JetBrains Mono',monospace; font-size:6px; color:rgba(255,255,255,.18); }
     .ptcell-z { font-family:'JetBrains Mono',monospace; font-size:6px; color:rgba(255,255,255,.22); line-height:1; align-self:flex-start; padding:2px 2px 0; }
     .ptcell-sym { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; color:var(--clr,#ccc); line-height:1; }
     .ptcell-nm { font-family:'JetBrains Mono',monospace; font-size:5px; color:rgba(255,255,255,.18); line-height:1; margin-top:1px; }
     .ptcell.nodata { opacity:0.40; cursor:not-allowed; }
-    .ptcell.nodata:hover { border-color:rgba(var(--clr-rgb,82,86,106),0.18); box-shadow:none; }
-    .ptcell.sel-a { background:rgba(251,191,36,.12); border-color:rgba(251,191,36,.70); box-shadow:0 0 12px rgba(251,191,36,.22); }
-    .ptcell.sel-b { background:rgba(96,165,250,.12); border-color:rgba(96,165,250,.70); box-shadow:0 0 12px rgba(96,165,250,.22); }
+    .ptcell.nodata:hover { border-color:rgba(var(--clr-rgb,82,86,106),0.18); box-shadow:none; background:rgba(255,255,255,0.03); transform:none; }
+    .ptcell.sel-a { background:rgba(251,191,36,.12); border-color:rgba(251,191,36,.70); box-shadow:0 0 14px rgba(251,191,36,.28); }
+    .ptcell.sel-b { background:rgba(96,165,250,.12); border-color:rgba(96,165,250,.70); box-shadow:0 0 14px rgba(96,165,250,.28); }
     .ptcell.blocked { opacity:0.22; cursor:not-allowed; }
-    .ptcell-period-lbl {
-      display:flex; align-items:center; justify-content:flex-end; padding-right:3px;
-      font-family:'JetBrains Mono',monospace; font-size:7px; color:rgba(255,255,255,.18);
-    }
-
-    /* Family legend */
+    .ptcell-period-lbl { display:flex; align-items:center; justify-content:flex-end; padding-right:3px; font-family:'JetBrains Mono',monospace; font-size:7px; color:rgba(255,255,255,.18); }
     .pt-legend { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
     .pt-leg-item { display:flex; align-items:center; gap:4px; font-family:'JetBrains Mono',monospace; font-size:8px; color:var(--txt3); letter-spacing:.04em; }
     .pt-leg-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
-
     .pt-mode-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
     .pt-mode-btn { font-family:'JetBrains Mono',monospace; font-size:10px; padding:4px 12px; border-radius:6px; background:var(--s2); border:1px solid var(--border); color:var(--txt3); cursor:pointer; transition:all .15s; letter-spacing:.06em; }
     .pt-mode-btn.active-a { background:rgba(251,191,36,.12); border-color:rgba(251,191,36,.55); color:#fbbf24; }
@@ -150,9 +111,34 @@
     .badge-gas      { background:rgba(74,222,128,.10); color:#4ade80; border:1px solid rgba(74,222,128,.3); }
     .badge-solid    { background:rgba(148,163,184,.10); color:#94a3b8; border:1px solid rgba(148,163,184,.3); }
     .badge-liquid   { background:rgba(56,189,248,.10); color:#38bdf8; border:1px solid rgba(56,189,248,.3); }
+
+    /* ── Thermal button ─────────────────────────────────── */
+    .thermal-btn { font-family:'JetBrains Mono',monospace; font-size:10px; padding:4px 12px; border-radius:6px; background:var(--s2); border:1px solid var(--border); color:var(--txt3); cursor:pointer; transition:all .2s; letter-spacing:.06em; display:inline-flex; align-items:center; gap:5px; }
+    .thermal-btn:hover { border-color:var(--border2); color:var(--txt); }
+    .thermal-btn.on { background:rgba(251,146,60,.12); border-color:rgba(251,146,60,.55); color:#fb923c; }
+    .thermal-dot { width:6px; height:6px; border-radius:50%; background:currentColor; opacity:0; }
+    .thermal-btn.on .thermal-dot { opacity:1; animation:bspulse 1.1s ease-in-out infinite; }
+    .canvas-ctrl { display:flex; align-items:center; justify-content:space-between; margin-top:8px; flex-wrap:wrap; gap:6px; }
+
+    /* ── PT Tooltip ─────────────────────────────────────── */
+    #ptTooltip {
+      position:fixed; z-index:999; pointer-events:none;
+      background:rgba(7,8,14,0.97); border:1px solid rgba(82,86,106,0.55);
+      border-radius:9px; padding:11px 15px; min-width:168px;
+      opacity:0; transition:opacity 0.12s;
+      box-shadow:0 8px 32px rgba(0,0,0,0.6);
+    }
+    .ptt-sym { font-family:'JetBrains Mono',monospace; font-size:24px; font-weight:700; line-height:1; margin-bottom:2px; }
+    .ptt-name { font-family:'JetBrains Mono',monospace; font-size:9px; color:rgba(255,255,255,.35); letter-spacing:.07em; text-transform:uppercase; margin-bottom:9px; }
+    .ptt-row { display:flex; justify-content:space-between; gap:16px; font-family:'JetBrains Mono',monospace; font-size:9px; padding:2px 0; border-bottom:1px solid rgba(42,45,58,.35); }
+    .ptt-row:last-child { border-bottom:none; }
+    .ptt-row span:first-child { color:rgba(255,255,255,.28); }
+    .ptt-row span:last-child { color:rgba(255,255,255,.82); }
+    .ptt-nosim { font-family:'JetBrains Mono',monospace; font-size:9px; color:rgba(255,255,255,.2); margin-top:6px; letter-spacing:.04em; }
   </style>
 </head>
 <body>
+<div id="ptTooltip"></div>
 <div class="page">
   <a href="index.html" class="back-link">← Volver</a>
   <h1 class="page-title">Química</h1>
@@ -201,20 +187,23 @@
   <!-- Description -->
   <div class="card">
     <div class="card-label">Sobre el simulador</div>
-    <p>Acerca dos átomos con el slider y observa cómo se deforma el campo de interacción. La malla de puntos visualiza el potencial análogo al gravitacional. Los parámetros —<strong>apantallamiento (σ)</strong>, <strong>carga nuclear efectiva (Z<sub>eff</sub>)</strong> y <strong>polarizabilidad (α)</strong>— determinan la intensidad y alcance de la atracción de London y la repulsión de Pauli. Los elementos sin datos de simulación aparecen atenuados.</p>
+    <p>Acerca dos átomos con el slider y observa cómo se deforma el campo de interacción. Los <strong>anillos electrónicos</strong> giran con velocidad angular proporcional al número cuántico principal. Las <strong>flechas de fuerza</strong> muestran F(r) = −dV/dr en tiempo real. Los indicadores <strong>δ+/δ−</strong> aparecen cuando ΔEN &gt; 0.3 (polaridad de enlace). El panel <em>V(r)</em> superpone también la curva de fuerza F(r) en amarillo.</p>
   </div>
 
   <!-- Canvas -->
   <div class="card" style="padding:16px">
     <div class="card-label">Campo de interacción</div>
     <div class="canvas-wrap">
-      <canvas id="simCanvas" width="800" height="300"></canvas>
+      <canvas id="simCanvas" width="800" height="420"></canvas>
     </div>
     <div class="incompat-warn" id="incompatWarn">
       <span class="incompat-warn-icon">⚠</span>
       <span class="incompat-warn-txt">PAR INCOMPATIBLE — Los gases nobles no forman enlaces estables con otros elementos.<br>La simulación muestra la interacción de dispersión de London, pero no existe compuesto.</span>
     </div>
-    <div class="dist-tag" id="distTag">— Å</div>
+    <div class="canvas-ctrl">
+      <div class="dist-tag" id="distTag">— Å</div>
+      <button id="thermalBtn" class="thermal-btn"><span class="thermal-dot"></span>Vibración térmica</button>
+    </div>
   </div>
 
   <!-- Slider -->
@@ -245,7 +234,7 @@
     <div class="e-head">
       <div>
         <div class="e-num" id="eNum">—</div>
-        <div class="e-sub">U.R. · FUERZAS DE DISPERSIÓN</div>
+        <div class="e-sub">U.R. · POTENCIAL LJ</div>
       </div>
       <div class="e-kind" id="eKind"></div>
     </div>
@@ -257,6 +246,18 @@
       <span class="e-lbl" style="color:#f87171">↑ Repulsión (Pauli)</span>
       <span class="e-lbl">Equilibrio</span>
       <span class="e-lbl" style="color:#4ade80">Atracción (London) ↑</span>
+    </div>
+
+    <!-- Force display -->
+    <div class="force-row">
+      <span class="force-lbl">F(r) = −dV/dr</span>
+      <span class="force-val force-zero" id="forceVal">—</span>
+      <span class="force-lbl">u.r./Å</span>
+    </div>
+    <div class="force-row" style="border-top:none;margin-top:2px;padding-top:0">
+      <span class="force-lbl">C₆ London</span>
+      <span class="force-val" id="c6Val" style="color:var(--txt2)">—</span>
+      <span class="force-lbl">eV·Å⁶</span>
     </div>
 
     <!-- Bond info section — animated reveal at energy minimum -->
@@ -289,9 +290,9 @@
 <script>
 'use strict';
 
-/* ══════════════════════════════════════════════════════════════════
-   ATOM DATA  —  includes EN (Pauling electronegativity)
-══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   ATOM DATA
+═══════════════════════════════════════════════════════════════ */
 const ATOMS = {
   'H' : {Z:1,  name:'Hidrógeno', shells:[1],     sigma:0.00,  Zeff:1.00, alpha:0.667, r:53,  IE:13.60, EN:2.20, color:'#d4d8f0', n:1, l:0, ml: 0, ms:+0.5, config:'1s¹'},
   'He': {Z:2,  name:'Helio',     shells:[2],     sigma:0.31,  Zeff:1.69, alpha:0.205, r:31,  IE:24.59, EN:null, color:'#67e8f9', n:1, l:0, ml: 0, ms:-0.5, config:'1s²'},
@@ -306,11 +307,15 @@ const ATOMS = {
   'Ar': {Z:18, name:'Argón',     shells:[2,8,8], sigma:11.24, Zeff:6.76, alpha:1.640, r:71,  IE:15.76, EN:null, color:'#93c5fd', n:3, l:1, ml:+1, ms:-0.5, config:'3p⁶'},
 };
 
-/* ══════════════════════════════════════════════════════════════════
+/* ── Atomic masses (uma) ──────────────────────────────────── */
+const ATOM_MASS = {
+  H:1.008, He:4.003, Li:6.941, C:12.011, N:14.007, O:15.999,
+  F:18.998, Ne:20.180, Na:22.990, Cl:35.453, Ar:39.948
+};
+
+/* ═══════════════════════════════════════════════════════════════
    FULL PERIODIC TABLE — 118 elements
-   Format: {sym, Z, p(period/row), g(group/col), f(family), name}
-   f-block: lanthanides row=9, actinides row=10
-══════════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════════ */
 const FAMILY_COLOR = {
   AM:'#ef4444', AE:'#f97316', TM:'#eab308', PT:'#84cc16',
   MT:'#10b981', NM:'#38bdf8', HL:'#22d3ee', NG:'#818cf8',
@@ -324,19 +329,15 @@ const FAMILY_NAME = {
 };
 
 const PT_ALL = [
-  // Period 1
   {sym:'H', Z:1,p:1,g:1,f:'NM',name:'Hidrógeno'},{sym:'He',Z:2,p:1,g:18,f:'NG',name:'Helio'},
-  // Period 2
   {sym:'Li',Z:3,p:2,g:1,f:'AM',name:'Litio'},{sym:'Be',Z:4,p:2,g:2,f:'AE',name:'Berilio'},
   {sym:'B',Z:5,p:2,g:13,f:'MT',name:'Boro'},{sym:'C',Z:6,p:2,g:14,f:'NM',name:'Carbono'},
   {sym:'N',Z:7,p:2,g:15,f:'NM',name:'Nitrógeno'},{sym:'O',Z:8,p:2,g:16,f:'NM',name:'Oxígeno'},
   {sym:'F',Z:9,p:2,g:17,f:'HL',name:'Flúor'},{sym:'Ne',Z:10,p:2,g:18,f:'NG',name:'Neón'},
-  // Period 3
   {sym:'Na',Z:11,p:3,g:1,f:'AM',name:'Sodio'},{sym:'Mg',Z:12,p:3,g:2,f:'AE',name:'Magnesio'},
   {sym:'Al',Z:13,p:3,g:13,f:'PT',name:'Aluminio'},{sym:'Si',Z:14,p:3,g:14,f:'MT',name:'Silicio'},
   {sym:'P',Z:15,p:3,g:15,f:'NM',name:'Fósforo'},{sym:'S',Z:16,p:3,g:16,f:'NM',name:'Azufre'},
   {sym:'Cl',Z:17,p:3,g:17,f:'HL',name:'Cloro'},{sym:'Ar',Z:18,p:3,g:18,f:'NG',name:'Argón'},
-  // Period 4
   {sym:'K',Z:19,p:4,g:1,f:'AM',name:'Potasio'},{sym:'Ca',Z:20,p:4,g:2,f:'AE',name:'Calcio'},
   {sym:'Sc',Z:21,p:4,g:3,f:'TM',name:'Escandio'},{sym:'Ti',Z:22,p:4,g:4,f:'TM',name:'Titanio'},
   {sym:'V',Z:23,p:4,g:5,f:'TM',name:'Vanadio'},{sym:'Cr',Z:24,p:4,g:6,f:'TM',name:'Cromo'},
@@ -346,7 +347,6 @@ const PT_ALL = [
   {sym:'Ga',Z:31,p:4,g:13,f:'PT',name:'Galio'},{sym:'Ge',Z:32,p:4,g:14,f:'MT',name:'Germanio'},
   {sym:'As',Z:33,p:4,g:15,f:'MT',name:'Arsénico'},{sym:'Se',Z:34,p:4,g:16,f:'NM',name:'Selenio'},
   {sym:'Br',Z:35,p:4,g:17,f:'HL',name:'Bromo'},{sym:'Kr',Z:36,p:4,g:18,f:'NG',name:'Criptón'},
-  // Period 5
   {sym:'Rb',Z:37,p:5,g:1,f:'AM',name:'Rubidio'},{sym:'Sr',Z:38,p:5,g:2,f:'AE',name:'Estroncio'},
   {sym:'Y',Z:39,p:5,g:3,f:'TM',name:'Itrio'},{sym:'Zr',Z:40,p:5,g:4,f:'TM',name:'Circonio'},
   {sym:'Nb',Z:41,p:5,g:5,f:'TM',name:'Niobio'},{sym:'Mo',Z:42,p:5,g:6,f:'TM',name:'Molibdeno'},
@@ -356,7 +356,6 @@ const PT_ALL = [
   {sym:'In',Z:49,p:5,g:13,f:'PT',name:'Indio'},{sym:'Sn',Z:50,p:5,g:14,f:'PT',name:'Estaño'},
   {sym:'Sb',Z:51,p:5,g:15,f:'MT',name:'Antimonio'},{sym:'Te',Z:52,p:5,g:16,f:'MT',name:'Telurio'},
   {sym:'I',Z:53,p:5,g:17,f:'HL',name:'Yodo'},{sym:'Xe',Z:54,p:5,g:18,f:'NG',name:'Xenón'},
-  // Period 6 (La-Lu in f-block row 9)
   {sym:'Cs',Z:55,p:6,g:1,f:'AM',name:'Cesio'},{sym:'Ba',Z:56,p:6,g:2,f:'AE',name:'Bario'},
   {sym:'Hf',Z:72,p:6,g:4,f:'TM',name:'Hafnio'},{sym:'Ta',Z:73,p:6,g:5,f:'TM',name:'Tántalo'},
   {sym:'W',Z:74,p:6,g:6,f:'TM',name:'Wolframio'},{sym:'Re',Z:75,p:6,g:7,f:'TM',name:'Renio'},
@@ -366,7 +365,6 @@ const PT_ALL = [
   {sym:'Pb',Z:82,p:6,g:14,f:'PT',name:'Plomo'},{sym:'Bi',Z:83,p:6,g:15,f:'PT',name:'Bismuto'},
   {sym:'Po',Z:84,p:6,g:16,f:'MT',name:'Polonio'},{sym:'At',Z:85,p:6,g:17,f:'HL',name:'Ástato'},
   {sym:'Rn',Z:86,p:6,g:18,f:'NG',name:'Radón'},
-  // Period 7 (Ac-Lr in f-block row 10)
   {sym:'Fr',Z:87,p:7,g:1,f:'AM',name:'Francio'},{sym:'Ra',Z:88,p:7,g:2,f:'AE',name:'Radio'},
   {sym:'Rf',Z:104,p:7,g:4,f:'TM',name:'Rutherfordio'},{sym:'Db',Z:105,p:7,g:5,f:'TM',name:'Dubnio'},
   {sym:'Sg',Z:106,p:7,g:6,f:'TM',name:'Seaborgio'},{sym:'Bh',Z:107,p:7,g:7,f:'TM',name:'Bohrio'},
@@ -376,7 +374,6 @@ const PT_ALL = [
   {sym:'Fl',Z:114,p:7,g:14,f:'UK',name:'Flerovio'},{sym:'Mc',Z:115,p:7,g:15,f:'UK',name:'Moscovio'},
   {sym:'Lv',Z:116,p:7,g:16,f:'UK',name:'Livermorio'},{sym:'Ts',Z:117,p:7,g:17,f:'HL',name:'Teneso'},
   {sym:'Og',Z:118,p:7,g:18,f:'NG',name:'Oganesón'},
-  // Lanthanides — row 9, cols 3–17
   {sym:'La',Z:57,p:9,g:3,f:'LN',name:'Lantano'},{sym:'Ce',Z:58,p:9,g:4,f:'LN',name:'Cerio'},
   {sym:'Pr',Z:59,p:9,g:5,f:'LN',name:'Praseodimio'},{sym:'Nd',Z:60,p:9,g:6,f:'LN',name:'Neodimio'},
   {sym:'Pm',Z:61,p:9,g:7,f:'LN',name:'Prometio'},{sym:'Sm',Z:62,p:9,g:8,f:'LN',name:'Samario'},
@@ -385,7 +382,6 @@ const PT_ALL = [
   {sym:'Ho',Z:67,p:9,g:13,f:'LN',name:'Holmio'},{sym:'Er',Z:68,p:9,g:14,f:'LN',name:'Erbio'},
   {sym:'Tm',Z:69,p:9,g:15,f:'LN',name:'Tulio'},{sym:'Yb',Z:70,p:9,g:16,f:'LN',name:'Iterbio'},
   {sym:'Lu',Z:71,p:9,g:17,f:'LN',name:'Lutecio'},
-  // Actinides — row 10, cols 3–17
   {sym:'Ac',Z:89,p:10,g:3,f:'AN',name:'Actinio'},{sym:'Th',Z:90,p:10,g:4,f:'AN',name:'Torio'},
   {sym:'Pa',Z:91,p:10,g:5,f:'AN',name:'Protactinio'},{sym:'U',Z:92,p:10,g:6,f:'AN',name:'Uranio'},
   {sym:'Np',Z:93,p:10,g:7,f:'AN',name:'Neptunio'},{sym:'Pu',Z:94,p:10,g:8,f:'AN',name:'Plutonio'},
@@ -396,7 +392,7 @@ const PT_ALL = [
   {sym:'Lr',Z:103,p:10,g:17,f:'AN',name:'Laurencio'},
 ];
 
-/* ── Noble gases set ───────────────────────────────────────── */
+/* ── Noble gases set ──────────────────────────────────────── */
 const NOBLES = new Set(['He','Ne','Ar','Kr','Xe','Rn']);
 function bondKey(kA,kB){ return [kA,kB].sort().join('-'); }
 function isCompatible(kA,kB){
@@ -406,9 +402,9 @@ function isCompatible(kA,kB){
   return true;
 }
 
-/* ══════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    COMPOUNDS DATABASE
-══════════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════════ */
 const BONDS = {
   'H-H':   {formula:'H₂',   name:'Hidrógeno molecular',      type:'Covalente no polar',    state:'gas',    Tm:-259.2,Tb:-252.9, note:'El gas más ligero. Triple punto a solo 14 K. Principal combustible de fusión estelar y pilas de hidrógeno.'},
   'Cl-H':  {formula:'HCl',  name:'Cloruro de hidrógeno',     type:'Covalente polar',       state:'gas',    Tm:-114.2,Tb:-85.1,  note:'Gas irritante; en solución acuosa forma ácido clorhídrico, uno de los ácidos fuertes más industrializados.'},
@@ -449,15 +445,18 @@ const BONDS = {
   'F-Cl':  {formula:'ClF',  name:'Monofluoruro de cloro',    type:'Covalente polar',       state:'gas',    Tm:-155.6,Tb:-100.1, note:'Interhalógeno con momento dipolar significativo (0.88 D). Reactivo como agente de fluoración electrofílica.'},
 };
 
-/* ── State ─────────────────────────────────────────────────── */
+/* ── State ────────────────────────────────────────────────── */
 let selA = ATOMS['Ne'];
 let selB = ATOMS['Ar'];
 let sliderV   = 22;
 let animT     = 0;
 let ptMode    = 'A';
 let bondSectionVisible = false;
+let thermalOn = false;
+const THERMAL_AMP  = 7;   // slider units
+const THERMAL_FREQ = 9;   // rad/s in animT
 
-/* ── Helpers ────────────────────────────────────────────────── */
+/* ── Helpers ──────────────────────────────────────────────── */
 function rgba(hex, a) {
   const n = parseInt(hex.replace('#',''), 16);
   return `rgba(${n>>16},${(n>>8)&0xff},${n&0xff},${a})`;
@@ -470,7 +469,7 @@ function lerp_color(c1,c2,t){
   return `rgb(${Math.round(lerp(n1>>16,n2>>16,t))},${Math.round(lerp((n1>>8)&0xff,(n2>>8)&0xff,t))},${Math.round(lerp(n1&0xff,n2&0xff,t))})`;
 }
 
-/* ── Physics ────────────────────────────────────────────────── */
+/* ── Physics ──────────────────────────────────────────────── */
 function london_C6(a,b){ return 1.5*a.alpha*b.alpha*a.IE*b.IE/(a.IE+b.IE); }
 function r_contact(a,b){ return (a.r+b.r)/100; }
 function lj_energy(a,b,r){
@@ -478,43 +477,65 @@ function lj_energy(a,b,r){
   const c12=c6*Math.pow(rc,6)/2, r6=Math.pow(r,6);
   return c12/(r6*r6)-c6/r6;
 }
+function lj_force(a,b,r){
+  /* F = -dV/dr; F>0 → repulsive, F<0 → attractive */
+  const c6=london_C6(a,b), rc=r_contact(a,b);
+  const c12=c6*Math.pow(rc,6)/2;
+  return 12*c12/Math.pow(r,13) - 6*c6/Math.pow(r,7);
+}
+function lj_k_eq(a,b){
+  /* d²V/dr² at r_eq ≈ r_contact */
+  const rc=r_contact(a,b), c6=london_C6(a,b);
+  const c12=c6*Math.pow(rc,6)/2;
+  return 156*c12/Math.pow(rc,14) - 42*c6/Math.pow(rc,8);
+}
 function sliderToR(v){
   const rc=r_contact(selA,selB), rmin=rc*0.80, rmax=9.0;
   const t=v/100;
   return rmax*Math.pow(rmin/rmax,t);
 }
 
-/* ── Canvas setup ───────────────────────────────────────────── */
+/* ── Canvas setup ─────────────────────────────────────────── */
 const canvas = document.getElementById('simCanvas');
 const ctx    = canvas.getContext('2d');
-const CW=800, CH=300;
+const CW=800, CH=420;
 const DPR=Math.min(window.devicePixelRatio||1,2);
 canvas.width=CW*DPR; canvas.height=CH*DPR;
 ctx.scale(DPR,DPR);
 
-/* ── Background ─────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   BACKGROUND
+═══════════════════════════════════════════════════════════════ */
 function drawBG(){
   ctx.fillStyle='#080910'; ctx.fillRect(0,0,CW,CH);
-  ctx.strokeStyle='rgba(42,45,58,0.3)'; ctx.lineWidth=0.5;
+  // Subtle deep glow in center
+  const gC=ctx.createRadialGradient(CW/2,CH/2,0,CW/2,CH/2,CW*0.55);
+  gC.addColorStop(0,'rgba(20,30,70,0.18)');
+  gC.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=gC; ctx.fillRect(0,0,CW,CH);
+  // Grid
+  ctx.strokeStyle='rgba(42,45,58,0.22)'; ctx.lineWidth=0.5;
   for(let x=0;x<CW;x+=44){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,CH);ctx.stroke();}
   for(let y=0;y<CH;y+=44){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(CW,y);ctx.stroke();}
 }
 
-/* ── Field mesh ─────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   FIELD MESH
+═══════════════════════════════════════════════════════════════ */
 function drawFieldMesh(xA,yA,xB,yB,E,eEq){
   const attractive=E<0;
   const norm=clamp(Math.abs(E)/(Math.abs(eEq)+1e-9),0,3);
   if(norm<0.02){
-    for(let i=0;i<=22;i++) for(let j=0;j<=10;j++){
-      ctx.fillStyle='rgba(42,45,58,0.22)';
-      ctx.beginPath();ctx.arc(i*CW/22,j*CH/10,1,0,Math.PI*2);ctx.fill();
+    for(let i=0;i<=22;i++) for(let j=0;j<=11;j++){
+      ctx.fillStyle='rgba(42,45,58,0.20)';
+      ctx.beginPath();ctx.arc(i*CW/22,j*CH/11,1,0,Math.PI*2);ctx.fill();
     }
     return;
   }
   const maxDisp=clamp(norm*22,0,28), sign=attractive?1:-0.7;
   for(let i=0;i<=22;i++){
-    for(let j=0;j<=10;j++){
-      const ox=i*CW/22, oy=j*CH/10;
+    for(let j=0;j<=11;j++){
+      const ox=i*CW/22, oy=j*CH/11;
       const dAx=xA-ox,dAy=yA-oy,dA=Math.sqrt(dAx*dAx+dAy*dAy)+1;
       const dBx=xB-ox,dBy=yB-oy,dB=Math.sqrt(dBx*dBx+dBy*dBy)+1;
       if(dA<30||dB<30) continue;
@@ -531,7 +552,9 @@ function drawFieldMesh(xA,yA,xB,yB,E,eEq){
   }
 }
 
-/* ── Field lines ─────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   FIELD LINES
+═══════════════════════════════════════════════════════════════ */
 function drawFieldLines(xA,yA,xB,yB,E,eEq){
   const norm=clamp(Math.abs(E)/(Math.abs(eEq)+1e-9),0,2.5);
   if(norm<0.03) return;
@@ -574,12 +597,231 @@ function drawFieldLines(xA,yA,xB,yB,E,eEq){
   ctx.restore();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   ORBITAL RENDERING  — gaussian cloud spaghettification
-   No separate lobes. Single stretched elliptical cloud that
-   elongates toward the bond partner, like tidal spaghettification.
-══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   ELECTRON RINGS — animated orbit rings
+═══════════════════════════════════════════════════════════════ */
+function drawElectronRings(ax, ay, atom, vR) {
+  const n = Math.min(atom.n, 3);
+  ctx.save();
+  for (let s = 1; s <= n; s++) {
+    const ringR = vR * (0.55 + s * 0.32);
+    const tiltY  = 0.22 + s * 0.09;
+    const speed  = 0.38 / s;
+    const rotDir = (s % 2 === 0) ? -1 : 1;
+    const baseAngle = animT * speed * rotDir;
 
+    // Dashed ellipse ring
+    ctx.beginPath();
+    ctx.ellipse(ax, ay, ringR, ringR * tiltY, 0.18*s, 0, Math.PI*2);
+    ctx.strokeStyle = rgba(atom.color, 0.08 + s * 0.018);
+    ctx.lineWidth = 0.7;
+    ctx.setLineDash([2, 6]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Electrons
+    const shellElec = atom.shells[s - 1] || 0;
+    const nDots = Math.min(shellElec, 4);
+    if (nDots === 0) continue;
+    for (let d = 0; d < nDots; d++) {
+      const a = baseAngle + (d / nDots) * Math.PI * 2;
+      const ex = ax + Math.cos(a) * ringR;
+      const ey = ay + Math.sin(a) * ringR * tiltY;
+
+      // Glow halo
+      const g = ctx.createRadialGradient(ex, ey, 0, ex, ey, 6);
+      g.addColorStop(0, rgba(atom.color, 0.65));
+      g.addColorStop(1, rgba(atom.color, 0));
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(ex, ey, 6, 0, Math.PI*2); ctx.fill();
+
+      // Core dot
+      ctx.fillStyle = rgba(atom.color, 0.88);
+      ctx.beginPath(); ctx.arc(ex, ey, 1.7, 0, Math.PI*2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BOND PARTICLE STREAM
+═══════════════════════════════════════════════════════════════ */
+function drawBondParticles(xA, yA, xB, yB, bondFrac, colorA, colorB) {
+  if (bondFrac < 0.05) return;
+  const N = 9;
+  ctx.save();
+  for (let i = 0; i < N; i++) {
+    // A → B
+    const p1 = (animT * 0.65 + i / N) % 1;
+    const px1 = lerp(xA, xB, p1);
+    const wave1 = Math.sin(p1 * Math.PI * 2.5 + animT * 2) * 7 * bondFrac;
+    const py1 = lerp(yA, yB, p1) + wave1;
+    const c1 = lerp_color(colorA, colorB, p1);
+    const fade1 = Math.sin(p1 * Math.PI);
+    const g1 = ctx.createRadialGradient(px1, py1, 0, px1, py1, 7);
+    g1.addColorStop(0, rgba(c1, bondFrac * 0.70 * fade1));
+    g1.addColorStop(1, rgba(c1, 0));
+    ctx.fillStyle = g1;
+    ctx.beginPath(); ctx.arc(px1, py1, 7, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = rgba(c1, bondFrac * 0.85 * fade1);
+    ctx.beginPath(); ctx.arc(px1, py1, 1.8, 0, Math.PI*2); ctx.fill();
+
+    // B → A (offset 0.5)
+    const p2 = (animT * 0.65 + i / N + 0.5) % 1;
+    const px2 = lerp(xB, xA, p2);
+    const wave2 = Math.sin(p2 * Math.PI * 2.5 + animT * 2 + 1) * 5 * bondFrac;
+    const py2 = lerp(yB, yA, p2) + wave2;
+    const c2 = lerp_color(colorB, colorA, p2);
+    const fade2 = Math.sin(p2 * Math.PI);
+    const g2 = ctx.createRadialGradient(px2, py2, 0, px2, py2, 5);
+    g2.addColorStop(0, rgba(c2, bondFrac * 0.50 * fade2));
+    g2.addColorStop(1, rgba(c2, 0));
+    ctx.fillStyle = g2;
+    ctx.beginPath(); ctx.arc(px2, py2, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = rgba(c2, bondFrac * 0.65 * fade2);
+    ctx.beginPath(); ctx.arc(px2, py2, 1.3, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FORCE ARROWS — F(r) direction indicators
+═══════════════════════════════════════════════════════════════ */
+function drawForceArrows(xA, xB, midY, outerRA, outerRB, F) {
+  const fMag = Math.abs(F);
+  if (fMag < 0.0008) return;
+  const repulsive = F > 0;
+  const arrowLen  = clamp(fMag * 0.55, 5, 32);
+  const arrowColor = repulsive ? '#f87171' : '#4ade80';
+  const alpha = clamp(0.30 + fMag * 0.07, 0.18, 0.78);
+  const pulse = repulsive ? 1 : 0.7 + 0.3 * Math.sin(animT * 5);
+
+  function drawArrow(x, y, dir) {
+    const x2 = x + dir * arrowLen;
+    ctx.save();
+    ctx.strokeStyle = rgba(arrowColor, alpha * pulse);
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x2, y); ctx.stroke();
+    const hw = 4.5, hl = 8;
+    ctx.beginPath();
+    ctx.moveTo(x2, y);
+    ctx.lineTo(x2 - dir * hl, y - hw);
+    ctx.moveTo(x2, y);
+    ctx.lineTo(x2 - dir * hl, y + hw);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  if (repulsive) {
+    drawArrow(xA - outerRA - 4, midY, -1);
+    drawArrow(xB + outerRB + 4, midY, +1);
+  } else {
+    drawArrow(xA + outerRA + 4, midY, +1);
+    drawArrow(xB - outerRB - 4, midY, -1);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DELTA CHARGES — polarity indicators
+═══════════════════════════════════════════════════════════════ */
+function drawDeltaCharges(xA, xB, midY, outerRA, outerRB) {
+  const enA = selA.EN, enB = selB.EN;
+  if (enA == null || enB == null) return;
+  const dEN = Math.abs(enA - enB);
+  if (dEN < 0.3) return;
+
+  const alpha = clamp((dEN - 0.3) / 1.8, 0, 0.88);
+  const aIsMore = enA > enB;
+
+  ctx.save();
+  ctx.font = 'bold 12px "JetBrains Mono",monospace';
+  ctx.textAlign = 'center';
+
+  const pulse = 0.75 + 0.25 * Math.sin(animT * 2.5);
+
+  // δ+ on less EN atom, δ- on more EN
+  const yA = midY - outerRA - 16;
+  const yB = midY - outerRB - 16;
+
+  ctx.fillStyle = rgba(aIsMore ? '#f87171' : '#60a5fa', alpha * pulse);
+  ctx.fillText(aIsMore ? 'δ⁺' : 'δ⁻', xA, yA);
+
+  ctx.fillStyle = rgba(aIsMore ? '#60a5fa' : '#f87171', alpha * pulse);
+  ctx.fillText(aIsMore ? 'δ⁻' : 'δ⁺', xB, yB);
+
+  // Dipole arrow between them
+  if (dEN > 0.8) {
+    const dipAlpha = clamp((dEN - 0.8) / 2.5, 0, 0.45) * pulse;
+    const midY2 = Math.min(yA, yB) - 6;
+    const dipDir = aIsMore ? 1 : -1; // toward more EN
+    const g = ctx.createLinearGradient(xA, midY2, xB, midY2);
+    g.addColorStop(0, rgba('#f87171', dipAlpha));
+    g.addColorStop(1, rgba('#60a5fa', dipAlpha));
+    ctx.strokeStyle = g;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath(); ctx.moveTo(xA, midY2); ctx.lineTo(xB, midY2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PHASE LABEL — top-center canvas overlay
+═══════════════════════════════════════════════════════════════ */
+function drawPhaseLabel(E, eEq, r, rc) {
+  let label, color;
+  const norm = clamp(Math.abs(E) / (Math.abs(eEq) + 1e-9), 0, 3);
+
+  if (E > 0) {
+    label = '⚡ REPULSIÓN PAULI';
+    color = 'rgba(248,113,113,0.88)';
+  } else if (norm < 0.08) {
+    label = '∿ DISPERSIÓN DE LONDON';
+    color = 'rgba(148,163,184,0.55)';
+  } else if (norm > 0.88) {
+    label = '✦ MÍNIMO · ENLACE FORMADO';
+    color = 'rgba(74,222,128,0.92)';
+  } else {
+    label = '↓ ATRACCIÓN · ACERCAMIENTO';
+    color = 'rgba(96,165,250,0.78)';
+  }
+
+  ctx.save();
+  ctx.font = '700 9px "JetBrains Mono",monospace';
+  ctx.textAlign = 'center';
+  ctx.letterSpacing = '0.14em';
+  ctx.fillStyle = color;
+  ctx.fillText(label, CW / 2, 18);
+  ctx.restore();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CANVAS HUD — live values (top-left)
+═══════════════════════════════════════════════════════════════ */
+function drawHUD(E, F, r) {
+  const x = 12, y = 22;
+  ctx.save();
+  const rows = [
+    { k: 'V(r)', v: E.toFixed(4), c: E < 0 ? '#4ade80' : '#f87171' },
+    { k: 'F(r)', v: F.toFixed(4), c: F > 0 ? '#f87171' : (Math.abs(F)<0.001 ? 'rgba(82,86,106,0.7)' : '#4ade80') },
+    { k: 'r   ', v: r.toFixed(3) + ' Å', c: 'rgba(148,163,184,0.85)' },
+  ];
+  ctx.font = '8px "JetBrains Mono",monospace';
+  rows.forEach((row, i) => {
+    ctx.fillStyle = 'rgba(82,86,106,0.55)';
+    ctx.textAlign = 'left';
+    ctx.fillText(row.k, x, y + i * 13);
+    ctx.fillStyle = row.c;
+    ctx.fillText(row.v, x + 26, y + i * 13);
+  });
+  ctx.restore();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ORBITAL RENDERING — gaussian cloud spaghettification
+═══════════════════════════════════════════════════════════════ */
 function drawShieldingCore(ax,ay,atom,shieldR){
   if(atom.sigma<0.05) return;
   ctx.save(); ctx.translate(ax,ay);
@@ -597,20 +839,15 @@ function drawShieldingCore(ax,ay,atom,shieldR){
   ctx.restore();
 }
 
-/* ─ s-orbital: spherical gaussian cloud → stretches into ellipse ─ */
 function drawSOrbital(ax,ay,atom,outerR,shiftX,elongX,squishY){
   const peakA=clamp(0.44-atom.Zeff*0.020,0.12,0.42);
   ctx.save();
   ctx.translate(ax+shiftX,ay);
   ctx.scale(elongX,squishY);
-
-  // Outer diffuse tail
   const gTail=ctx.createRadialGradient(0,0,outerR*0.5,0,0,outerR*1.75);
   gTail.addColorStop(0,rgba(atom.color,peakA*0.09));
   gTail.addColorStop(1,rgba(atom.color,0));
   ctx.fillStyle=gTail; ctx.beginPath(); ctx.arc(0,0,outerR*1.75,0,Math.PI*2); ctx.fill();
-
-  // Main gaussian blob
   const g=ctx.createRadialGradient(0,0,0,0,0,outerR);
   g.addColorStop(0,   rgba(atom.color,peakA));
   g.addColorStop(0.28,rgba(atom.color,peakA*0.75));
@@ -618,28 +855,20 @@ function drawSOrbital(ax,ay,atom,outerR,shiftX,elongX,squishY){
   g.addColorStop(0.82,rgba(atom.color,peakA*0.08));
   g.addColorStop(1,   rgba(atom.color,0));
   ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,outerR,0,Math.PI*2); ctx.fill();
-
   ctx.restore();
 }
 
-/* ─ p-orbital: single round cloud → teardrop spaghettification ─ */
 function drawPOrbital(ax,ay,atom,outerR,shiftX,elongX,squishY,lobeAngle,asymm){
   const peakA=clamp(0.38-atom.Zeff*0.012,0.13,0.34);
   ctx.save();
   ctx.translate(ax+shiftX,ay);
   ctx.rotate(lobeAngle);
-
-  // Center shifts toward bond partner as asymm grows (tidal distortion)
   const cx=asymm*outerR*0.32;
   ctx.scale(elongX*1.06,squishY*0.88);
-
-  // Outer halo
   const gH=ctx.createRadialGradient(cx,0,outerR*0.35,cx,0,outerR*1.75);
   gH.addColorStop(0,rgba(atom.color,peakA*0.10));
   gH.addColorStop(1,rgba(atom.color,0));
   ctx.fillStyle=gH; ctx.beginPath(); ctx.arc(cx,0,outerR*1.75,0,Math.PI*2); ctx.fill();
-
-  // Main gaussian blob (elongated, shifted center)
   const g=ctx.createRadialGradient(cx,0,0,cx,0,outerR);
   g.addColorStop(0,   rgba(atom.color,peakA*1.05));
   g.addColorStop(0.30,rgba(atom.color,peakA*0.68));
@@ -647,27 +876,17 @@ function drawPOrbital(ax,ay,atom,outerR,shiftX,elongX,squishY,lobeAngle,asymm){
   g.addColorStop(0.88,rgba(atom.color,peakA*0.05));
   g.addColorStop(1,   rgba(atom.color,0));
   ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,0,outerR,0,Math.PI*2); ctx.fill();
-
   ctx.restore();
 }
 
-/* ─ drawAtom — main entry ─ */
 function drawAtom(ax,ay,atom,vR,distFrac,dir,r){
   const breathe=1+0.012*Math.sin(animT*1.8+dir*0.6);
-
-  // Orbital radius: moderate Bohr scaling — stays proportional
   const outerR=vR*clamp((atom.n*atom.n)/(atom.Zeff*0.88),0.60,1.80)*breathe;
-
-  // Shielding core radius
   const shieldR=vR*clamp(0.16+atom.sigma*0.038,0.16,1.10);
-
-  // Polarization (London dipole induction)
   const alphaFactor=clamp(atom.alpha/24.3,0.03,1.0);
   let shiftX =distFrac*outerR*0.24*alphaFactor*dir;
   let elongX =1+distFrac*0.22*alphaFactor;
   let squishY=1-distFrac*0.09*alphaFactor;
-
-  // Close-range tidal spaghettification (r < 2.8 Å)
   const GRAV_THRESHOLD=2.8;
   if(r!==undefined&&r<GRAV_THRESHOLD){
     const gravFrac =clamp((GRAV_THRESHOLD-r)/GRAV_THRESHOLD,0,1);
@@ -676,13 +895,8 @@ function drawAtom(ax,ay,atom,vR,distFrac,dir,r){
     squishY  =Math.max(0.42,squishY-gravBoost*0.28);
     shiftX  +=gravBoost*outerR*0.55*dir;
   }
-  // Cap to avoid wild distortion
   elongX=Math.min(elongX,2.6);
-
-  // 1. Shielding core
   drawShieldingCore(ax,ay,atom,shieldR);
-
-  // 2. Valence orbital cloud
   if(atom.l===0){
     drawSOrbital(ax,ay,atom,outerR,shiftX,elongX,squishY);
   } else {
@@ -692,8 +906,7 @@ function drawAtom(ax,ay,atom,vR,distFrac,dir,r){
     const asymm    =distFrac*0.35*(-dir)*alphaFactor;
     drawPOrbital(ax,ay,atom,outerR,shiftX,elongX,squishY,lobeAngle,asymm);
   }
-
-  // 3. Nucleus
+  // Nucleus
   const shieldFrac=clamp(atom.sigma/(atom.Z*0.95),0,0.88);
   ctx.save(); ctx.translate(ax,ay);
   const nucR=Math.max(1.8,vR*0.038);
@@ -707,56 +920,101 @@ function drawAtom(ax,ay,atom,vR,distFrac,dir,r){
   ctx.beginPath(); ctx.arc(0,0,nucR,0,Math.PI*2); ctx.fill();
   ctx.restore();
 
-  // 4. Labels
-  const labelY=ay+outerR*1.18+20;
+  // Labels — symbol + config + mass/IE line
+  const labelY=ay+outerR*1.18+22;
   ctx.textAlign='center';
   ctx.font='bold 12px "JetBrains Mono",monospace';
-  ctx.fillStyle=rgba(atom.color,0.80);
+  ctx.fillStyle=rgba(atom.color,0.82);
   ctx.fillText(keyOf(atom),ax,labelY);
   ctx.font='9px "JetBrains Mono",monospace';
   ctx.fillStyle=rgba(atom.color,0.40);
-  ctx.fillText(`${atom.config}  ·  Zeff ${atom.Zeff.toFixed(2)}  ·  σ ${atom.sigma.toFixed(2)}`,ax,labelY+13);
+  ctx.fillText(`${atom.config}  ·  Zeff ${atom.Zeff.toFixed(2)}  ·  σ ${atom.sigma.toFixed(2)}`,ax,labelY+14);
+  const kAtom=keyOf(atom), mass=ATOM_MASS[kAtom];
+  if(mass){
+    ctx.font='8px "JetBrains Mono",monospace';
+    ctx.fillStyle=rgba(atom.color,0.25);
+    ctx.fillText(`M ${mass} uma  ·  IE ${atom.IE.toFixed(2)} eV  ·  α ${atom.alpha.toFixed(3)} Å³`,ax,labelY+27);
+  }
 }
 
-/* ── Mini V(r) curve ────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   MINI V(r) + F(r) CURVE — bottom-right overlay
+═══════════════════════════════════════════════════════════════ */
 function drawMiniCurve(rCur){
   const rc=r_contact(selA,selB), rMin=rc*0.75, rMax=9.0;
-  const PW=115,PH=58,PX=CW-PW-12,PY=CH-PH-12;
+  const PW=178, PH=90, PX=CW-PW-12, PY=CH-PH-12;
   ctx.save();
-  ctx.fillStyle='rgba(8,9,16,0.90)'; ctx.strokeStyle='rgba(42,45,58,0.75)'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.roundRect(PX,PY,PW,PH,5); ctx.fill(); ctx.stroke();
-  ctx.fillStyle='rgba(82,86,106,0.7)'; ctx.font='7px "JetBrains Mono",monospace'; ctx.textAlign='left';
-  ctx.fillText('V(r)  ·  Lennard-Jones',PX+7,PY+11);
-  const M={l:10,r:8,t:15,b:9};
+  ctx.fillStyle='rgba(8,9,16,0.93)'; ctx.strokeStyle='rgba(42,45,58,0.80)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.roundRect(PX,PY,PW,PH,6); ctx.fill(); ctx.stroke();
+
+  // Title
+  ctx.fillStyle='rgba(82,86,106,0.70)'; ctx.font='7px "JetBrains Mono",monospace'; ctx.textAlign='left';
+  ctx.fillText('POTENCIAL  ·  FUERZA',PX+7,PY+11);
+  // Legend
+  ctx.fillStyle='rgba(74,222,128,0.75)'; ctx.fillText('─ V(r)',PX+PW-70,PY+11);
+  ctx.fillStyle='rgba(251,191,36,0.65)'; ctx.fillText('─ F(r)',PX+PW-70,PY+20);
+
+  const M={l:10,r:8,t:24,b:10};
   const iW=PW-M.l-M.r, iH=PH-M.t-M.b;
+
   let eMin=Infinity,eMax=-Infinity;
-  for(let s=1;s<=80;s++){
-    const r=rMin+(rMax-rMin)*s/80, e=lj_energy(selA,selB,r);
+  let fMin=Infinity,fMax=-Infinity;
+  const steps=90;
+  for(let s=1;s<=steps;s++){
+    const r=rMin+(rMax-rMin)*s/steps;
+    const e=lj_energy(selA,selB,r), f=lj_force(selA,selB,r);
     if(e<eMin)eMin=e; if(e>eMax)eMax=e;
+    if(f<fMin)fMin=f; if(f>fMax)fMax=f;
   }
-  const cap=Math.abs(eMin)*2.8; eMax=Math.min(eMax,cap);
-  const eRange=(eMax-eMin)||1;
+  const eCap=Math.abs(eMin)*2.8; eMax=Math.min(eMax,eCap);
+  const fCap=Math.abs(fMin)*1.8; fMax=Math.min(fMax,fCap);
+  const eRange=(eMax-eMin)||1, fRange=(fMax-fMin)||1;
+
   const toX=r=>PX+M.l+(r-rMin)/(rMax-rMin)*iW;
-  const toY=e=>PY+M.t+iH-clamp((e-eMin)/eRange,0,1)*iH;
+  const toEY=e=>PY+M.t+iH-clamp((e-eMin)/eRange,0,1)*iH;
+  const toFY=f=>PY+M.t+iH-clamp((f-fMin)/fRange,0,1)*iH;
+
+  // Zero line
   ctx.setLineDash([2,3]); ctx.strokeStyle='rgba(82,86,106,0.28)'; ctx.lineWidth=0.5;
-  ctx.beginPath(); ctx.moveTo(PX+M.l,toY(0)); ctx.lineTo(PX+M.l+iW,toY(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PX+M.l,toEY(0)); ctx.lineTo(PX+M.l+iW,toEY(0)); ctx.stroke();
   ctx.setLineDash([]);
+
+  // Force curve
+  ctx.beginPath(); let firstF=true;
+  for(let s=1;s<=steps;s++){
+    const r=rMin+(rMax-rMin)*s/steps, f=lj_force(selA,selB,r);
+    const x2=toX(r), y2=clamp(toFY(f),PY+M.t,PY+M.t+iH);
+    if(firstF){ctx.moveTo(x2,y2);firstF=false;}else ctx.lineTo(x2,y2);
+  }
+  ctx.strokeStyle='rgba(251,191,36,0.50)'; ctx.lineWidth=1.1; ctx.stroke();
+
+  // Energy curve
   ctx.beginPath(); let first=true;
-  for(let s=1;s<=80;s++){
-    const r=rMin+(rMax-rMin)*s/80, e=lj_energy(selA,selB,r);
-    const x2=toX(r),y2=toY(e);
+  for(let s=1;s<=steps;s++){
+    const r=rMin+(rMax-rMin)*s/steps, e=lj_energy(selA,selB,r);
+    const x2=toX(r), y2=clamp(toEY(e),PY+M.t,PY+M.t+iH);
     if(first){ctx.moveTo(x2,y2);first=false;}else ctx.lineTo(x2,y2);
   }
-  ctx.strokeStyle='rgba(74,222,128,0.65)'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.strokeStyle='rgba(74,222,128,0.72)'; ctx.lineWidth=1.6; ctx.stroke();
+
+  // Current-position indicator
   const eCur=lj_energy(selA,selB,rCur);
-  const dotX=toX(rCur), dotY=clamp(toY(eCur),PY+M.t+2,PY+M.t+iH-2);
-  ctx.strokeStyle='rgba(74,222,128,0.22)'; ctx.lineWidth=0.5;
+  const dotX=toX(rCur), dotY=clamp(toEY(eCur),PY+M.t+2,PY+M.t+iH-2);
+  ctx.strokeStyle='rgba(74,222,128,0.20)'; ctx.lineWidth=0.5;
   ctx.beginPath(); ctx.moveTo(dotX,PY+M.t); ctx.lineTo(dotX,PY+M.t+iH); ctx.stroke();
-  ctx.fillStyle='#4ade80'; ctx.beginPath(); ctx.arc(dotX,dotY,3.2,0,Math.PI*2); ctx.fill();
+
+  const pulse=1+0.28*Math.sin(animT*7);
+  const dr=3.0*pulse, gr=9*pulse;
+  const gDot=ctx.createRadialGradient(dotX,dotY,0,dotX,dotY,gr);
+  gDot.addColorStop(0,'rgba(74,222,128,0.55)');
+  gDot.addColorStop(1,'rgba(74,222,128,0)');
+  ctx.fillStyle=gDot; ctx.beginPath(); ctx.arc(dotX,dotY,gr,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#4ade80'; ctx.beginPath(); ctx.arc(dotX,dotY,dr,0,Math.PI*2); ctx.fill();
+
   ctx.restore();
 }
 
-/* ── Distance annotation ────────────────────────────────────── */
+/* ── Distance annotation ──────────────────────────────────── */
 function drawDistAnnotation(xA,xB,midY,vRA,vRB,r){
   const y=midY+Math.max(vRA,vRB)*2.1+20;
   ctx.textAlign='center'; ctx.font='9px "JetBrains Mono",monospace';
@@ -764,8 +1022,8 @@ function drawDistAnnotation(xA,xB,midY,vRA,vRB,r){
   ctx.fillText(`◂ ${r.toFixed(2)} Å ▸`,(xA+xB)/2,y);
 }
 
-/* ── Energy UI ──────────────────────────────────────────────── */
-function updateEnergyUI(E,eEq){
+/* ── Energy UI ────────────────────────────────────────────── */
+function updateEnergyUI(E, eEq, F){
   document.getElementById('eNum').textContent=E.toFixed(3);
   const fill=document.getElementById('eFill'), eKind=document.getElementById('eKind');
   const norm=clamp(Math.abs(E)/(Math.abs(eEq)+1e-9),0,3);
@@ -779,9 +1037,23 @@ function updateEnergyUI(E,eEq){
     fill.style.background='linear-gradient(90deg,#ef4444,#f87171)';
     eKind.innerHTML='<span style="color:#f87171">REPULSIVA</span><br><span style="color:var(--txt3)">PAULI EXCLUSION</span>';
   }
+
+  // Force
+  const fEl=document.getElementById('forceVal');
+  if(fEl){
+    const fAbs=Math.abs(F);
+    if(fAbs<0.0005){ fEl.textContent='≈ 0'; fEl.className='force-val force-zero'; }
+    else {
+      fEl.textContent=(F>0?'+':'')+F.toFixed(4);
+      fEl.className='force-val '+(F>0?'force-rep':'force-att');
+    }
+  }
+  // C6
+  const c6El=document.getElementById('c6Val');
+  if(c6El) c6El.textContent=london_C6(selA,selB).toFixed(4);
 }
 
-/* ── Bond polarity ──────────────────────────────────────────── */
+/* ── Bond polarity ────────────────────────────────────────── */
 function bondPolarityDesc(dEN){
   if(dEN<0.4)  return {label:'No polar',              color:'#60a5fa'};
   if(dEN<0.8)  return {label:'Ligeramente polar',      color:'#93c5fd'};
@@ -806,8 +1078,18 @@ function stateBadgeClass(s){
   if(s==='líquido') return 'badge-liquid';
   return 'badge-covalent';
 }
+function getBondOrderLabel(type, formula) {
+  const t = type.toLowerCase();
+  if(t.includes('iónico'))    return 'Enlace iónico';
+  if(t.includes('metálico'))  return 'Enlace metálico';
+  const triple = ['N₂','C₂N₂'];
+  const double = ['O₂','C₂'];
+  if(triple.includes(formula)) return 'Orden de enlace 3';
+  if(double.includes(formula)) return 'Orden de enlace 2';
+  return 'Orden de enlace 1';
+}
 
-/* ── Bond section (inline) ──────────────────────────────────── */
+/* ── Bond section ─────────────────────────────────────────── */
 function updateBondSection(){
   const kA=keyOf(selA), kB=keyOf(selB);
   const bk=bondKey(kA,kB);
@@ -816,30 +1098,39 @@ function updateBondSection(){
 
   const rc   =r_contact(selA,selB);
   const C6   =london_C6(selA,selB);
+  const kEq  =lj_k_eq(selA,selB);
   const enA  =selA.EN, enB=selB.EN;
   const dEN  =(enA!=null&&enB!=null)?Math.abs(enA-enB):null;
   const polar=dEN!==null?bondPolarityDesc(dEN):null;
+
+  const mA=ATOM_MASS[kA], mB=ATOM_MASS[kB];
+  const muStr=(mA&&mB)?(mA*mB/(mA+mB)).toFixed(3)+' uma':'—';
+  const orderLabel=getBondOrderLabel(bond.type, bond.formula);
 
   document.getElementById('bsFormula').textContent=bond.formula;
   document.getElementById('bsIupac').textContent=bond.name;
   document.getElementById('bsBadges').innerHTML=
     `<span class="modal-badge ${typeBadgeClass(bond.type)}">${bond.type}</span>`
-    +`<span class="modal-badge ${stateBadgeClass(bond.state)}">${bond.state} a 25 °C</span>`;
+   +`<span class="modal-badge ${stateBadgeClass(bond.state)}">${bond.state} a 25 °C</span>`
+   +`<span class="modal-badge badge-covalent">${orderLabel}</span>`;
 
   const Tm=bond.Tm!=null?bond.Tm+' °C':'se descompone';
   const Tb=bond.Tb!=null?bond.Tb+' °C':'—';
   const rcPm=(rc*100).toFixed(0);
+  const eMin=lj_energy(selA,selB,rc).toFixed(4);
 
   document.getElementById('bsRowsLeft').innerHTML=
     `<div class="bs-row"><span>Fórmula</span><span style="color:#4ade80;font-weight:700">${bond.formula}</span></div>`
    +`<div class="bs-row"><span>Punto de fusión</span><span>${Tm}</span></div>`
    +`<div class="bs-row"><span>Punto de ebullición</span><span>${Tb}</span></div>`
-   +`<div class="bs-row"><span>Dist. equilibrio</span><span>${rcPm} pm</span></div>`;
+   +`<div class="bs-row"><span>Dist. equilibrio r₀</span><span>${rcPm} pm</span></div>`
+   +`<div class="bs-row"><span>Masa reducida μ</span><span>${muStr}</span></div>`;
 
   let rightRows=
     `<div class="bs-row"><span>Estado (25 °C)</span><span>${bond.state}</span></div>`
-   +`<div class="bs-row"><span>Coef. dispersión C₆</span><span>${C6.toFixed(3)} eV·Å⁶</span></div>`
-   +`<div class="bs-row"><span>Energía mínima LJ</span><span>${lj_energy(selA,selB,rc).toFixed(4)} u.r.</span></div>`;
+   +`<div class="bs-row"><span>Coef. dispersión C₆</span><span>${C6.toFixed(4)} eV·Å⁶</span></div>`
+   +`<div class="bs-row"><span>E mínima V(r₀)</span><span>${eMin} u.r.</span></div>`
+   +`<div class="bs-row"><span>Constante fuerza k</span><span>${kEq.toFixed(4)} u.r./Å²</span></div>`;
   if(dEN!==null){
     rightRows+=`<div class="bs-row"><span>ΔEN Pauling</span><span style="color:${polar.color}">${dEN.toFixed(2)} · ${polar.label}</span></div>`;
   }
@@ -847,13 +1138,16 @@ function updateBondSection(){
   document.getElementById('bsNote').textContent=bond.note;
 }
 
-/* ── Param cards ────────────────────────────────────────────── */
+/* ── Param cards ──────────────────────────────────────────── */
 function renderParams(elId,atom,cls){
   const lName=['s','p','d','f'][atom.l]??'?';
   const msStr=atom.ms>0?'+½ ↑':'−½ ↓';
   const mlSign=atom.ml>=0?(atom.ml>0?'+':''):'';
+  const kAtom=Object.keys(ATOMS).find(k=>ATOMS[k]===atom);
+  const mass=ATOM_MASS[kAtom]??'—';
   document.getElementById(elId).innerHTML=`
     <div class="pt-row"><span class="pt-name">Config. electrónica</span><span class="pt-val ${cls}">${atom.config}</span></div>
+    <div class="pt-row"><span class="pt-name">Masa atómica</span><span class="pt-val ${cls}">${mass} uma</span></div>
     <div class="pt-row"><span class="pt-name">n  (cuántico principal)</span><span class="pt-val ${cls}">${atom.n}</span></div>
     <div class="pt-row"><span class="pt-name">l  (momento angular)</span><span class="pt-val ${cls}">${atom.l} · orbital ${lName}</span></div>
     <div class="pt-row"><span class="pt-name">m<sub>l</sub>  (magnético)</span><span class="pt-val ${cls}">${mlSign}${atom.ml}</span></div>
@@ -874,34 +1168,55 @@ function updateParams(){
   renderParams('paramsB',selB,'pt-b');
 }
 
-/* ══════════════════════════════════════════════════════════════
-   FULL PERIODIC TABLE BUILD — 118 elements, 10 rows
-   CSS grid: rows 1–7 = periods 1–7; row 8 = gap; rows 9–10 = f-block
-══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   PERIODIC TABLE — with tooltip
+═══════════════════════════════════════════════════════════════ */
+function showPTTooltip(e, el) {
+  const tt = document.getElementById('ptTooltip');
+  if (!tt) return;
+  const simAtom = ATOMS[el.sym];
+  const clr = FAMILY_COLOR[el.f] || '#ccc';
+  let html = `<div class="ptt-sym" style="color:${clr}">${el.sym}</div>`;
+  html += `<div class="ptt-name">${el.name} · ${FAMILY_NAME[el.f]||el.f}</div>`;
+  html += `<div class="ptt-row"><span>Número atómico</span><span>${el.Z}</span></div>`;
+  const mass = ATOM_MASS[el.sym];
+  if (mass) html += `<div class="ptt-row"><span>Masa</span><span>${mass} uma</span></div>`;
+  if (simAtom) {
+    if (simAtom.EN != null) html += `<div class="ptt-row"><span>EN Pauling</span><span>${simAtom.EN.toFixed(2)}</span></div>`;
+    html += `<div class="ptt-row"><span>IE</span><span>${simAtom.IE.toFixed(2)} eV</span></div>`;
+    html += `<div class="ptt-row"><span>Radio atómico</span><span>${simAtom.r} pm</span></div>`;
+    html += `<div class="ptt-row"><span>Zeff</span><span>${simAtom.Zeff.toFixed(2)}</span></div>`;
+    html += `<div class="ptt-row"><span>α polariz.</span><span>${simAtom.alpha.toFixed(3)} Å³</span></div>`;
+    html += `<div class="ptt-row"><span>Config.</span><span>${simAtom.config}</span></div>`;
+  } else {
+    html += `<div class="ptt-nosim">Sin datos de simulación</div>`;
+  }
+  tt.innerHTML = html;
+  tt.style.opacity = '1';
+  const rx = e.clientX + 16, ry = e.clientY;
+  const ttW = 180, ttH = 180;
+  tt.style.left = Math.min(rx, window.innerWidth - ttW - 8) + 'px';
+  tt.style.top  = Math.max(8, Math.min(ry - 40, window.innerHeight - ttH - 8)) + 'px';
+}
+function hidePTTooltip() {
+  const tt = document.getElementById('ptTooltip');
+  if (tt) tt.style.opacity = '0';
+}
+
 function buildPeriodicTable(){
   const grid=document.getElementById('ptableGrid');
   if(!grid) return;
-
-  // Map: "row-col" → PT_ALL entry  (using css row, not period directly)
-  // periods 9/10 stay as-is for f-block
   const posMap={};
-  PT_ALL.forEach(el=>{
-    posMap[`${el.p}-${el.g}`]=el;
-  });
-
-  // Simulator atoms set (key lookup)
+  PT_ALL.forEach(el=>{ posMap[`${el.p}-${el.g}`]=el; });
   const simKeys=new Set(Object.keys(ATOMS));
-
   grid.innerHTML='';
 
-  // Rows 1–7 (main table) + placeholders at (6,3) and (7,3)
   for(let row=1;row<=7;row++){
     for(let col=1;col<=18;col++){
       const key=`${row}-${col}`;
       const el=posMap[key];
       const cell=document.createElement('div');
       cell.style.cssText=`grid-row:${row};grid-column:${col};`;
-
       if(el){
         const clr=FAMILY_COLOR[el.f]||'#888';
         const n=parseInt(clr.replace('#',''),16);
@@ -916,12 +1231,12 @@ function buildPeriodicTable(){
          +`<span class="ptcell-sym">${el.sym}</span>`
          +`<span class="ptcell-nm">${el.name.slice(0,5)}</span>`;
         if(hasSim) cell.addEventListener('click',()=>handlePTClick(el.sym));
+        cell.addEventListener('mouseenter', evt=>showPTTooltip(evt, el));
+        cell.addEventListener('mouseleave', hidePTTooltip);
       } else if((row===6&&col===3)||(row===7&&col===3)){
-        // f-block placeholder
         const lblRow=(row===6)?'57–71':'89–103';
         const fClr=(row===6)?FAMILY_COLOR.LN:FAMILY_COLOR.AN;
         cell.className='ptcell-placeholder';
-        cell.style.cssText+=`grid-row:${row};grid-column:${col};`;
         cell.innerHTML=`<span style="font-family:'JetBrains Mono',monospace;font-size:5.5px;color:${fClr};opacity:.6;">${lblRow}</span>`;
       } else {
         cell.className='ptcell-empty';
@@ -930,11 +1245,7 @@ function buildPeriodicTable(){
     }
   }
 
-  // Row 8 is the CSS gap row (auto 10px) — no elements to add
-
-  // Rows 9–10: lanthanides & actinides
   for(let frow=9;frow<=10;frow++){
-    // Period label (col 2)
     const lblCell=document.createElement('div');
     const perLbl=frow===9?'6':'7';
     lblCell.style.cssText=`grid-row:${frow};grid-column:2;display:flex;align-items:center;justify-content:flex-end;padding-right:2px;`;
@@ -957,6 +1268,8 @@ function buildPeriodicTable(){
           `<span class="ptcell-z">${el.Z}</span>`
          +`<span class="ptcell-sym">${el.sym}</span>`
          +`<span class="ptcell-nm">${el.name.slice(0,5)}</span>`;
+        cell.addEventListener('mouseenter', evt=>showPTTooltip(evt, el));
+        cell.addEventListener('mouseleave', hidePTTooltip);
       } else {
         cell.className='ptcell-empty';
       }
@@ -964,7 +1277,6 @@ function buildPeriodicTable(){
     }
   }
 
-  // Family legend
   const legend=document.getElementById('ptLegend');
   if(legend){
     legend.innerHTML=Object.entries(FAMILY_NAME).map(([k,v])=>
@@ -972,7 +1284,6 @@ function buildPeriodicTable(){
     ).join('');
   }
 
-  // Mode buttons
   document.getElementById('modeA').addEventListener('click',()=>{ptMode='A';updatePTDisplay();});
   document.getElementById('modeB').addEventListener('click',()=>{ptMode='B';updatePTDisplay();});
 }
@@ -1013,54 +1324,85 @@ function updatePTDisplay(){
   document.getElementById('incompatWarn').style.display=incompat?'flex':'none';
 }
 
-/* ══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    MAIN RENDER LOOP
-══════════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════════ */
 function render(){
   drawBG();
 
-  const rc     =r_contact(selA,selB);
-  const rmin   =rc*0.80, rmax=9.0;
-  const r      =sliderToR(sliderV);
+  const rc    =r_contact(selA,selB);
+  const rmin  =rc*0.80, rmax=9.0;
+
+  // Thermal vibration offset
+  const thermalOff=thermalOn ? THERMAL_AMP*Math.sin(animT*THERMAL_FREQ) : 0;
+  const r=sliderToR(clamp(sliderV+thermalOff,0,100));
   const distFrac=clamp(1-(r-rmin)/(rmax-rmin),0,1);
 
-  const maxRpm =Math.max(selA.r,selB.r,38);
-  const vscale =58/maxRpm;
-  const vRA    =Math.max(17,selA.r*vscale);
-  const vRB    =Math.max(17,selB.r*vscale);
+  const maxRpm=Math.max(selA.r,selB.r,38);
+  const vscale=58/maxRpm;
+  const vRA=Math.max(17,selA.r*vscale);
+  const vRB=Math.max(17,selB.r*vscale);
 
-  const minSep =vRA+vRB+12, maxSep=CW*0.62;
-  const sep    =minSep+(maxSep-minSep)*(1-distFrac);
-  const midY   =CH/2;
-  const xA     =CW/2-sep/2, xB=CW/2+sep/2;
+  // Outer orbital radii (for overlay elements)
+  const breatheA=1+0.012*Math.sin(animT*1.8+0.6);
+  const breatheB=1+0.012*Math.sin(animT*1.8-0.6);
+  const outerRA=vRA*clamp((selA.n*selA.n)/(selA.Zeff*0.88),0.60,1.80)*breatheA;
+  const outerRB=vRB*clamp((selB.n*selB.n)/(selB.Zeff*0.88),0.60,1.80)*breatheB;
+
+  const minSep=vRA+vRB+12, maxSep=CW*0.62;
+  const sep=minSep+(maxSep-minSep)*(1-distFrac);
+  const midY=CH/2;
+  const xA=CW/2-sep/2, xB=CW/2+sep/2;
 
   const E  =lj_energy(selA,selB,r);
   const eEq=lj_energy(selA,selB,rc);
+  const F  =lj_force(selA,selB,r);
 
   const fOnA=selB.Zeff/(r*r), fOnB=selA.Zeff/(r*r);
   const distA=clamp(selA.alpha*fOnA*0.016*distFrac,0,0.80);
   const distB=clamp(selB.alpha*fOnB*0.016*distFrac,0,0.80);
 
+  // 1. Field
   drawFieldMesh(xA,midY,xB,midY,E,eEq);
   drawFieldLines(xA,midY,xB,midY,E,eEq);
+
+  // 2. Electron rings (behind orbitals)
+  drawElectronRings(xA, midY, selA, vRA);
+  drawElectronRings(xB, midY, selB, vRB);
+
+  // 3. Atom orbitals
   drawAtom(xA,midY,selA,vRA,distA,+1,r);
   drawAtom(xB,midY,selB,vRB,distB,-1,r);
+
+  // 4. Bond particles (in front of orbitals)
+  const kA=keyOf(selA), kB=keyOf(selB);
+  const bk=bondKey(kA,kB);
+  const hasBond=isCompatible(kA,kB)&&!!BONDS[bk];
+  const atEquil=hasBond&&E<0&&E<=eEq*0.88;
+  const bondFrac=atEquil?clamp(1-Math.abs(E-eEq)/(Math.abs(eEq)*2),0,1):0;
+  if(bondFrac>0.05) drawBondParticles(xA,midY,xB,midY,bondFrac,selA.color,selB.color);
+
+  // 5. Force arrows
+  drawForceArrows(xA, xB, midY, outerRA, outerRB, F);
+
+  // 6. Delta charge labels
+  drawDeltaCharges(xA, xB, midY, outerRA, outerRB);
+
+  // 7. Overlays
+  drawPhaseLabel(E, eEq, r, rc);
+  drawHUD(E, F, r);
   drawMiniCurve(r);
   drawDistAnnotation(xA,xB,midY,vRA,vRB,r);
 
-  const kA=keyOf(selA), kB=keyOf(selB);
+  // 8. Incompatible tint
   if(!isCompatible(kA,kB)){
     ctx.save(); ctx.fillStyle='rgba(239,68,68,0.06)';
     ctx.fillRect(0,0,CW,CH); ctx.restore();
   }
 
-  updateEnergyUI(E,eEq);
+  updateEnergyUI(E, eEq, F);
   document.getElementById('distTag').textContent=`d = ${r.toFixed(3)} Å`;
 
-  // Bond section: reveal only at energy absolute maximum (within 12% of equilibrium)
-  const bk=bondKey(kA,kB);
-  const hasBond=isCompatible(kA,kB)&&!!BONDS[bk];
-  const atEquil=hasBond&&E<0&&E<=eEq*0.88;
   if(atEquil!==bondSectionVisible){
     bondSectionVisible=atEquil;
     const sect=document.getElementById('bondSection');
@@ -1072,7 +1414,7 @@ function render(){
   requestAnimationFrame(render);
 }
 
-/* ── Init ───────────────────────────────────────────────────── */
+/* ── Init ─────────────────────────────────────────────────── */
 buildPeriodicTable();
 updatePTDisplay();
 updateParams();
@@ -1081,8 +1423,12 @@ document.getElementById('distSlider').addEventListener('input',e=>{
   sliderV=+e.target.value;
 });
 
+document.getElementById('thermalBtn').addEventListener('click',()=>{
+  thermalOn=!thermalOn;
+  document.getElementById('thermalBtn').classList.toggle('on', thermalOn);
+});
+
 render();
 </script>
-  <script src="/chatbot-widget.js"></script>
 </body>
 </html>
