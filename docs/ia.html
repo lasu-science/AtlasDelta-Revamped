@@ -4,10 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Red Neuronal — AtlasDelta (Mejorada)</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     :root {
+      /* ── Tipografía autocontenida (sin dependencias externas) ── */
+      --font-serif: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+      --font-sans: 'Trebuchet MS', 'Gill Sans', 'Gill Sans MT', Calibri, 'Lucida Sans', sans-serif;
+      --font-mono: 'Cascadia Code', 'Fira Code', Consolas, 'Lucida Console', 'Courier New', monospace;
+
+      /* ── Paleta ── */
       --bg: #0d0e12;
       --s0: #13141a;
       --s1: #1a1c24;
@@ -34,7 +38,7 @@
     body {
       background: var(--bg);
       color: var(--txt);
-      font-family: 'Familjen Grotesk', sans-serif;
+      font-family: var(--font-sans);
       font-size: 16px;
       line-height: 1.65;
       min-height: 100vh;
@@ -47,7 +51,7 @@
     }
 
     .page-title {
-      font-family: 'Instrument Serif', serif;
+      font-family: var(--font-serif);
       font-size: clamp(2rem, 6vw, 3.2rem);
       font-weight: 400;
       margin-bottom: 8px;
@@ -110,7 +114,7 @@
     }
 
     .step-num {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 9px;
       color: var(--txt3);
       text-transform: uppercase;
@@ -178,7 +182,7 @@
 
     label {
       display: block;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 10px;
       letter-spacing: 0.15em;
       color: var(--txt3);
@@ -195,7 +199,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--txt);
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 13px;
       padding: 12px;
       transition: border-color 0.2s;
@@ -219,7 +223,7 @@
       font-size: 11px;
       color: var(--txt3);
       margin-top: 6px;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-mono);
     }
 
     /* ── Botones ── */
@@ -239,7 +243,7 @@
       border: 1px solid var(--border);
       background: var(--s1);
       color: var(--txt2);
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 11px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -295,7 +299,7 @@
       gap: 8px;
       padding: 8px 14px;
       border-radius: 100px;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 10px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -340,7 +344,7 @@
     }
 
     .metric-label {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 9px;
       letter-spacing: 0.18em;
       color: var(--txt3);
@@ -349,7 +353,7 @@
     }
 
     .metric-value {
-      font-family: 'Instrument Serif', serif;
+      font-family: var(--font-serif);
       font-size: 1.8rem;
       color: var(--accent);
       line-height: 1;
@@ -380,7 +384,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       padding: 16px;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 12px;
       max-height: 200px;
       overflow-y: auto;
@@ -405,7 +409,7 @@
     .data-table th {
       background: var(--s2);
       padding: 10px;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-mono);
       font-size: 9px;
       text-align: left;
       color: var(--txt3);
@@ -597,7 +601,7 @@
 
             <div class="btn-group">
               <button class="btn btn-primary" onclick="importCSV()">📊 Importar Datos</button>
-              <select id="exampleSelect" class="btn btn-secondary" style="padding: 12px; font-size: 11px; flex: 0; min-width: 200px;">
+              <select id="exampleSelect" onchange="loadExample()" class="btn btn-secondary" style="padding: 12px; font-size: 11px; flex: 0; min-width: 200px;">
                 <option value="">📋 Cargar Ejemplo...</option>
                 <option value="iris">🌸 Iris (Flores)</option>
                 <option value="iris_extended">🌸 Iris Extendido</option>
@@ -874,1523 +878,234 @@
   </div>
 
   <script>
-    // ═══════════════════════════════════════════════
-    // ESTADO GLOBAL
-    // ═══════════════════════════════════════════════
-    let ctx = {
-      data: [],
-      features: [],
-      classes: [],
-      desc: '',
-      taskType: 'classification'
-    };
+    function parseCSV(text) {
+  const lines = text.trim().split("\n");
+  const header = lines[0].split(",");
 
-    let net = null;
-    let lossHistory = [];
-    let currentEpoch = 0;
-    let trainInterval = null;
-    let trainStart = 0;
-    let trainPaused = false;
-    let normStats = null;
+  const data = [];
 
-    // ═══════════════════════════════════════════════
-    // FUNCIONES DE UI
-    // ═══════════════════════════════════════════════
-    function showSection(n) {
-      document.querySelectorAll('.section').forEach((s, i) => {
-        s.classList.remove('visible');
-        if (i === n) s.classList.add('visible');
-      });
+  for (let i = 1; i < lines.length; i++) {
+    const vals = lines[i].split(",");
 
-      document.querySelectorAll('.step').forEach((s, i) => {
-        s.classList.remove('active', 'done');
-        if (i < n) s.classList.add('done');
-        else if (i === n) s.classList.add('active');
-      });
-
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (vals.length !== header.length) {
+      log(`Fila inválida ignorada: ${lines[i]}`, "warn");
+      continue;
     }
 
-    function log(msg, type = '') {
-      const logEl = document.getElementById('trainingLog');
-      const line = document.createElement('div');
-      line.className = 'log-line' + (type ? ' ' + type : '');
-      const ts = new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      line.textContent = `[${ts}] ${msg}`;
-      logEl.appendChild(line);
-      logEl.scrollTop = logEl.scrollHeight;
-    }
-
-    function showStatus(text, show = true) {
-      const badge = document.getElementById('trainingStatus');
-      badge.style.display = show ? 'flex' : 'none';
-      document.getElementById('statusText').textContent = text;
-    }
-
-    // ═══════════════════════════════════════════════
-    // CSV IMPORT
-    // ═══════════════════════════════════════════════
-    function loadCSVFile(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        document.getElementById('csvInput').value = e.target.result;
-        document.getElementById('csvHint').textContent = `✓ Archivo cargado: ${file.name}`;
-      };
-      reader.readAsText(file);
-    }
-
-    function showExample() {
-      const example = `especie,longitud,peso,color
-gato,45,4.5,1
-perro,60,8.2,0
-gato,48,4.8,1
-perro,58,7.9,0
-gato,42,4.2,1
-perro,65,9.1,0`;
-      document.getElementById('csvInput').value = example;
-      document.getElementById('csvHint').textContent = '← Ejemplo de datos (gatos vs perros)';
-    }
-
-    const examples = {
-      iris: `especies,sepal_length,sepal_width,petal_length,petal_width
-setosa,5.1,3.5,1.4,0.2
-setosa,4.9,3.0,1.4,0.2
-setosa,4.7,3.2,1.3,0.2
-versicolor,7.0,3.2,4.7,1.4
-versicolor,6.4,3.2,4.5,1.5
-versicolor,6.9,3.1,4.9,1.5
-virginica,7.1,3.0,5.9,2.1
-virginica,6.3,2.9,5.6,1.8
-virginica,6.5,3.0,5.8,2.2
-setosa,5.4,3.9,1.7,0.4
-versicolor,6.5,3.0,5.5,1.8
-virginica,7.3,2.9,6.3,1.8
-setosa,5.0,3.6,1.4,0.2
-versicolor,6.0,2.7,5.1,1.6
-virginica,6.7,3.3,5.7,2.5`,
-      
-      wine: `clase,alcohol,acidity,phenols,color
-A,13.2,3.97,2.4,0.8
-A,13.16,2.36,2.67,0.9
-A,13.05,3.86,2.32,0.7
-B,12.37,1.21,2.56,0.6
-B,13.51,1.8,2.65,0.8
-B,12.85,1.65,2.6,0.7
-C,12.0,3.43,3.4,0.9
-C,12.64,1.36,2.02,0.5
-C,12.33,3.17,2.21,0.8
-A,13.01,2.29,1.97,0.6
-B,12.22,1.29,1.97,0.6
-C,12.56,1.33,1.67,0.8`,
-      
-      penguins: `species,culmen_length,culmen_depth,flipper_length,body_mass
-Adelie,39.1,18.7,181,3750
-Adelie,39.5,17.4,186,3800
-Adelie,40.3,18.0,195,3250
-Chinstrap,46.5,17.9,192,3500
-Chinstrap,50.8,18.4,200,4050
-Chinstrap,50.9,17.5,198,3700
-Gentoo,46.1,13.2,211,4500
-Gentoo,50.4,15.3,224,4550
-Gentoo,47.6,14.5,215,4550
-Adelie,36.6,17.8,185,3700
-Chinstrap,43.3,17.0,188,3400
-Gentoo,47.2,13.7,212,4725`,
-      
-      breast_cancer: `diagnosis,radius_mean,texture_mean,smoothness_mean
-M,17.99,10.38,0.1184
-M,20.57,17.77,0.1329
-M,19.69,21.25,0.1207
-M,11.42,20.38,0.1593
-B,13.45,18.23,0.1275
-B,18.25,19.98,0.1264
-B,13.71,20.83,0.1703
-M,20.29,14.34,0.1024
-M,12.45,15.7,0.1794
-B,12.0,18.93,0.1398
-M,16.02,23.24,0.1340
-B,15.78,17.89,0.1280`,
-      
-      iris_extended: `especie,largo_sepalo,ancho_sepalo,largo_petalo,ancho_petalo
-setosa,5.1,3.5,1.4,0.2
-setosa,7.0,4.7,1.5,0.4
-versicolor,5.9,3.0,4.2,1.5
-versicolor,6.1,2.9,4.7,1.4
-virginica,6.3,3.3,6.0,2.5
-virginica,7.1,3.0,5.9,2.1
-setosa,4.8,3.4,1.6,0.2
-versicolor,6.0,2.7,5.1,1.6
-virginica,7.6,3.0,6.6,2.2
-setosa,4.6,3.1,1.5,0.2`,
-      
-      car_mpg: `efficiency,weight,horsepower,cylinders
-low,3104,130,8
-low,3260,165,8
-medium,2807,110,7
-medium,2756,100,5
-high,2429,68,4
-high,2127,46,4
-low,2950,140,8
-medium,2615,97,6
-high,2200,52,4
-medium,2868,113,8`,
-      
-      student_performance: `resultado,tempo_estudio,asistencia,tareas
-aprobado,8,85,0.8
-aprobado,7,90,0.9
-reprobado,2,60,0.3
-reprobado,3,65,0.4
-aprobado,9,95,0.95
-aprobado,8,88,0.85
-reprobado,1,50,0.2
-reprobado,2,55,0.3
-aprobado,10,100,1.0
-aprobado,6,80,0.75`
-    };
-
-    function loadExample() {
-      const select = document.getElementById('exampleSelect');
-      const key = select.value;
-      if (!key || !examples[key]) return;
-      
-      document.getElementById('csvInput').value = examples[key];
-      const names = { 
-        iris: 'Iris (Flores)',
-        iris_extended: 'Iris Extendido',
-        wine: 'Vinos', 
-        penguins: 'Pingüinos', 
-        breast_cancer: 'Cáncer de Mama',
-        car_mpg: 'Eficiencia de Autos',
-        student_performance: 'Desempeño Estudiantil'
-      };
-      document.getElementById('csvHint').textContent = `✓ Ejemplo cargado: ${names[key]}`;
-      select.value = '';
-    }
-
-    function importCSV() {
-      const csv = document.getElementById('csvInput').value.trim();
-      if (!csv) {
-        alert('Por favor ingresa datos CSV');
-        return;
-      }
-
-      const lines = csv.split('\n').filter(l => l.trim());
-      if (lines.length < 2) {
-        alert('Necesitas al menos una fila de datos además del encabezado');
-        return;
-      }
-
-      // Parse header
-      const header = lines[0].split(',').map(h => h.trim());
-      ctx.features = header.slice(1);
-      ctx.classes = [];
-      ctx.data = [];
-
-      // Parse data
-      const classSet = new Set();
-      for (let i = 1; i < lines.length; i++) {
-        const vals = lines[i].split(',').map(v => v.trim());
-        if (vals.length !== header.length) continue;
-
-        const label = vals[0];
-        classSet.add(label);
-
-        const inputs = vals.slice(1).map(v => {
-          const num = parseFloat(v);
-          return isNaN(num) ? 0 : num;
-        });
-
-        ctx.data.push({ label, inputs });
-      }
-
-      ctx.classes = Array.from(classSet).sort();
-      ctx.taskType = ctx.classes.length <= 2 ? 'classification' : 'classification';
-
-      // Show preview
-      const tbody = document.querySelector('#previewTable tbody') || document.createElement('tbody');
-      tbody.innerHTML = '';
-      
-      const table = document.getElementById('previewTable');
-      table.innerHTML = '';
-      
-      // Header
-      const thead = document.createElement('thead');
-      const tr = document.createElement('tr');
-      header.forEach(h => {
-        const th = document.createElement('th');
-        th.textContent = h;
-        tr.appendChild(th);
-      });
-      thead.appendChild(tr);
-      table.appendChild(thead);
-
-      // Data (primeras 5 filas)
-      const tbody2 = document.createElement('tbody');
-      ctx.data.slice(0, 5).forEach(d => {
-        const tr = document.createElement('tr');
-        const td1 = document.createElement('td');
-        td1.textContent = d.label;
-        tr.appendChild(td1);
-        d.inputs.forEach(v => {
-          const td = document.createElement('td');
-          td.textContent = v.toFixed(2);
-          tr.appendChild(td);
-        });
-        tbody2.appendChild(tr);
-      });
-      table.appendChild(tbody2);
-
-      document.getElementById('dataPreview').style.display = 'block';
-
-      // Update metrics
-      document.getElementById('inputSizeMetric').textContent = ctx.features.length;
-      document.getElementById('outputSizeMetric').textContent = ctx.classes.length;
-
-      log(`✓ Datos importados: ${ctx.data.length} muestras, ${ctx.features.length} características, ${ctx.classes.length} clases`, 'info');
-      
-      // Preview network
-      previewNetwork();
-      
-      // Draw class distribution
-      setTimeout(() => drawClassDistribution(), 100);
-      
-      // Auto advance
-      setTimeout(() => showSection(1), 800);
-    }
-
-    // ═══════════════════════════════════════════════
-    // ARQUITECTURA
-    // ═══════════════════════════════════════════════
-    function buildNetwork() {
-      if (ctx.data.length === 0) {
-        log('⚠ Importa datos primero', 'warn');
-        return false;
-      }
-
-      const archStr = document.getElementById('archInput').value.trim();
-      const hiddenLayers = archStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
-
-      if (hiddenLayers.length === 0) {
-        log('⚠ Define al menos una capa oculta (ej: 64,32,16)', 'warn');
-        return false;
-      }
-
-      const sizes = [ctx.features.length, ...hiddenLayers, ctx.classes.length];
-      const lr = parseFloat(document.getElementById('lrInput').value) || 0.01;
-      const l2 = parseFloat(document.getElementById('l2Input').value) || 0;
-      const actFn = document.getElementById('actFnSelect').value || 'relu';
-
-      // Initialize network
-      net = {
-        sizes,
-        actFn,
-        lr,
-        l2,
-        weights: [],
-        biases: []
-      };
-
-      // Initialize weights & biases
-      for (let i = 0; i < sizes.length - 1; i++) {
-        const w = [];
-        const b = [];
-        for (let j = 0; j < sizes[i]; j++) {
-          w[j] = [];
-          for (let k = 0; k < sizes[i + 1]; k++) {
-            w[j][k] = (Math.random() - 0.5) * 2 / Math.sqrt(sizes[i]);
-          }
-        }
-        for (let k = 0; k < sizes[i + 1]; k++) {
-          b[k] = 0;
-        }
-        net.weights.push(w);
-        net.biases.push(b);
-      }
-
-      // Calculate params
-      let params = 0;
-      for (let i = 0; i < sizes.length - 1; i++) {
-        params += sizes[i] * sizes[i + 1] + sizes[i + 1];
-      }
-      document.getElementById('paramsMetric').textContent = params.toLocaleString();
-
-      drawNetwork();
-      log(`✓ Red construida: ${sizes.join(' → ')} (${params.toLocaleString()} parámetros)`, 'info');
-      return true;
-    }
-
-    function drawNetwork() {
-      const canvas = document.getElementById('netCanvas');
-      if (!canvas) return;
-      
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const W = Math.max(300, rect.width - 32);
-      const H = 300;
-      
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
-      canvas.style.width = W + 'px';
-      canvas.style.height = H + 'px';
-
-      const c = canvas.getContext('2d');
-      c.scale(dpr, dpr);
-      c.clearRect(0, 0, W, H);
-
-      if (!net || !net.sizes || net.sizes.length === 0) return;
-
-      const L = net.sizes.length;
-      const padX = 40, padY = 50;
-      const usableW = W - padX * 2;
-      const usableH = H - padY * 2;
-
-      // Calculate positions
-      const pos = [];
-      const maxSize = Math.max(...net.sizes);
-
-      for (let li = 0; li < L; li++) {
-        pos[li] = [];
-        const size = net.sizes[li];
-        const nodeGap = usableH / (maxSize + 1);
-        const layerX = padX + (L > 1 ? (li / (L - 1)) * usableW : usableW / 2);
-
-        for (let ni = 0; ni < size; ni++) {
-          const offsetY = (maxSize - size) / 2 * nodeGap;
-          const nodeY = padY + (ni + 1) * nodeGap + offsetY;
-          pos[li].push({ x: layerX, y: nodeY });
-        }
-      }
-
-      // Draw edges
-      c.strokeStyle = 'rgba(82,86,106,0.15)';
-      c.lineWidth = 0.8;
-      for (let li = 0; li < L - 1; li++) {
-        for (let i = 0; i < pos[li].length; i++) {
-          for (let j = 0; j < pos[li + 1].length; j++) {
-            c.beginPath();
-            c.moveTo(pos[li][i].x, pos[li][i].y);
-            c.lineTo(pos[li + 1][j].x, pos[li + 1][j].y);
-            c.stroke();
-          }
-        }
-      }
-
-      // Draw nodes
-      pos.forEach((layer, li) => {
-        layer.forEach(node => {
-          c.beginPath();
-          c.arc(node.x, node.y, 5, 0, Math.PI * 2);
-          c.fillStyle = li === 0 ? 'rgba(74,222,128,0.7)' : li === L - 1 ? 'rgba(248,113,113,0.7)' : 'rgba(139,144,168,0.7)';
-          c.fill();
-          c.strokeStyle = 'rgba(82,86,106,0.9)';
-          c.lineWidth = 1.2;
-          c.stroke();
-        });
-      });
-
-      // Draw labels
-      c.fillStyle = 'rgba(82,86,106,0.9)';
-      c.font = "11px 'JetBrains Mono'";
-      c.textAlign = 'center';
-      pos.forEach((layer, li) => {
-        if (layer.length === 0) return;
-        const label = li === 0 ? 'Entrada' : li === L - 1 ? 'Salida' : `Capa ${li}`;
-        c.fillText(label, layer[0].x, padY - 15);
-        c.fillText(`${net.sizes[li]}`, layer[0].x, H - 8);
-      });
-    }
-
-    // ═══════════════════════════════════════════════
-    // RED NEURONAL
-    // ═══════════════════════════════════════════════
-    function activation(x, fn) {
-      if (fn === 'relu') return Math.max(0, x);
-      if (fn === 'sigmoid') return 1 / (1 + Math.exp(-x));
-      if (fn === 'tanh') return Math.tanh(x);
-      return x;
-    }
-
-    function activationDerivative(x, fn) {
-      if (fn === 'relu') return x > 0 ? 1 : 0;
-      if (fn === 'sigmoid') { const s = 1 / (1 + Math.exp(-x)); return s * (1 - s); }
-      if (fn === 'tanh') { const t = Math.tanh(x); return 1 - t * t; }
-      return 1;
-    }
-
-    function forward(inputs) {
-      let a = inputs;
-      for (let l = 0; l < net.weights.length; l++) {
-        const z = [];
-        for (let j = 0; j < net.weights[l][0].length; j++) {
-          let sum = net.biases[l][j];
-          for (let i = 0; i < a.length; i++) {
-            sum += a[i] * net.weights[l][i][j];
-          }
-          z[j] = sum;
-        }
-        a = l < net.weights.length - 1 ? z.map(x => activation(x, net.actFn)) : softmax(z);
-      }
-      return a;
-    }
-
-    function softmax(z) {
-      const m = Math.max(...z);
-      const exp = z.map(x => Math.exp(x - m));
-      const sum = exp.reduce((a, b) => a + b, 0);
-      return exp.map(x => x / sum);
-    }
-
-    // ═══════════════════════════════════════════════
-    // ENTRENAMIENTO
-    // ═══════════════════════════════════════════════
-    function startTraining() {
-      if (ctx.data.length === 0) {
-        alert('Primero importa los datos en el Paso 1');
-        return;
-      }
-
-      // Construir la red si no existe o actualizar parámetros
-      if (!buildNetwork()) {
-        return;
-      }
-
-      normStats = normalizeData(ctx.data);
-      lossHistory = [];
-      currentEpoch = 0;
-
-      document.getElementById('btnTrain').style.display = 'none';
-      document.getElementById('btnPause').style.display = 'inline-flex';
-      document.getElementById('btnStop').style.display = 'inline-flex';
-
-      showStatus('Entrenando…', true);
-      log('🚀 Iniciando entrenamiento...', 'info');
-
-      const targetEpochs = parseInt(document.getElementById('epochsInput').value) || 100;
-      trainStart = performance.now();
-      trainPaused = false;
-      let currentIter = 0;
-
-      const BATCH = 8;
-      const epPerTick = Math.max(1, Math.round(targetEpochs / 200));
-
-      trainInterval = setInterval(() => {
-        if (trainPaused) return;
-        if (currentEpoch >= targetEpochs) {
-          finishTraining();
-          return;
-        }
-
-        for (let ep = 0; ep < epPerTick && currentEpoch < targetEpochs; ep++) {
-          // Shuffle data
-          const indices = ctx.data.map((_, i) => i).sort(() => Math.random() - 0.5);
-
-          let epochLoss = 0;
-
-          for (let b = 0; b < indices.length; b += BATCH) {
-            const batch = indices.slice(b, b + BATCH);
-
-            for (const idx of batch) {
-              const d = ctx.data[idx];
-              const inputs = normalize(d.inputs, normStats);
-              const target = oneHot(d.label);
-
-              // Forward
-              let a = inputs;
-              const activations = [a];
-              const zs = [];
-
-              for (let l = 0; l < net.weights.length; l++) {
-                const z = [];
-                for (let j = 0; j < net.weights[l][0].length; j++) {
-                  let sum = net.biases[l][j];
-                  for (let i = 0; i < a.length; i++) {
-                    sum += a[i] * net.weights[l][i][j];
-                  }
-                  z[j] = sum;
-                }
-                zs.push(z);
-                a = l < net.weights.length - 1 ? z.map(x => activation(x, net.actFn)) : softmax(z);
-                activations.push(a);
-              }
-
-              // Loss (cross-entropy, summing over classes)
-              const loss = -target.reduce((s, t, i) => s + t * Math.log(Math.max(a[i], 1e-10)), 0);
-              epochLoss += loss;
-
-              // Backward
-              let delta = a.map((v, i) => v - target[i]);
-              for (let l = net.weights.length - 1; l >= 0; l--) {
-                const newDelta = Array(activations[l].length).fill(0);
-
-                for (let j = 0; j < net.biases[l].length; j++) {
-                  let d = delta[j];
-                  if (l < net.weights.length - 1) {
-                    d *= activationDerivative(zs[l][j], net.actFn);
-                  }
-
-                  for (let i = 0; i < activations[l].length; i++) {
-                    const grad = activations[l][i] * d + net.l2 * net.weights[l][i][j];
-                    net.weights[l][i][j] -= net.lr * grad / batch.length;
-                    newDelta[i] += net.weights[l][i][j] * d;
-                  }
-
-                  net.biases[l][j] -= net.lr * d / batch.length;
-                }
-
-                delta = newDelta;
-              }
-            }
-          }
-
-          // Record one loss value per epoch (average over all samples)
-          lossHistory.push(epochLoss / ctx.data.length);
-          currentEpoch++;
-        }
-
-        // Update UI
-        const elapsed = Math.round((performance.now() - trainStart) / 1000);
-        document.getElementById('epochMetric').textContent = currentEpoch;
-        document.getElementById('lossMetric').textContent = lossHistory[lossHistory.length - 1].toFixed(4);
-        document.getElementById('timeMetric').textContent = elapsed + 's';
-
-        drawLossChart();
-      }, 50);
-    }
-
-    function pauseTraining() {
-      trainPaused = !trainPaused;
-      document.getElementById('btnPause').textContent = trainPaused ? '▶ Reanudar' : '⏸ Pausar';
-      showStatus(trainPaused ? 'Pausado' : 'Entrenando…', !trainPaused);
-    }
-
-    function stopTraining(finished) {
-      clearInterval(trainInterval);
-      trainInterval = null;
-
-      document.getElementById('btnTrain').style.display = 'inline-flex';
-      document.getElementById('btnPause').style.display = 'none';
-      document.getElementById('btnStop').style.display = 'none';
-
-      showStatus('', false);
-
-      if (finished) {
-        log(`✓ ¡Entrenamiento completado! Loss final: ${lossHistory[lossHistory.length - 1].toFixed(4)}`, 'info');
-        activateStep(4);
-      } else {
-        log('⏹ Entrenamiento detenido', 'warn');
-      }
-    }
-
-    function finishTraining() {
-      stopTraining(true);
-      
-      // Show eval buttons
-      document.getElementById('btnEval').style.display = 'inline-flex';
-      document.getElementById('btnExport').style.display = 'inline-flex';
-      
-      // Enable prediction section
-      document.getElementById('noPredictionMsg').style.display = 'none';
-      document.getElementById('loadModelBtns').style.display = 'none';
-      document.getElementById('predictionSection').style.display = 'block';
-
-      // Build prediction inputs
-      const inputDiv = document.getElementById('predictionInputs');
-      inputDiv.innerHTML = '';
-      ctx.features.forEach((feat, i) => {
-        const group = document.createElement('div');
-        group.className = 'form-group';
-        group.innerHTML = `
-          <label>${feat}</label>
-          <input type="number" id="pred_${i}" value="0" step="0.1">
-        `;
-        inputDiv.appendChild(group);
-      });
-
-      // Auto evaluate
-      evaluateModel();
-    }
-
-    function evaluateModel() {
-      if (!net || ctx.data.length === 0) return;
-
-      let correct = 0;
-      let predictions = [];
-
-      ctx.data.forEach(d => {
-        const inputs = normalize(d.inputs, normStats);
-        const output = forward(inputs);
-        const pred = output.indexOf(Math.max(...output));
-        const predClass = ctx.classes[pred];
-        const actual = ctx.classes.indexOf(d.label);
-
-        predictions.push({ actual, predicted: pred, correct: actual === pred });
-        if (actual === pred) correct++;
-      });
-
-      const accuracy = (correct / ctx.data.length * 100).toFixed(1);
-      
-      // Calculate precision and recall per class
-      let totalPrecision = 0, totalRecall = 0;
-      ctx.classes.forEach((cls, idx) => {
-        const tp = predictions.filter(p => p.actual === idx && p.predicted === idx).length;
-        const fp = predictions.filter(p => p.actual !== idx && p.predicted === idx).length;
-        const fn = predictions.filter(p => p.actual === idx && p.predicted !== idx).length;
-        
-        const precision = tp + fp > 0 ? (tp / (tp + fp) * 100) : 0;
-        const recall = tp + fn > 0 ? (tp / (tp + fn) * 100) : 0;
-        
-        totalPrecision += precision;
-        totalRecall += recall;
-      });
-
-      const avgPrecision = (totalPrecision / ctx.classes.length).toFixed(1);
-      const avgRecall = (totalRecall / ctx.classes.length).toFixed(1);
-
-      document.getElementById('accuracyMetric').textContent = accuracy + '%';
-      document.getElementById('precisionMetric').textContent = avgPrecision + '%';
-      document.getElementById('recallMetric').textContent = avgRecall + '%';
-      document.getElementById('evalMetrics').style.display = 'grid';
-
-      log(`✓ Evaluación: Accuracy=${accuracy}%, Precision=${avgPrecision}%, Recall=${avgRecall}%`, 'info');
-      
-      // Draw visualizations
-      drawClassDistribution();
-      drawConfusionMatrix(predictions);
-      drawFeatureImportance();
-      calculateWeightsStats();
-      
-      // Show advanced options
-      document.getElementById('gridSearchSection').style.display = 'block';
-      document.getElementById('btnSaveData').style.display = 'inline-flex';
-      document.getElementById('btnReport').style.display = 'inline-flex';
-    }
-
-    function drawConfusionMatrix(predictions) {
-      const canvas = document.getElementById('confusionCanvas');
-      if (!canvas) return;
-      
-      canvas.style.display = 'block';
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const W = Math.max(250, rect.width - 32);
-      const H = 200;
-
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
-      canvas.style.width = W + 'px';
-      canvas.style.height = H + 'px';
-
-      const c = canvas.getContext('2d');
-      c.scale(dpr, dpr);
-      c.clearRect(0, 0, W, H);
-
-      const nClasses = ctx.classes.length;
-      const cm = Array(nClasses).fill(0).map(() => Array(nClasses).fill(0));
-      predictions.forEach(p => { cm[p.actual][p.predicted]++; });
-
-      const maxVal = Math.max(...cm.flat());
-      const labelPad = Math.min(60, Math.floor((W - 40) / (nClasses + 1)));
-      const gridW = W - 40 - labelPad;
-      const gridH = H - 40 - labelPad;
-      const cellSize = gridW / nClasses;
-      const cellHeight = gridH / nClasses;
-
-      c.font = '9px JetBrains Mono';
-      c.fillStyle = 'rgba(139,144,168,0.9)';
-      c.textAlign = 'center';
-
-      // Column headers (predicted)
-      ctx.classes.forEach((cls, j) => {
-        const x = 40 + labelPad + j * cellSize + cellSize / 2;
-        const label = cls.length > 6 ? cls.slice(0, 5) + '…' : cls;
-        c.fillText(label, x, 14);
-      });
-
-      // Row headers (actual) + cells
-      ctx.classes.forEach((cls, i) => {
-        const rowLabel = cls.length > 6 ? cls.slice(0, 5) + '…' : cls;
-        c.textAlign = 'right';
-        c.fillStyle = 'rgba(139,144,168,0.9)';
-        c.fillText(rowLabel, 38 + labelPad - 4, 20 + labelPad + i * cellHeight + cellHeight / 2 + 3);
-
-        cm[i].forEach((val, j) => {
-          const x = 40 + labelPad + j * cellSize;
-          const y = 20 + labelPad + i * cellHeight;
-          const intensity = maxVal > 0 ? val / maxVal : 0;
-          c.fillStyle = i === j
-            ? `rgba(74,222,128,${0.15 + intensity * 0.7})`
-            : `rgba(248,113,113,${intensity * 0.6})`;
-          c.fillRect(x, y, cellSize, cellHeight);
-          c.strokeStyle = 'rgba(82,86,106,0.5)';
-          c.lineWidth = 1;
-          c.strokeRect(x, y, cellSize, cellHeight);
-          c.fillStyle = intensity > 0.5 ? 'white' : 'rgba(139,144,168,0.9)';
-          c.font = '10px JetBrains Mono';
-          c.textAlign = 'center';
-          c.textBaseline = 'middle';
-          c.fillText(val, x + cellSize / 2, y + cellHeight / 2);
-        });
-      });
-    }
-
-    function drawFeatureImportance() {
-      const canvas = document.getElementById('featureImportanceCanvas');
-      if (!canvas || !net) return;
-
-      canvas.style.display = 'block';
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const W = Math.max(250, rect.width - 32);
-      const H = 200;
-
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
-      canvas.style.width = W + 'px';
-      canvas.style.height = H + 'px';
-
-      const c = canvas.getContext('2d');
-      c.scale(dpr, dpr);
-      c.clearRect(0, 0, W, H);
-
-      const importance = ctx.features.map((_, i) => {
-        let sum = 0;
-        for (let j = 0; j < net.weights[0][i].length; j++) {
-          sum += Math.abs(net.weights[0][i][j]);
-        }
-        return sum / net.weights[0][i].length;
-      });
-
-      const maxImportance = Math.max(...importance);
-      const barWidth = (W - 50) / ctx.features.length;
-      const barHeight = H - 50;
-
-      importance.forEach((imp, i) => {
-        const x = 40 + i * barWidth;
-        const h = (imp / maxImportance) * barHeight;
-        const y = H - 30 - h;
-        c.fillStyle = 'rgba(251,191,36,0.7)';
-        c.fillRect(x, y, barWidth - 4, h);
-        c.fillStyle = 'rgba(82,86,106,0.9)';
-        c.font = '9px JetBrains Mono';
-        c.textAlign = 'center';
-        c.fillText(ctx.features[i], x + barWidth / 2 - 2, H - 8);
-      });
-    }
-
-    function calculateWeightsStats() {
-      if (!net) return;
-      let weightsSum = 0, weightsCount = 0;
-      net.weights.forEach(layer => {
-        layer.forEach(row => {
-          row.forEach(w => {
-            weightsSum += Math.abs(w);
-            weightsCount++;
-          });
-        });
-      });
-      const avgWeights = (weightsSum / weightsCount).toFixed(4);
-      document.getElementById('weightsStatsMetric').textContent = avgWeights;
-      document.getElementById('gradientsStatsMetric').textContent = (avgWeights * 0.5).toFixed(4);
-      document.getElementById('weightsMetrics').style.display = 'grid';
-    }
-
-    function saveTrainingData() {
-      if (ctx.data.length === 0) { alert('No hay datos'); return; }
-      const data = { features: ctx.features, classes: ctx.classes, data: ctx.data, timestamp: new Date().toISOString() };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `datos_${new Date().getTime()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      log('💾 Datos guardados', 'info');
-    }
-
-    function loadTrainingData() {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          try {
-            const data = JSON.parse(event.target.result);
-            ctx.features = data.features;
-            ctx.classes = data.classes;
-            ctx.data = data.data;
-            document.getElementById('csvHint').textContent = `✓ ${data.data.length} muestras cargadas`;
-            document.getElementById('dataPreview').style.display = 'block';
-            previewNetwork();
-            drawClassDistribution();
-            log(`✓ Datos cargados: ${ctx.data.length} muestras`, 'info');
-          } catch (err) {
-            log(`✗ Error: ${err.message}`, 'error');
-          }
-        };
-        reader.readAsText(file);
-      };
-      input.click();
-    }
-
-    function generateReport() {
-      if (!net || ctx.data.length === 0) return;
-      const timestamp = new Date().toLocaleString('es-ES');
-      const accuracy = document.getElementById('accuracyMetric').textContent || '-';
-      const precision = document.getElementById('precisionMetric').textContent || '-';
-      const recall = document.getElementById('recallMetric').textContent || '-';
-      const reportHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Reporte NN</title><style>body{font-family:Arial;margin:40px;color:#333}h1{color:#4ade80}table{width:100%;border-collapse:collapse;margin:20px 0}th,td{border:1px solid #ddd;padding:10px}th{background:#4ade80;color:white}</style></head><body><h1>Reporte Red Neuronal</h1><p>Generado: ${timestamp}</p><h2>Modelo</h2><p><strong>Arquitectura:</strong> ${net.sizes.join(' → ')}</p><p><strong>Accuracy:</strong> ${accuracy} | Precisión: ${precision} | Recall: ${recall}</p><h2>Dataset</h2><p><strong>Muestras:</strong> ${ctx.data.length} | Características: ${ctx.features.length} | Clases: ${ctx.classes.length}</p></body></html>`;
-      const blob = new Blob([reportHTML], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `reporte_${new Date().getTime()}.html`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      log('📋 Reporte generado', 'info');
-    }
-
-    function showTutorial() {
-      const msg = `📚 TUTORIAL\n\n1. DATOS: CSV o ejemplo\n2. ARQUITECTURA: 64,32,16\n3. PARÁMETROS: LR y épocas\n4. ENTRENA: Monitorea loss\n5. EVALÚA: Métricas\n6. PREDICE: Nuevos datos\n\n💡 Grid Search: encuentra mejores hiperparámetros\n💾 Guarda datos y modelos\n📊 Exporta reportes`;
-      alert(msg);
-    }
-
-    function startGridSearch() {
-      if (ctx.data.length === 0) { alert('Importa datos primero'); return; }
-      const lrs = document.getElementById('gridLr').value.split(',').map(s => parseFloat(s.trim())).filter(v => !isNaN(v) && v > 0);
-      const archs = document.getElementById('gridArch').value.split('|').map(s =>
-        s.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n > 0)
-      ).filter(a => a.length > 0);
-
-      if (lrs.length === 0 || archs.length === 0) { alert('Revisa el formato de LR y arquitecturas'); return; }
-
-      log(`🔍 Grid Search: ${lrs.length} × ${archs.length} = ${lrs.length * archs.length} combinaciones`, 'info');
-      const normS = normalizeData(ctx.data);
-      const results = [];
-
-      lrs.forEach(lr => {
-        archs.forEach(hiddenLayers => {
-          const sizes = [ctx.features.length, ...hiddenLayers, ctx.classes.length];
-          const tempNet = { sizes, actFn: 'relu', lr, l2: 0, weights: [], biases: [] };
-          for (let i = 0; i < sizes.length - 1; i++) {
-            const w = Array.from({ length: sizes[i] }, () =>
-              Array.from({ length: sizes[i + 1] }, () => (Math.random() - 0.5) * 2 / Math.sqrt(sizes[i]))
-            );
-            tempNet.weights.push(w);
-            tempNet.biases.push(Array(sizes[i + 1]).fill(0));
-          }
-          // Quick 30-epoch training
-          for (let ep = 0; ep < 30; ep++) {
-            ctx.data.sort(() => Math.random() - 0.5).forEach(d => {
-              const inp = normalize(d.inputs, normS);
-              const target = oneHot(d.label);
-              let a = inp; const acts = [a]; const zs = [];
-              for (let l = 0; l < tempNet.weights.length; l++) {
-                const z = tempNet.weights[l][0].map((_, j) => {
-                  let s = tempNet.biases[l][j];
-                  a.forEach((v, i) => { s += v * tempNet.weights[l][i][j]; });
-                  return s;
-                });
-                zs.push(z);
-                a = l < tempNet.weights.length - 1 ? z.map(x => activation(x, 'relu')) : softmax(z);
-                acts.push(a);
-              }
-              let delta = a.map((v, i) => v - target[i]);
-              for (let l = tempNet.weights.length - 1; l >= 0; l--) {
-                const nd = Array(acts[l].length).fill(0);
-                for (let j = 0; j < tempNet.biases[l].length; j++) {
-                  let dv = delta[j];
-                  if (l < tempNet.weights.length - 1) dv *= activationDerivative(zs[l][j], 'relu');
-                  for (let i = 0; i < acts[l].length; i++) {
-                    tempNet.weights[l][i][j] -= lr * acts[l][i] * dv;
-                    nd[i] += tempNet.weights[l][i][j] * dv;
-                  }
-                  tempNet.biases[l][j] -= lr * dv;
-                }
-                delta = nd;
-              }
-            });
-          }
-          // Evaluate
-          let correct = 0;
-          ctx.data.forEach(d => {
-            let a = normalize(d.inputs, normS);
-            for (let l = 0; l < tempNet.weights.length; l++) {
-              const z = tempNet.weights[l][0].map((_, j) => {
-                let s = tempNet.biases[l][j];
-                a.forEach((v, i) => { s += v * tempNet.weights[l][i][j]; });
-                return s;
-              });
-              a = l < tempNet.weights.length - 1 ? z.map(x => activation(x, 'relu')) : softmax(z);
-            }
-            if (a.indexOf(Math.max(...a)) === ctx.classes.indexOf(d.label)) correct++;
-          });
-          const acc = (correct / ctx.data.length * 100).toFixed(1);
-          results.push({ lr, arch: hiddenLayers.join(','), acc: parseFloat(acc) });
-        });
-      });
-
-      results.sort((a, b) => b.acc - a.acc);
-      const resDiv = document.getElementById('gridSearchResults');
-      resDiv.style.display = 'block';
-      resDiv.innerHTML = `<table class="data-table"><thead><tr><th>Rank</th><th>LR</th><th>Arquitectura</th><th>Accuracy</th></tr></thead><tbody>
-        ${results.map((r, i) => `<tr style="${i===0?'color:var(--accent)':''}"><td>${i+1}</td><td>${r.lr}</td><td>${r.arch}</td><td>${r.acc}%</td></tr>`).join('')}
-      </tbody></table>`;
-      log(`✓ Grid Search completo. Mejor: LR=${results[0].lr}, Arq=${results[0].arch}, Acc=${results[0].acc}%`, 'info');
-    }
-
-    function validateKFold() {
-      if (!net || ctx.data.length < 2) {
-        alert('Entrena el modelo primero');
-        return;
-      }
-
-      const k = parseInt(document.getElementById('kfoldInput').value) || 5;
-      if (k < 2 || k > ctx.data.length) {
-        alert(`K debe estar entre 2 y ${ctx.data.length}`);
-        return;
-      }
-
-      log(`🔄 Ejecutando validación cruzada con ${k} folds...`, 'info');
-
-      // Shuffle data
-      const data = [...ctx.data].sort(() => Math.random() - 0.5);
-      const foldSize = Math.floor(data.length / k);
-      const accuracies = [];
-
-      for (let fold = 0; fold < k; fold++) {
-        // Split data
-        const testStart = fold * foldSize;
-        const testEnd = fold === k - 1 ? data.length : (fold + 1) * foldSize;
-        const testData = data.slice(testStart, testEnd);
-        const trainData = data.slice(0, testStart).concat(data.slice(testEnd));
-
-        // Train temporary network
-        const tempNet = JSON.parse(JSON.stringify(net)); // Deep copy
-        const tempNormStats = normalizeData(trainData);
-
-        // Quick training
-        for (let epoch = 0; epoch < 20; epoch++) {
-          trainData.forEach(d => {
-            const inputs = normalize(d.inputs, tempNormStats);
-            const target = oneHot(d.label);
-
-            let a = inputs;
-            const activations = [a];
-            const zs = [];
-
-            // Forward
-            for (let l = 0; l < tempNet.weights.length; l++) {
-              const z = [];
-              for (let j = 0; j < tempNet.weights[l][0].length; j++) {
-                let sum = tempNet.biases[l][j];
-                for (let i = 0; i < a.length; i++) {
-                  sum += a[i] * tempNet.weights[l][i][j];
-                }
-                z[j] = sum;
-              }
-              zs.push(z);
-              a = l < tempNet.weights.length - 1 ? z.map(x => activation(x, tempNet.actFn)) : softmax(z);
-              activations.push(a);
-            }
-
-            // Backward
-            let delta = a.map((v, i) => v - target[i]);
-            for (let l = tempNet.weights.length - 1; l >= 0; l--) {
-              const newDelta = Array(activations[l].length).fill(0);
-
-              for (let j = 0; j < tempNet.biases[l].length; j++) {
-                let d = delta[j];
-                if (l < tempNet.weights.length - 1) {
-                  d *= activationDerivative(zs[l][j], tempNet.actFn);
-                }
-
-                for (let i = 0; i < activations[l].length; i++) {
-                  const grad = activations[l][i] * d;
-                  tempNet.weights[l][i][j] -= tempNet.lr * grad;
-                  newDelta[i] += tempNet.weights[l][i][j] * d;
-                }
-
-                tempNet.biases[l][j] -= tempNet.lr * d;
-              }
-
-              delta = newDelta;
-            }
-          });
-        }
-
-        // Evaluate on test set
-        let correct = 0;
-        testData.forEach(d => {
-          const inputs = normalize(d.inputs, tempNormStats);
-          let a = inputs;
-          for (let l = 0; l < tempNet.weights.length; l++) {
-            const z = [];
-            for (let j = 0; j < tempNet.weights[l][0].length; j++) {
-              let sum = tempNet.biases[l][j];
-              for (let i = 0; i < a.length; i++) {
-                sum += a[i] * tempNet.weights[l][i][j];
-              }
-              z[j] = sum;
-            }
-            a = l < tempNet.weights.length - 1 ? z.map(x => activation(x, tempNet.actFn)) : softmax(z);
-          }
-          const pred = a.indexOf(Math.max(...a));
-          const actual = ctx.classes.indexOf(d.label);
-          if (pred === actual) correct++;
-        });
-
-        const acc = (correct / testData.length * 100);
-        accuracies.push(acc);
-      }
-
-      // Calculate statistics
-      const mean = (accuracies.reduce((a, b) => a + b, 0) / k).toFixed(1);
-      const variance = (accuracies.reduce((sq, n) => sq + Math.pow(n - mean, 2), 0) / k).toFixed(2);
-      const std = Math.sqrt(variance).toFixed(1);
-      const min = Math.min(...accuracies).toFixed(1);
-      const max = Math.max(...accuracies).toFixed(1);
-
-      document.getElementById('kfoldAccuracy').textContent = mean + '%';
-      document.getElementById('kfoldStd').textContent = std + '%';
-      document.getElementById('kfoldRange').textContent = `${min}% - ${max}%`;
-      document.getElementById('kfoldMetrics').style.display = 'block';
-
-      drawKFoldChart(accuracies);
-      log(`✓ K-Fold completado: Media=${mean}% ± ${std}%`, 'info');
-    }
-
-    function drawClassDistribution() {
-      const canvas = document.getElementById('classDistCanvas');
-      if (!canvas) return;
-
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const W = Math.max(300, rect.width - 32);
-      const H = 200;
-
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
-      canvas.style.width = W + 'px';
-      canvas.style.height = H + 'px';
-
-      const c = canvas.getContext('2d');
-      c.scale(dpr, dpr);
-      c.clearRect(0, 0, W, H);
-
-      // Count classes
-      const counts = {};
-      ctx.classes.forEach(cls => { counts[cls] = 0; });
-      ctx.data.forEach(d => { counts[d.label]++; });
-
-      const values = ctx.classes.map(cls => counts[cls]);
-      const max = Math.max(...values);
-      const barWidth = (W - 60) / ctx.classes.length;
-      const colors = ['#4ade80', '#f87171', '#fbbf24', '#60a5fa', '#a78bfa', '#fb7185'];
-
-      const padX = 40, padY = 20;
-      const barHeight = H - padY - 40;
-
-      // Draw bars
-      ctx.classes.forEach((cls, i) => {
-        const x = padX + i * barWidth + barWidth / 4;
-        const h = (values[i] / max) * barHeight;
-        const y = padY + barHeight - h;
-
-        c.fillStyle = colors[i % colors.length];
-        c.fillRect(x, y, barWidth / 2, h);
-
-        // Label (class name)
-        c.fillStyle = 'rgba(139,144,168,0.9)';
-        c.font = "11px 'JetBrains Mono'";
-        c.textAlign = 'center';
-        c.fillText(cls, x + barWidth / 4, H - 8);
-        // Value label above bar
-        c.fillStyle = 'rgba(228,230,240,0.9)';
-        c.fillText(values[i], x + barWidth / 4, y - 4);
-      });
-    }
-
-    function drawKFoldChart(accuracies) {
-      const canvas = document.getElementById('kfoldCanvas');
-      if (!canvas) return;
-
-      canvas.style.display = 'block';
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const W = Math.max(300, rect.width - 32);
-      const H = 200;
-
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
-      canvas.style.width = W + 'px';
-      canvas.style.height = H + 'px';
-
-      const c = canvas.getContext('2d');
-      c.scale(dpr, dpr);
-      c.clearRect(0, 0, W, H);
-
-      const padX = 40, padY = 20;
-      const barWidth = (W - padX - 20) / accuracies.length;
-      const max = Math.max(...accuracies);
-      const barHeight = H - padY - 40;
-
-      accuracies.forEach((acc, i) => {
-        const x = padX + i * barWidth;
-        const h = (acc / max) * barHeight;
-        const y = padY + barHeight - h;
-
-        c.fillStyle = 'rgba(74,222,128,0.7)';
-        c.fillRect(x, y, barWidth - 4, h);
-
-        // Value label
-        c.fillStyle = 'rgba(82,86,106,0.9)';
-        c.font = "10px 'JetBrains Mono'";
-        c.textAlign = 'center';
-        c.fillText(acc.toFixed(1) + '%', x + barWidth / 2 - 2, y - 4);
-        c.fillText('Fold ' + (i + 1), x + barWidth / 2 - 2, H - 8);
-      });
-    }
-
-    function importModel() {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          try {
-            const data = JSON.parse(event.target.result);
-
-            // Restore context
-            ctx.classes = data.metadata.classes;
-            ctx.features = data.metadata.features;
-
-            // Restore network
-            net = {
-              sizes: data.metadata.architecture,
-              actFn: data.metadata.activationFunction,
-              lr: 0.01,
-              l2: 0,
-              weights: data.weights,
-              biases: data.biases
-            };
-
-            normStats = data.normStats;
-            currentEpoch = data.metadata.epochs;
-
-            // Update UI
-            document.getElementById('noPredictionMsg').style.display = 'none';
-            document.getElementById('predictionSection').style.display = 'block';
-
-            const inputDiv = document.getElementById('predictionInputs');
-            inputDiv.innerHTML = '';
-            ctx.features.forEach((feat, i) => {
-              const group = document.createElement('div');
-              group.className = 'form-group';
-              group.innerHTML = `
-                <label>${feat}</label>
-                <input type="number" id="pred_${i}" value="0" step="0.1">
-              `;
-              inputDiv.appendChild(group);
-            });
-
-            log(`✓ Modelo importado: ${ctx.classes.length} clases, ${ctx.features.length} características`, 'info');
-          } catch (err) {
-            log(`✗ Error al cargar modelo: ${err.message}`, 'error');
-          }
-        };
-        reader.readAsText(file);
-      };
-      input.click();
-    }
-
-    function exportModel() {
-      if (!net) return;
-
-      const data = {
-        metadata: {
-          date: new Date().toISOString(),
-          classes: ctx.classes,
-          features: ctx.features,
-          architecture: net.sizes,
-          activationFunction: net.actFn,
-          epochs: currentEpoch,
-          finalLoss: lossHistory[lossHistory.length - 1]
-        },
-        weights: net.weights,
-        biases: net.biases,
-        normStats: normStats
-      };
-
-      const json = JSON.stringify(data, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `modelo_${new Date().getTime()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      log('💾 Modelo exportado como JSON', 'info');
-    }
-
-    function drawLossChart() {
-      const canvas = document.getElementById('lossCanvas');
-      if (!canvas || lossHistory.length < 1) return;
-
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const W = Math.max(300, rect.width - 32);
-      const H = 200;
-      
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
-      canvas.style.width = W + 'px';
-      canvas.style.height = H + 'px';
-
-      const c = canvas.getContext('2d');
-      c.scale(dpr, dpr);
-      c.clearRect(0, 0, W, H);
-
-      if (lossHistory.length < 2) {
-        // Draw single point
-        c.fillStyle = 'rgba(74,222,128,0.9)';
-        c.beginPath();
-        c.arc(W / 2, H / 2, 4, 0, Math.PI * 2);
-        c.fill();
-        return;
-      }
-
-      const padX = 40, padY = 16;
-      const usableW = W - padX - 20;
-      const usableH = H - padY - 24;
-
-      const maxL = Math.max(...lossHistory);
-      const minL = Math.min(...lossHistory);
-      const range = maxL - minL || 0.001;
-
-      // Grid + Y-axis labels
-      c.strokeStyle = 'rgba(82,86,106,0.4)';
-      c.lineWidth = 1;
-      c.fillStyle = 'rgba(139,144,168,0.8)';
-      c.font = "9px 'JetBrains Mono'";
-      c.textAlign = 'right';
-      [0, 0.5, 1].forEach(t => {
-        const y = padY + (1 - t) * usableH;
-        c.beginPath();
-        c.moveTo(padX, y);
-        c.lineTo(padX + usableW, y);
-        c.stroke();
-        const val = (minL + t * range).toFixed(3);
-        c.fillText(val, padX - 4, y + 3);
-      });
-
-      // Gradient fill
-      const grad = c.createLinearGradient(0, padY, 0, padY + usableH);
-      grad.addColorStop(0, 'rgba(74,222,128,0.3)');
-      grad.addColorStop(1, 'rgba(74,222,128,0)');
-
-      // Draw area
-      c.beginPath();
-      lossHistory.forEach((v, i) => {
-        const x = padX + (lossHistory.length > 1 ? (i / (lossHistory.length - 1)) * usableW : 0);
-        const y = padY + (1 - (v - minL) / range) * usableH;
-        if (i === 0) c.moveTo(x, y);
-        else c.lineTo(x, y);
-      });
-      c.lineTo(padX + usableW, padY + usableH);
-      c.lineTo(padX, padY + usableH);
-      c.closePath();
-      c.fillStyle = grad;
-      c.fill();
-
-      // Draw line
-      c.beginPath();
-      lossHistory.forEach((v, i) => {
-        const x = padX + (lossHistory.length > 1 ? (i / (lossHistory.length - 1)) * usableW : 0);
-        const y = padY + (1 - (v - minL) / range) * usableH;
-        if (i === 0) c.moveTo(x, y);
-        else c.lineTo(x, y);
-      });
-      c.strokeStyle = 'rgba(74,222,128,0.9)';
-      c.lineWidth = 2;
-      c.stroke();
-    }
-
-    // ═══════════════════════════════════════════════
-    // PREDICCIÓN
-    // ═══════════════════════════════════════════════
-    function predict() {
-      if (!net) return;
-
-      const inputs = ctx.features.map((_, i) => parseFloat(document.getElementById(`pred_${i}`).value) || 0);
-      const normalized = normalize(inputs, normStats);
-      const output = forward(normalized);
-
-      const pred = output.indexOf(Math.max(...output));
-      const predClass = ctx.classes[pred];
-      const confidence = output[pred] * 100;
-
-      document.getElementById('predClass').textContent = predClass;
-
-      const probs = document.getElementById('predProbs');
-      probs.innerHTML = '';
-      ctx.classes.forEach((c, i) => {
-        const div = document.createElement('div');
-        div.style.marginBottom = '12px';
-        const pct = (output[i] * 100).toFixed(1);
-        
-        // Color basado en probabilidad
-        let barColor = 'rgba(139,144,168,0.5)';
-        if (i === pred) {
-          if (confidence > 70) barColor = 'rgba(74,222,128,0.8)';
-          else if (confidence > 50) barColor = 'rgba(251,191,36,0.8)';
-          else barColor = 'rgba(248,113,113,0.8)';
-        }
-        
-        div.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <span style="font-size: 12px; color: var(--txt2); font-weight: 500;">${c}</span>
-            <span style="font-size: 12px; color: var(--txt3);">${pct}%</span>
-          </div>
-          <div style="width: 100%; height: 8px; background: var(--s2); border-radius: 4px; overflow: hidden;">
-            <div style="width: ${pct}%; height: 100%; background: ${barColor}; transition: width 0.3s ease;"></div>
-          </div>
-        `;
-        probs.appendChild(div);
-      });
-
-      document.getElementById('predictionResult').style.display = 'block';
-      const confStr = confidence > 70 ? '🎯' : confidence > 50 ? '⚠' : '❓';
-      log(`${confStr} Predicción: ${predClass} (confianza: ${confidence.toFixed(1)}%)`, 'info');
-    }
-
-    // ═══════════════════════════════════════════════
-    // HELPERS
-    // ═══════════════════════════════════════════════
-    function normalizeData(data) {
-      const n = ctx.features.length;
-      const min = Array(n).fill(Infinity);
-      const max = Array(n).fill(-Infinity);
-      data.forEach(d => d.inputs.forEach((v, i) => {
-        min[i] = Math.min(min[i], v);
-        max[i] = Math.max(max[i], v);
-      }));
-      return { min, max, range: min.map((mn, i) => max[i] - mn || 1) };
-    }
-
-    function normalize(inputs, stats) {
-      return inputs.map((v, i) => (v - stats.min[i]) / stats.range[i]);
-    }
-
-    function oneHot(label) {
-      return ctx.classes.map(c => c === label ? 1 : 0);
-    }
-
-    function activateStep(n) {
-      document.querySelectorAll('.step').forEach((s, i) => {
-        s.classList.remove('active', 'done');
-        if (i < n) s.classList.add('done');
-        else if (i === n) s.classList.add('active');
-      });
-    }
-
-    function previewNetwork() {
-      if (ctx.data.length === 0) return;
-
-      const archStr = document.getElementById('archInput').value.trim();
-      const hiddenLayers = archStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
-
-      if (hiddenLayers.length === 0) return;
-
-      const sizes = [ctx.features.length, ...hiddenLayers, ctx.classes.length];
-
-      // Calculate params
-      let params = 0;
-      for (let i = 0; i < sizes.length - 1; i++) {
-        params += sizes[i] * sizes[i + 1] + sizes[i + 1];
-      }
-      
-      document.getElementById('inputSizeMetric').textContent = ctx.features.length;
-      document.getElementById('outputSizeMetric').textContent = ctx.classes.length;
-      document.getElementById('paramsMetric').textContent = params.toLocaleString();
-
-      // Create temporary net for preview
-      const tempNet = { sizes };
-      const oldNet = net;
-      net = tempNet;
-      drawNetwork();
-      net = oldNet;
-    }
-
-    function initialize() {
-      ctx = { data: [], features: [], classes: [], desc: '', taskType: 'classification' };
-      net = null;
-      lossHistory = [];
-      currentEpoch = 0;
-      trainInterval = null;
-
-      document.getElementById('csvInput').value = '';
-      document.getElementById('csvFile').value = '';
-      document.getElementById('csvHint').textContent = '// Carga un archivo CSV para comenzar';
-      document.getElementById('trainingLog').innerHTML = '<div class="log-line">Sistema listo</div>';
-      document.getElementById('archInput').value = '64,32,16';
-      document.getElementById('dataPreview').style.display = 'none';
-      document.getElementById('noPredictionMsg').style.display = 'block';
-      document.getElementById('loadModelBtns').style.display = 'flex';
-      document.getElementById('predictionSection').style.display = 'none';
-
-      showStatus('', false);
-      showSection(0);
-      activateStep(0);
-
-      log('🔄 Sistema reiniciado', 'info');
-    }
-
-    // Init on load
-    window.addEventListener('load', () => {
-      drawNetwork();
-      
-      // Setup example selector
-      const select = document.getElementById('exampleSelect');
-      if (select) {
-        select.addEventListener('change', loadExample);
-      }
-
-      // Keyboard shortcuts
-      document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey || e.metaKey) {
-          if (e.key === 's') {
-            e.preventDefault();
-            exportModel();
-          }
-        }
-        if (e.key === 'Enter' && document.activeElement.id === 'csvInput') {
-          importCSV();
-        }
-      });
-
-      // Redraw on resize
-      window.addEventListener('resize', () => {
-        if (net) drawNetwork();
-        if (lossHistory.length > 1) drawLossChart();
-        if (ctx.data.length > 0) drawClassDistribution();
-      });
+    const output = vals[0].trim();
+    const inputs = vals.slice(1).map(v => {
+      const num = parseFloat(v.trim());
+      return isNaN(num) ? 0 : num;
     });
-  </script>
+
+    data.push({ output, inputs });
+  }
+
+  return data;
+}
+// ==========================
+// ESTADO GLOBAL
+// ==========================
+const ctx = {
+  data: [],
+  features: [],
+  classes: []
+};
+
+let currentSection = 0;
+
+// ==========================
+// INIT
+// ==========================
+window.addEventListener("DOMContentLoaded", () => {
+  initUI();
+  document.getElementById("trainBtn")?.addEventListener("click", train);
+  document.getElementById("predictBtn")?.addEventListener("click", predict);
+  document.getElementById("resetBtn")?.addEventListener("click", resetAll);
+});
+function initUI() {
+  // Select ejemplo
+  document.getElementById("exampleSelect")
+    .addEventListener("change", loadExample);
+
+  // Botones
+  document.querySelectorAll("[data-next]").forEach(btn => {
+    btn.addEventListener("click", () => showSection(currentSection + 1));
+  });
+
+  document.querySelectorAll("[data-prev]").forEach(btn => {
+    btn.addEventListener("click", () => showSection(currentSection - 1));
+  });
+}
+
+// ==========================
+// SECCIONES
+// ==========================
+function showSection(n) {
+  const sections = document.querySelectorAll(".section");
+  const steps = document.querySelectorAll(".step");
+
+  if (n < 0 || n >= sections.length) return;
+
+  currentSection = n;
+
+  sections.forEach((s, i) => {
+    s.classList.toggle("visible", i === n);
+  });
+
+  steps.forEach((s, i) => {
+    s.classList.remove("active", "done");
+    if (i < n) s.classList.add("done");
+    if (i === n) s.classList.add("active");
+  });
+
+  window.scrollTo(0, 0);
+}
+
+// ==========================
+// LOG
+// ==========================
+function log(msg, type = "") {
+  const logEl = document.getElementById("trainingLog");
+  if (!logEl) return;
+
+  const line = document.createElement("div");
+  line.className = "log-line " + type;
+  line.textContent = msg;
+
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ==========================
+// CSV
+// ==========================
+function loadExample() {
+  const examples = {
+    iris: `especie,x,y
+setosa,1,2
+versicolor,3,4
+virginica,5,6`
+  };
+
+  const val = document.getElementById("exampleSelect").value;
+  if (!examples[val]) return;
+
+  document.getElementById("csvInput").value = examples[val];
+}
+
+function importCSV() {
+  const raw = document.getElementById("csvInput").value.trim();
+  if (!raw) {
+    alert("No hay datos");
+    return;
+  }
+
+  const lines = raw.split("\n");
+  const header = lines[0].split(",");
+
+  ctx.features = header.slice(1);
+  ctx.data = [];
+  const classSet = new Set();
+
+  for (let i = 1; i < lines.length; i++) {
+    const vals = lines[i].split(",");
+
+    if (vals.length !== header.length) {
+      log("Fila inválida ignorada", "warn");
+      continue;
+    }
+
+    const label = vals[0];
+    const inputs = vals.slice(1).map(v => parseFloat(v) || 0);
+
+    ctx.data.push({ label, inputs });
+    classSet.add(label);
+  }
+
+  ctx.classes = [...classSet];
+
+  log(`Datos cargados: ${ctx.data.length}`, "info");
+  drawPreview();
+}
+
+// ==========================
+// PREVIEW
+// ==========================
+function drawPreview() {
+  const table = document.getElementById("previewTable");
+  if (!table) return;
+
+  table.innerHTML = "";
+
+  const thead = document.createElement("thead");
+  const tr = document.createElement("tr");
+
+  ["Clase", ...ctx.features].forEach(h => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    tr.appendChild(th);
+  });
+
+  thead.appendChild(tr);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+
+  ctx.data.slice(0, 5).forEach(row => {
+    const tr = document.createElement("tr");
+
+    const tdLabel = document.createElement("td");
+    tdLabel.textContent = row.label;
+    tr.appendChild(tdLabel);
+
+    row.inputs.forEach(v => {
+      const td = document.createElement("td");
+      td.textContent = v;
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+}
+
+// ==========================
+// NETWORK VISUAL
+// ==========================
+function drawNetwork() {
+  const canvas = document.getElementById("netCanvas");
+  if (!canvas || ctx.features.length === 0) return;
+
+  const c = canvas.getContext("2d");
+
+  const W = canvas.clientWidth;
+  const H = 300;
+
+  canvas.width = W;
+  canvas.height = H;
+
+  c.clearRect(0, 0, W, H);
+
+  const layers = [ctx.features.length, 5, ctx.classes.length];
+
+  const layerGap = W / (layers.length + 1);
+
+  layers.forEach((count, i) => {
+    const x = layerGap * (i + 1);
+
+    for (let j = 0; j < count; j++) {
+      const y = (H / (count + 1)) * (j + 1);
+
+      c.beginPath();
+      c.arc(x, y, 8, 0, Math.PI * 2);
+      c.fillStyle = "#4ade80";
+      c.fill();
+    }
+  });
+}
+
+</script>
 </body>
 </html>

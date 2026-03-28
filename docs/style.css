@@ -3,10 +3,20 @@
    Aesthetic: dark scientific / lab (matches lab.html)
    ═══════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
+
+/* ── Tipografía ────────────────────────────────────────────────────────────
+   Instrument Serif  → Google Fonts (con fallback a Palatino / Georgia)
+   Familjen Grotesk  → Trebuchet MS / Gill Sans / Calibri
+   JetBrains Mono    → Cascadia Code / Fira Code / Consolas / Courier New
+   ──────────────────────────────────────────────────────────────────────── */
 
 /* ── Variables ──────────────────────────────────────── */
 :root {
+  --font-serif: 'Instrument Serif', 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+  --font-sans:  'Trebuchet MS', 'Gill Sans', 'Gill Sans MT', Calibri, 'Lucida Sans', sans-serif;
+  --font-mono:  'Cascadia Code', 'Fira Code', Consolas, 'Lucida Console', 'Courier New', monospace;
+
   --bg: #0d0e12;
   --s0: #13141a;
   --s1: #1a1c24;
@@ -39,7 +49,7 @@ html {
 body {
   background: var(--bg);
   color: var(--txt);
-  font-family: 'Familjen Grotesk', sans-serif;
+  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.65;
   min-height: 100vh;
@@ -72,7 +82,7 @@ body::after {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: .2em;
   text-transform: uppercase;
@@ -88,7 +98,7 @@ body::after {
 
 /* ── Page title ─────────────────────────────────────── */
 .page-title {
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-serif);
   font-size: clamp(2rem, 6vw, 3.2rem);
   font-weight: 400;
   line-height: 1.1;
@@ -128,7 +138,7 @@ hr {
 
 /* Card label (like in lab.html) */
 .card-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: .22em;
   color: var(--txt3);
@@ -148,7 +158,7 @@ hr {
 
 /* ── Headings inside cards ──────────────────────────── */
 .card h2 {
-  font-family: 'Familjen Grotesk', sans-serif;
+  font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 700;
   color: var(--txt);
@@ -156,7 +166,7 @@ hr {
 }
 
 .card h3 {
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-serif);
   font-size: 1.25rem;
   font-weight: 400;
   font-style: italic;
@@ -263,7 +273,7 @@ table {
 }
 
 caption {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: .18em;
   color: var(--txt3);
@@ -279,7 +289,7 @@ thead {
 th {
   text-align: left;
   padding: 10px 14px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: .12em;
   text-transform: uppercase;
@@ -319,7 +329,7 @@ tfoot td {
   border-top: 1px solid var(--border);
   padding: 24px 0 0;
   text-align: center;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--txt3);
 }
@@ -348,7 +358,7 @@ tfoot td {
 }
 
 .index-hero .kicker {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: .22em;
   color: var(--txt3);
@@ -357,7 +367,7 @@ tfoot td {
 }
 
 .index-hero h1 {
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-serif);
   font-size: clamp(2.4rem, 8vw, 4rem);
   font-weight: 400;
   line-height: 1.08;
@@ -434,7 +444,7 @@ tfoot td {
 
 .card-snap h3 {
   position: absolute;
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-serif);
   font-size: clamp(1.1rem, 3.5vw, 1.8rem);
   font-weight: 400;
   font-style: italic;
@@ -525,7 +535,7 @@ tfoot td {
 }
 
 .menu-item h3 {
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-serif);
   font-size: 1.15rem;
   font-style: italic;
   font-weight: 400;
@@ -727,7 +737,7 @@ tfoot td {
 }
 
 .sidenav-logo-text {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: .18em;
@@ -743,7 +753,7 @@ tfoot td {
 
 /* ── Section labels ── */
 .sidenav-section-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 8.5px;
   letter-spacing: .2em;
   text-transform: uppercase;
@@ -789,7 +799,7 @@ tfoot td {
 
 .sidenav.collapsed .sidenav-link::after {
   content: attr(data-label);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 8px;
   letter-spacing: .06em;
   color: var(--txt3);
@@ -970,7 +980,7 @@ tfoot td {
 }
 
 .graph-title {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: .18em;
   color: var(--txt3);
@@ -1012,7 +1022,7 @@ canvas {
 }
 
 .ctrl-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: .12em;
   text-transform: uppercase;
@@ -1042,7 +1052,7 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 .ctrl-val {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--accent);
   min-width: 44px;
@@ -1058,7 +1068,7 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 .tab-btn {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: .12em;
   text-transform: uppercase;
@@ -1093,7 +1103,7 @@ input[type=range]::-webkit-slider-thumb {
 /* ── Color pills / badges ── */
 .pill {
   display: inline-block;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: .1em;
   padding: 3px 9px;
@@ -1141,7 +1151,7 @@ input[type=range]::-webkit-slider-thumb {
   border-radius: var(--radius-sm);
   padding: 14px 18px;
   margin: 12px 0;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 14px;
   color: var(--txt);
   text-align: center;
@@ -1187,7 +1197,7 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 .mini-card .mc-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: .18em;
   text-transform: uppercase;
@@ -1215,7 +1225,7 @@ input[type=range]::-webkit-slider-thumb {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 600;
   color: var(--txt2);
@@ -1228,7 +1238,7 @@ input[type=range]::-webkit-slider-thumb {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-serif);
   font-size: 14px;
   color: var(--txt);
   padding: 4px;
@@ -1315,7 +1325,7 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 .tl-time {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: .16em;
   text-transform: uppercase;
@@ -1339,4 +1349,46 @@ input[type=range]::-webkit-slider-thumb {
 
 .cathode {
   color: #60a5fa;
+}
+
+* {
+  max-width: 100%;
+}
+
+table {
+  display: block;
+  overflow-x: auto;
+}
+
+.log-container {
+  word-break: break-word;
+}
+
+textarea {
+  word-break: break-word;
+}
+
+* {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+table {
+  display: block;
+  overflow-x: auto;
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.log-container {
+  max-height: 200px;
+  overflow-y: auto;
+  word-break: break-word;
 }
