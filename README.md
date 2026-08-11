@@ -1,8 +1,4 @@
-> [!TIP]
-> 
-> Se aceptan [Solicitudes de revisión](https://github.com/EzeGamer135/calculadora-cientifica/pulls). Siéntete libre de expresar qué podemos mejorar, ¡tomaremos tus mensajes!
-
 > [!CAUTION]
-> El repositorio se encuentra bajo la [Licencia Apache 2.0](https://github.com/EzeGamer135/calculadora-cientifica?tab=Apache-2.0-1-ov-file#readme).
+> El repositorio se encuentra bajo la Licencia CC BY-NC 4.0.
 > 
-> Revisar las [Políticas de seguridad](https://github.com/EzeGamer135/calculadora-cientifica-avanzada/blob/main/SECURITY.md) en caso de haber encontrado una vulnerabilidad de seguridad.
+> Revisar las Políticas de seguridad en caso de haber encontrado una vulnerabilidad de seguridad.
