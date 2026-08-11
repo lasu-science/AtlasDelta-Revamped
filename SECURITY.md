@@ -1,13 +1,5 @@
 # Políticas de seguridad
 
-## Versiones soportadas
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.0     | :white_check_mark: |
-
-## Reportando una vulnerabilidad
-
 Este repositorio tiene configuradas todas las medidas de seguridad permisibles por el sitio. Sin embargo, aún pueden encontrarse vulnerabilidades y brechas de seguridad.
 Si encuentras una, puedes añadir un informe en un issue y lo revisaremos cuanto antes. Asegúrate de incluir un expediente argumentativo explicando:
 
