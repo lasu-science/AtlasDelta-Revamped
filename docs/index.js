@@ -32,7 +32,7 @@ function HomePage() {
           'El modelo económico (Haiku) cuesta centavos de dólar por miles de análisis — para uso personal, rara vez vas a gastar el crédito inicial.',
           'Los precios y montos de crédito los define Anthropic y pueden cambiar; revisá el valor actual en su sitio antes de cargar saldo.'
         ]),
-        h('div',{className:'panel-cta'},h('a',{className:'btn btn-primary',href:'https://console.anthropic.com',target:'_blank',style:{display:'inline-block'}},'Crear cuenta en console.anthropic.com →'))
+        h('div',{className:'panel-cta'},h('a',{className:'btn btn-primary',href:'https://console.anthropic.com',target:'_blank',style:{display:'inline-block'}},'Anthropic →'))
       ], 'primary'),
       Panel('IA gratis (Groq o Gemini)', 'SIN COSTO', [
         h('p',{},'Corren modelos de código abierto en vez de Claude — análisis más limitado, pero sin costo alguno. Elegí uno de los dos en Configuración.'),
@@ -42,8 +42,8 @@ function HomePage() {
           'Ideal para probar el copiloto o usarlo ocasionalmente sin pensar en costos; la calidad de las explicaciones es menor que con Claude, en especial en diagramas o matemática compleja.'
         ]),
         h('div',{className:'panel-cta',style:{display:'flex',gap:'10px',flexWrap:'wrap'}},
-          h('a',{className:'btn btn-outline',href:'https://console.groq.com',target:'_blank'},'Groq →'),
-          h('a',{className:'btn btn-outline',href:'https://aistudio.google.com/apikey',target:'_blank'},'Gemini →')
+          h('a',{className:'btn btn-primary',href:'https://console.groq.com',target:'_blank'},'Groq →'),
+          h('a',{className:'btn btn-primary',href:'https://aistudio.google.com/apikey',target:'_blank'},'Gemini →')
         )
       ], 'success')
     ),

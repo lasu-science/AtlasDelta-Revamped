@@ -248,12 +248,12 @@ function Header(currentPage) {
     h('div', {className:'header-inner'},
       h('a', {className:'header-brand', href:'index.html'}, 'AtlasDelta', h('span',{},'//Revamped')),
       h('nav', {className:'nav-links', style:{display:window.innerWidth<640?'none':'flex'}},
-        h('a', {className:'nav-link'+(currentPage==='library'?' active':''), href:'library.html'}, 'Repositorio')
+        h('a', {className:'nav-link, btn-primary'+(currentPage==='library'?' active':''), href:'library.html'}, 'Repositorio')
       ),
       h('div', {className:'header-right'},
         user
           ? [h('a', {className:'btn btn-primary', href:'workspace.html'}, 'Abrir workspace'),
-             h('button', {className:'btn btn-ghost', onClick:signOut}, 'salir')]
+             h('a', {className:'btn btn-primary', onClick:signOut}, 'salir')]
           : h('a', {className:'btn btn-outline', href:'auth.html'}, 'Acceder')
       )
     )
@@ -266,12 +266,12 @@ function WorkspaceHeader() {
   return h('header', {className:'ws-header'},
     h('div', {className:'ws-header-inner'},
       h('a', {className:'ws-brand', href:'workspace.html'}, 'AtlasDelta', h('span',{style:{color:'#22d3ee'}}, ' · workspace')),
-      h('a', {className:'btn btn-ghost', href:'index.html'}, '← Inicio'),
-      h('a', {className:'btn btn-ghost', href:'library.html'}, 'Repositorio'),
-      h('a', {className:'btn btn-ghost', href:'settings.html'}, '🤖 Copiloto'),
+      h('a', {className:'btn btn-primary', href:'index.html'}, '← Inicio'),
+      h('a', {className:'btn btn-primary', href:'library.html'}, 'Repositorio'),
+      h('a', {className:'btn btn-primary', href:'settings.html'}, '🤖 Copiloto'),
       h('div', {style:{marginLeft:'auto',display:'flex',alignItems:'center',gap:'16px',fontSize:'12px'}},
         user ? h('span', {style:{color:'#8a8fa8'}}, user.email + (isAdmin()?' · admin':'')) : null,
-        h('button', {className:'btn btn-ghost', onClick:signOut}, 'salir')
+        h('a', {className:'btn btn-primary', onClick:signOut}, 'salir')
       )
     )
   );
