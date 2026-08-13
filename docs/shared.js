@@ -83,6 +83,23 @@ function getU() { return getUser() ? getUser().email : 'anon'; }
 var DEFAULT_LATEX = '\\documentclass{article}\n\\title{Documento sin título}\n\\author{}\n\\date{}\n\n\\begin{document}\n\\maketitle\n\n\\section{Introducción}\nEscribe aquí. Soporta \\textbf{negrita}, \\emph{cursiva} y $E = mc^2$.\n\n\\begin{equation}\n  \\frac{\\partial u}{\\partial t} + (u \\cdot \\nabla) u = -\\frac{1}{\\rho}\\nabla p + \\nu \\nabla^2 u\n\\end{equation}\n\n\\subsection{Lista}\n\\begin{itemize}\n  \\item Primer punto\n  \\item Segundo punto\n\\end{itemize}\n\n\\end{document}\n';
 var ADMIN_EMAIL = 'ezesouto2@gmail.com';
 function isAdmin() { var u = getUser(); return !!(u && u.email === ADMIN_EMAIL); }
+
+// ── Supabase (backend real: base de datos + auth) ────────
+// Completá estos dos valores con los de tu propio proyecto (gratis) en
+// https://supabase.com → tu proyecto → Project Settings → API.
+// Sin esto, el login/registro/recuperación de contraseña no van a funcionar.
+var SUPABASE_URL = 'https://fyztxoxejbzkuthvcpus.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_J2uKmgVrKJrvZogQfGUm1g_dzOHfQ2h';
+var _supabaseClient = null;
+function getSupabaseClient() {
+  if (_supabaseClient) return _supabaseClient;
+  if (typeof window.supabase === 'undefined') {
+    console.error('Falta cargar la librería de Supabase (script CDN) en esta página.');
+    return null;
+  }
+  _supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return _supabaseClient;
+}
 // ═══════════════════════════════════════════════════════
 // Copiloto científico — llamadas directas a la API de Anthropic desde el
 // navegador. La clave la pega cada usuario en settings.html y queda SOLO en
@@ -236,6 +253,7 @@ function requireAuth() {
   return true;
 }
 function signOut() {
+  if (typeof window.supabase !== 'undefined') { try { getSupabaseClient().auth.signOut(); } catch(e) {} }
   localStorage.removeItem('ad_user');
   location.href = 'index.html';
 }
@@ -254,7 +272,7 @@ function Header(currentPage) {
         user
           ? [h('a', {className:'btn btn-primary', href:'workspace.html'}, 'Abrir workspace'),
              h('a', {className:'btn btn-primary', onClick:signOut}, 'salir')]
-          : h('a', {className:'btn btn-outline', href:'auth.html'}, 'Acceder')
+          : h('a', {className:'btn btn-primary', href:'auth.html'}, 'Acceder')
       )
     )
   );
