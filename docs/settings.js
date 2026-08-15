@@ -71,7 +71,7 @@ function SettingsPage() {
             h('div',{style:{fontSize:'12px',marginBottom:'6px',color:'#8a8fa8'}},'Modelo'),
             h('input',{type:'text',value:model,placeholder:AI_PROVIDERS[provider].defaultModel,onInput:function(e){model=e.target.value;},style:{width:'100%',background:'#0f172a',border:'1px solid rgba(55,65,81,.8)',padding:'8px 10px',color:'#e2e8f0',fontFamily:'var(--font-mono)',fontSize:'13px'}}),
             h('div',{style:{fontSize:'11px',color:'#8a8fa8',marginTop:'4px'}},
-              provider==='anthropic' ? 'Ej: claude-haiku-4-5-20251001 (económico), claude-sonnet-5 (equilibrado), claude-opus-4-8 (el más capaz)' : provider==='gemini' ? 'Ej: gemini-2.5-flash, gemini-2.0-flash' : 'Ej: llama-3.3-70b-versatile, qwen-2.5-32b'
+              provider==='anthropic' ? 'Ej: claude-haiku-4-5-20251001 (económico), claude-sonnet-5 (equilibrado), claude-opus-4-8 (el más capaz)' : provider==='gemini' ? 'Ej: gemini-3.6-flash (estable), gemini-3.7-flash (más nuevo, precio introductorio), gemini-3.5-flash-lite (el más económico)' : 'Ej: openai/gpt-oss-120b (más capaz), openai/gpt-oss-20b (más liviano/rápido)'
             )
           ),
           h('div',{style:{display:'flex',gap:'12px',alignItems:'center',flexWrap:'wrap'}},

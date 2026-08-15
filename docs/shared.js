@@ -122,8 +122,8 @@ function getFirebaseAuth() {
 // ═══════════════════════════════════════════════════════
 var AI_PROVIDERS = {
   anthropic: { label:'Anthropic (Claude) — de pago, con crédito inicial gratis', defaultModel:'claude-sonnet-5', keyPlaceholder:'sk-ant-...' },
-  groq:      { label:'Groq — gratis, modelos de código abierto', defaultModel:'llama-3.3-70b-versatile', keyPlaceholder:'gsk_...' },
-  gemini:    { label:'Gemini (Google) — gratis, sin tarjeta', defaultModel:'gemini-2.5-flash', keyPlaceholder:'AIzaSy...' }
+  groq:      { label:'Groq — gratis, modelos de código abierto', defaultModel:'openai/gpt-oss-120b', keyPlaceholder:'gsk_...' },
+  gemini:    { label:'Gemini (Google) — gratis, sin tarjeta', defaultModel:'gemini-3.6-flash', keyPlaceholder:'AIzaSy...' }
 };
 function getApiProvider() { return localStorage.getItem('ad_api_provider') || 'anthropic'; }
 function setApiProvider(p) { localStorage.setItem('ad_api_provider', p || 'anthropic'); }
