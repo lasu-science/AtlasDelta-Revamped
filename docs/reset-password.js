@@ -1,15 +1,18 @@
 // ResetPasswordPage — a esta página redirige el link del email de recuperación
-// que envía Supabase. Supabase deja una sesión temporal de "recovery" activa
-// leyendo el token del hash de la URL; acá solo pedimos la contraseña nueva.
+// que envía Firebase. Firebase manda un código de un solo uso (oobCode) como
+// parámetro en la URL; lo validamos y, si es válido, dejamos definir la contraseña nueva.
 function ResetPasswordPage() {
   var password = '', password2 = '', error = null, done = false, loading = false, ready = false;
-  var sb = getSupabaseClient();
+  var auth = getFirebaseAuth();
+  var oobCode = new URLSearchParams(location.search).get('oobCode');
 
-  function checkSession() {
-    if (!sb) { error = 'No se pudo conectar con el servidor de autenticación (revisá SUPABASE_URL / SUPABASE_ANON_KEY en shared.js).'; ready = true; render(); return; }
-    sb.auth.getSession().then(function(res){
-      var session = res.data && res.data.session;
-      if (!session) { error = 'Este link ya expiró o no es válido. Pedí uno nuevo desde "¿Olvidaste tu contraseña?" en la pantalla de acceso.'; }
+  function checkCode() {
+    if (!auth) { error = 'No se pudo conectar con el servidor de autenticación (revisá FIREBASE_CONFIG en shared.js).'; ready = true; render(); return; }
+    if (!oobCode) { error = 'Este link no es válido — le falta el código de verificación. Pedí uno nuevo desde "¿Olvidaste tu contraseña?" en la pantalla de acceso.'; ready = true; render(); return; }
+    auth.verifyPasswordResetCode(oobCode).then(function(){
+      ready = true; render();
+    }).catch(function(){
+      error = 'Este link ya expiró o ya se usó. Pedí uno nuevo desde "¿Olvidaste tu contraseña?" en la pantalla de acceso.';
       ready = true; render();
     });
   }
@@ -20,10 +23,12 @@ function ResetPasswordPage() {
     if (password.length < 6) { error = 'La contraseña debe tener al menos 6 caracteres.'; render(); return; }
     if (password !== password2) { error = 'Las contraseñas no coinciden.'; render(); return; }
     loading = true; render();
-    sb.auth.updateUser({ password: password }).then(function(res){
+    auth.confirmPasswordReset(oobCode, password).then(function(){
+      loading = false; done = true; render();
+    }).catch(function(err){
       loading = false;
-      if (res.error) { error = res.error.message; render(); return; }
-      done = true; render();
+      error = err.code === 'auth/weak-password' ? 'La contraseña debe tener al menos 6 caracteres.' : (err.message || 'No se pudo actualizar la contraseña.');
+      render();
     });
   }
 
@@ -39,7 +44,7 @@ function ResetPasswordPage() {
         h('div',{className:'auth-info'},'▸ Contraseña actualizada. Ya podés iniciar sesión con la nueva.'),
         h('a',{className:'btn btn-primary',href:'auth.html',style:{display:'inline-block',marginTop:'12px'}},'Ir a iniciar sesión →')
       );
-    } else if (error && !sb) {
+    } else if (error && !auth) {
       body = h('div',{className:'auth-error'},'▸ '+error);
     } else if (error) {
       body = h('div',{},
@@ -71,7 +76,7 @@ function ResetPasswordPage() {
   }
 
   render();
-  checkSession();
+  checkCode();
   return root;
 }
 

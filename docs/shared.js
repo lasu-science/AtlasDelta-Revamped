@@ -84,21 +84,26 @@ var DEFAULT_LATEX = '\\documentclass{article}\n\\title{Documento sin título}\n\
 var ADMIN_EMAIL = 'ezesouto2@gmail.com';
 function isAdmin() { var u = getUser(); return !!(u && u.email === ADMIN_EMAIL); }
 
-// ── Supabase (backend real: base de datos + auth) ────────
-// Completá estos dos valores con los de tu propio proyecto (gratis) en
-// https://supabase.com → tu proyecto → Project Settings → API.
+// ── Firebase (backend real: base de datos + auth) ────────
+// Completá estos valores con los de tu propio proyecto (gratis) en
+// https://console.firebase.google.com → ⚙ Configuración del proyecto → General
+// → "Tus apps" → app web → "Configuración del SDK".
 // Sin esto, el login/registro/recuperación de contraseña no van a funcionar.
-var SUPABASE_URL = 'https://fyztxoxejbzkuthvcpus.supabase.co';
-var SUPABASE_ANON_KEY = 'sb_publishable_J2uKmgVrKJrvZogQfGUm1g_dzOHfQ2h';
-var _supabaseClient = null;
-function getSupabaseClient() {
-  if (_supabaseClient) return _supabaseClient;
-  if (typeof window.supabase === 'undefined') {
-    console.error('Falta cargar la librería de Supabase (script CDN) en esta página.');
+var FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyBZIKInHfAuFGaji8dXOb95OaHZ7WzBnNM',
+  authDomain: 'atlasdelta-4c992.firebaseapp.com',
+  projectId: 'atlasdelta-4c992'
+};
+var _firebaseAuth = null;
+function getFirebaseAuth() {
+  if (_firebaseAuth) return _firebaseAuth;
+  if (typeof firebase === 'undefined') {
+    console.error('Falta cargar la librería de Firebase (script CDN) en esta página.');
     return null;
   }
-  _supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  return _supabaseClient;
+  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  _firebaseAuth = firebase.auth();
+  return _firebaseAuth;
 }
 // ═══════════════════════════════════════════════════════
 // Copiloto científico — llamadas directas a la API de Anthropic desde el
@@ -253,7 +258,7 @@ function requireAuth() {
   return true;
 }
 function signOut() {
-  if (typeof window.supabase !== 'undefined') { try { getSupabaseClient().auth.signOut(); } catch(e) {} }
+  if (typeof firebase !== 'undefined') { try { getFirebaseAuth().signOut(); } catch(e) {} }
   localStorage.removeItem('ad_user');
   location.href = 'index.html';
 }
