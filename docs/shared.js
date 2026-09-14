@@ -488,6 +488,15 @@ function renderMdMath(src) {
     var out = '<table><thead><tr>'+head.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr></thead><tbody>';
     rows.forEach(function(r){ out += '<tr>'+r.map(function(c){return '<td>'+c+'</td>';}).join('')+'</tr>'; });
     out += '</tbody></table>';
+    // Las celdas pueden contener placeholders de fórmulas (\x00M<i>\x00) generados
+    // más arriba. La tabla entera se vuelve a "slotear" para protegerla del resto
+    // del pipeline de Markdown (párrafos, listas, etc.), pero el reemplazo final
+    // de placeholders NO es recursivo: solo hace una pasada sobre el string, así
+    // que un placeholder de fórmula anidado dentro del placeholder de la tabla
+    // quedaba sin resolver (la fórmula aparecía como texto crudo, sin renderizar).
+    // Solución: resolver los placeholders de fórmula dentro de "out" ya mismo,
+    // usando los slots ya generados, antes de volver a slotear la tabla completa.
+    out = out.replace(/\x00M(\d+)\x00/g, function(_,i){return slots[Number(i)]||'';});
     return slot(out);
   });
 
