@@ -18,6 +18,7 @@ function h(tag, attrs) {
       else if (k.slice(0,2) === 'on') el.addEventListener(k.slice(2).toLowerCase(), v);
       else if ((k === 'disabled' || k === 'checked' || k === 'required' || k === 'selected') && !v) {}
       else if (k === 'checked') { el.checked = true; el.setAttribute('checked',''); }
+      else if (k === 'value' && tag === 'textarea') el.value = v; // <textarea> no tiene atributo "value"; setAttribute no hace nada
       else el.setAttribute(k, v === true ? '' : String(v));
     });
   }

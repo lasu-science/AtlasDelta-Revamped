@@ -33,6 +33,16 @@ function ArticleEditorPage() {
     catch (e) { el.innerHTML = '<p style="color:#ef4444">Error al renderizar.</p>'; }
   }
 
+  function moveSection(i, dir) {
+    var j = i + dir;
+    if (j < 0 || j >= article.sections.length) return;
+    var tmp = article.sections[i];
+    article.sections[i] = article.sections[j];
+    article.sections[j] = tmp;
+    save();
+    renderSections();
+  }
+
   function renderSections() {
     var wrap = document.getElementById('ae-sections');
     if (!wrap) return;
@@ -44,6 +54,8 @@ function ArticleEditorPage() {
           h('select',{onChange:function(e){s.widget=e.target.value||undefined;save();}},
             WIDGET_OPTIONS.map(function(w){return h('option',{value:w,selected:(s.widget||'')===w||undefined},w||'(sin widget)');})
           ),
+          h('button',{className:'btn btn-ghost',title:'Subir sección',disabled:i===0||undefined,onClick:function(){moveSection(i,-1);}},'↑'),
+          h('button',{className:'btn btn-ghost',title:'Bajar sección',disabled:i===article.sections.length-1||undefined,onClick:function(){moveSection(i,1);}},'↓'),
           article.sections.length>1 ? h('button',{className:'btn btn-ghost',style:{color:'#ef4444'},onClick:function(){article.sections.splice(i,1);save();renderSections();}},'Borrar sección') : null
         ),
         h('div',{className:'ae-section-grid'},
