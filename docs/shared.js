@@ -98,13 +98,27 @@ var FIREBASE_CONFIG = {
 var _firebaseAuth = null;
 function getFirebaseAuth() {
   if (_firebaseAuth) return _firebaseAuth;
-  if (typeof firebase === 'undefined') {
-    console.error('Falta cargar la librería de Firebase (script CDN) en esta página.');
+  if (typeof firebase === 'undefined' || !firebase.auth) {
+    console.error('Falta cargar la librería de Firebase Auth (script CDN) en esta página.');
     return null;
   }
   if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
   _firebaseAuth = firebase.auth();
   return _firebaseAuth;
+}
+// Al cargar la página, el SDK de Firebase todavía no restauró la sesión
+// guardada (es async) — si escribimos a Firestore antes de que termine, la
+// escritura sale "sin autenticar" y las reglas de seguridad la rechazan.
+// Esto espera a que el SDK confirme el usuario (o null) al menos una vez.
+var _authReadyPromise = null;
+function waitForFirebaseAuthReady() {
+  if (_authReadyPromise) return _authReadyPromise;
+  var auth = getFirebaseAuth();
+  if (!auth) return Promise.resolve(null);
+  _authReadyPromise = new Promise(function(resolve){
+    var unsub = auth.onAuthStateChanged(function(user){ unsub(); resolve(user); });
+  });
+  return _authReadyPromise;
 }
 // ═══════════════════════════════════════════════════════
 // Copiloto científico — llamadas directas a la API de Anthropic desde el
@@ -449,9 +463,11 @@ function ensureArticlesMigrated() {
       localStorage.setItem('ad_articles_migrated_v1', 'true');
       return Promise.resolve();
     }
-    var writes = toUpload.map(function(a){ return db.collection('articles').doc(a.slug).set(a); });
-    writes = writes.concat(localDeletions.map(function(slug){ return db.collection('article_deletions').doc(slug).set({deleted:true}); }));
-    return Promise.all(writes).then(function(){
+    return waitForFirebaseAuthReady().then(function(){
+      var writes = toUpload.map(function(a){ return db.collection('articles').doc(a.slug).set(a); });
+      writes = writes.concat(localDeletions.map(function(slug){ return db.collection('article_deletions').doc(slug).set({deleted:true}); }));
+      return Promise.all(writes);
+    }).then(function(){
       localStorage.setItem('ad_articles_migrated_v1', 'true');
       console.log('Migración a Firestore completa:', toUpload.length, 'artículo(s),', localDeletions.length, 'oculto(s).');
     }).catch(function(err){
@@ -493,19 +509,23 @@ function getAllArticles() {
 function saveCustomArticle(article) {
   var db = getFirestoreDb();
   if (!db) return Promise.reject(new Error('No se pudo conectar con Firestore (revisá que el script y FIREBASE_CONFIG estén cargados).'));
-  return db.collection('articles').doc(article.slug).set(article);
+  return waitForFirebaseAuthReady().then(function(){
+    return db.collection('articles').doc(article.slug).set(article);
+  });
 }
 // Borra un artículo: si es precargado, lo oculta (tombstone) sin tocar el
 // array original; si es propio, lo elimina directamente.
 function deleteCustomArticle(slug) {
   var db = getFirestoreDb();
   if (!db) return Promise.reject(new Error('No se pudo conectar con Firestore (revisá que el script y FIREBASE_CONFIG estén cargados).'));
-  if (isBuiltInSlug(slug)) {
-    return db.collection('articles').doc(slug).delete().then(function(){
-      return db.collection('article_deletions').doc(slug).set({deleted:true});
-    });
-  }
-  return db.collection('articles').doc(slug).delete();
+  return waitForFirebaseAuthReady().then(function(){
+    if (isBuiltInSlug(slug)) {
+      return db.collection('articles').doc(slug).delete().then(function(){
+        return db.collection('article_deletions').doc(slug).set({deleted:true});
+      });
+    }
+    return db.collection('articles').doc(slug).delete();
+  });
 }
 function slugify(s) {
   return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
