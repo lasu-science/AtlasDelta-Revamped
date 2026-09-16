@@ -406,65 +406,106 @@ var LEVEL_META = {
   avanzado:{label:"Avanzado"}
 };
 
-// ── Artículos: overrides/borrados sobre los precargados + artículos nuevos ─
-// Los artículos de ejemplo (Mecánica Clásica, Electromagnetismo, etc.) viven
-// hardcodeados en ARTICLES. Como no se puede reescribir ese array desde el
-// navegador, guardamos ediciones como "overrides" (slug -> versión editada) y
-// borrados como una lista de slugs ocultos ("tombstones"), todo en localStorage.
+// ── Artículos: Firestore (compartido entre dispositivos) ────────────────
+// Los artículos de ejemplo (Mecánica Clásica, Electromagnetismo, etc.) siguen
+// hardcodeados en ARTICLES. Las ediciones de admin y los artículos nuevos ya
+// NO viven en localStorage (eso era por-dispositivo) — viven en la colección
+// 'articles' de Firestore (doc id = slug), visible para cualquiera que la lea,
+// pero solo editable por ADMIN_EMAIL (reforzado con reglas de seguridad en
+// Firestore, no solo acá). Los "borrados" de artículos precargados se marcan
+// como un doc en 'article_deletions' (tombstone), sin tocar el array original.
 var BUILTIN_ARTICLES = ARTICLES;
 function isBuiltInSlug(slug) { return BUILTIN_ARTICLES.some(function(a){return a.slug===slug;}); }
-function getArticleOverrides() {
-  try { return JSON.parse(localStorage.getItem('ad_article_overrides') || '{}'); } catch(e) { return {}; }
+
+var _firestoreDb = null;
+function getFirestoreDb() {
+  if (_firestoreDb) return _firestoreDb;
+  if (typeof firebase === 'undefined' || !firebase.firestore) {
+    console.error('Falta cargar la librería de Firestore (script CDN) en esta página.');
+    return null;
+  }
+  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  _firestoreDb = firebase.firestore();
+  return _firestoreDb;
 }
-function getDeletedBuiltins() {
-  try { return JSON.parse(localStorage.getItem('ad_article_deletions') || '[]'); } catch(e) { return []; }
+
+// Migración de una sola vez: sube lo que haya en el localStorage de ESTE
+// dispositivo/admin a Firestore, y marca la migración como hecha para no
+// repetirla. No hace nada si ya se migró antes o si no hay nada que migrar.
+var _migrationPromise = null;
+function ensureArticlesMigrated() {
+  if (_migrationPromise) return _migrationPromise;
+  _migrationPromise = (function() {
+    if (!isAdmin()) return Promise.resolve();
+    if (localStorage.getItem('ad_articles_migrated_v1')) return Promise.resolve();
+    var db = getFirestoreDb();
+    if (!db) return Promise.resolve();
+    var localCustom, localOverrides, localDeletions;
+    try { localCustom = JSON.parse(localStorage.getItem('ad_articles') || '[]'); } catch(e) { localCustom = []; }
+    try { localOverrides = JSON.parse(localStorage.getItem('ad_article_overrides') || '{}'); } catch(e) { localOverrides = {}; }
+    try { localDeletions = JSON.parse(localStorage.getItem('ad_article_deletions') || '[]'); } catch(e) { localDeletions = []; }
+    var toUpload = localCustom.concat(Object.keys(localOverrides).map(function(k){ return localOverrides[k]; }));
+    if (toUpload.length === 0 && localDeletions.length === 0) {
+      localStorage.setItem('ad_articles_migrated_v1', 'true');
+      return Promise.resolve();
+    }
+    var writes = toUpload.map(function(a){ return db.collection('articles').doc(a.slug).set(a); });
+    writes = writes.concat(localDeletions.map(function(slug){ return db.collection('article_deletions').doc(slug).set({deleted:true}); }));
+    return Promise.all(writes).then(function(){
+      localStorage.setItem('ad_articles_migrated_v1', 'true');
+      console.log('Migración a Firestore completa:', toUpload.length, 'artículo(s),', localDeletions.length, 'oculto(s).');
+    }).catch(function(err){
+      console.error('Error migrando artículos a Firestore (se reintentará en la próxima carga):', err);
+    });
+  })();
+  return _migrationPromise;
 }
-function getCustomArticles() {
-  try { return JSON.parse(localStorage.getItem('ad_articles') || '[]'); } catch(e) { return []; }
-}
+
 function getArticle(slug) {
-  var custom = getCustomArticles().find(function(a){return a.slug===slug;});
-  if (custom) return custom;
-  var overrides = getArticleOverrides();
-  if (overrides[slug]) return overrides[slug];
-  if (getDeletedBuiltins().indexOf(slug) >= 0) return undefined;
-  return BUILTIN_ARTICLES.find(function(a){return a.slug===slug;});
+  return ensureArticlesMigrated().then(function(){
+    var db = getFirestoreDb();
+    if (!db) return BUILTIN_ARTICLES.find(function(a){return a.slug===slug;});
+    return db.collection('articles').doc(slug).get().then(function(doc){
+      if (doc.exists) return doc.data();
+      return db.collection('article_deletions').doc(slug).get().then(function(delDoc){
+        if (delDoc.exists) return undefined;
+        return BUILTIN_ARTICLES.find(function(a){return a.slug===slug;});
+      });
+    });
+  });
 }
 function getAllArticles() {
-  var deleted = getDeletedBuiltins(), overrides = getArticleOverrides();
-  var builtins = BUILTIN_ARTICLES
-    .filter(function(a){ return deleted.indexOf(a.slug) < 0; })
-    .map(function(a){ return overrides[a.slug] || a; });
-  return builtins.concat(getCustomArticles());
+  return ensureArticlesMigrated().then(function(){
+    var db = getFirestoreDb();
+    if (!db) return BUILTIN_ARTICLES.slice();
+    return Promise.all([db.collection('articles').get(), db.collection('article_deletions').get()]).then(function(results){
+      var customDocs = results[0].docs.map(function(d){ return d.data(); });
+      var deletedSlugs = results[1].docs.map(function(d){ return d.id; });
+      var customSlugs = customDocs.map(function(a){ return a.slug; });
+      var builtins = BUILTIN_ARTICLES.filter(function(a){ return deletedSlugs.indexOf(a.slug) < 0 && customSlugs.indexOf(a.slug) < 0; });
+      return builtins.concat(customDocs);
+    });
+  });
 }
-// Guarda un artículo: si el slug corresponde a uno precargado, lo guarda como
-// override; si es nuevo (creado desde el workspace), va a la lista de artículos propios.
+// Guarda un artículo (nuevo o edición de uno precargado) en Firestore.
+// Las reglas de seguridad del lado del servidor son las que de verdad
+// impiden que alguien que no sea ADMIN_EMAIL pueda escribir acá.
 function saveCustomArticle(article) {
-  if (isBuiltInSlug(article.slug)) {
-    var overrides = getArticleOverrides();
-    overrides[article.slug] = article;
-    localStorage.setItem('ad_article_overrides', JSON.stringify(overrides));
-    return;
-  }
-  var all = getCustomArticles();
-  var idx = all.findIndex(function(a){return a.slug===article.slug;});
-  if (idx >= 0) all[idx] = article; else all.push(article);
-  localStorage.setItem('ad_articles', JSON.stringify(all));
+  var db = getFirestoreDb();
+  if (!db) return Promise.reject(new Error('No se pudo conectar con Firestore (revisá que el script y FIREBASE_CONFIG estén cargados).'));
+  return db.collection('articles').doc(article.slug).set(article);
 }
-// Borra un artículo: si es precargado, lo oculta (tombstone) sin tocar el array
-// original; si es propio, lo elimina directamente.
+// Borra un artículo: si es precargado, lo oculta (tombstone) sin tocar el
+// array original; si es propio, lo elimina directamente.
 function deleteCustomArticle(slug) {
+  var db = getFirestoreDb();
+  if (!db) return Promise.reject(new Error('No se pudo conectar con Firestore (revisá que el script y FIREBASE_CONFIG estén cargados).'));
   if (isBuiltInSlug(slug)) {
-    var deleted = getDeletedBuiltins();
-    if (deleted.indexOf(slug) < 0) deleted.push(slug);
-    localStorage.setItem('ad_article_deletions', JSON.stringify(deleted));
-    var overrides = getArticleOverrides();
-    delete overrides[slug];
-    localStorage.setItem('ad_article_overrides', JSON.stringify(overrides));
-    return;
+    return db.collection('articles').doc(slug).delete().then(function(){
+      return db.collection('article_deletions').doc(slug).set({deleted:true});
+    });
   }
-  var all = getCustomArticles().filter(function(a){return a.slug!==slug;});
-  localStorage.setItem('ad_articles', JSON.stringify(all));
+  return db.collection('articles').doc(slug).delete();
 }
 function slugify(s) {
   return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');

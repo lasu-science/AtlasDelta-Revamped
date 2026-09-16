@@ -3,17 +3,29 @@ function WorkspaceHome() {
   var tab = 'models', showNew = false, newName = '', newDomain = 'general', newKind = '2d';
   var admin = isAdmin();
 
-  function getData() {
+  function getLocalData() {
     var u = getU();
     return {
       models: JSON.parse(localStorage.getItem('ad_models_'+u) || '[]'),
       docs: JSON.parse(localStorage.getItem('ad_docs_'+u) || '[]'),
-      plots: JSON.parse(localStorage.getItem('ad_plots_'+u) || '[]'),
-      articles: getAllArticles()
+      plots: JSON.parse(localStorage.getItem('ad_plots_'+u) || '[]')
     };
   }
 
-  function refresh() { renderWsContent(getData()); updateTabs(); }
+  function refresh() {
+    updateTabs();
+    if (tab === 'articles') {
+      var content = document.getElementById('ws-dynamic-content');
+      if (content) content.innerHTML = '<p style="color:#8a8fa8;font-size:14px">Cargando artículos…</p>';
+      getAllArticles().then(function(articles){
+        if (tab === 'articles') renderArticlesTab(articles); // el usuario pudo cambiar de pestaña mientras cargaba
+      }).catch(function(err){
+        if (tab === 'articles' && content) content.innerHTML = '<p style="color:#ef4444;font-size:14px">No se pudieron cargar los artículos: '+(err.message||err)+'</p>';
+      });
+    } else {
+      renderWsContent(getLocalData());
+    }
+  }
 
   var tabKeys = admin ? ['models','documents','plots','articles'] : ['models','documents','plots'];
   function updateTabs() {
@@ -53,13 +65,16 @@ function WorkspaceHome() {
   function createArticle() {
     if (!newName.trim()) return;
     var slug = slugify(newName) || rid();
+    showNew = false; newName = ''; refresh();
     saveCustomArticle({
       slug: slug, title: newName, category:'fisica', level:'introductorio', readingMinutes:10,
       summary:'', sections:[{id:'contenido', title:'Contenido', keywords:[], body:'Escribe aquí el contenido del artículo.'}],
       updated_at: new Date().toISOString()
+    }).then(function(){
+      location.href = 'article-editor.html?slug=' + encodeURIComponent(slug);
+    }).catch(function(err){
+      alert('No se pudo crear el artículo: ' + (err.message || err));
     });
-    showNew = false; newName = '';
-    location.href = 'article-editor.html?slug=' + encodeURIComponent(slug);
   }
 
   function deleteItem(key, id) {
@@ -114,24 +129,32 @@ function WorkspaceHome() {
           h('div',{style:{borderTop:'1px solid rgba(55,65,81,0.6)',padding:'4px 16px',display:'flex',justifyContent:'flex-end'}},h('button',{className:'btn btn-ghost',onClick:function(e){e.stopPropagation();e.preventDefault();deleteItem('ad_plots',p.id);},style:{fontSize:'12px',color:'#ef4444'}},'Borrar'))
         ));
       });
-    } else if (tab === 'articles') {
-      content.appendChild(h('div',{style:{marginBottom:'16px'}},h('button',{className:'ws-create-btn',onClick:function(){showNew=true;newName='';refresh();}},'+ Nuevo artículo')));
-      if (showNew) renderNewModal('artículo','ART',function(){createArticle();});
-      if (data.articles.length === 0) content.appendChild(h('p',{style:{color:'#8a8fa8',fontSize:'14px'}},'No hay artículos.'));
-      else data.articles.forEach(function(a){
-        var builtin = isBuiltInSlug(a.slug);
-        content.appendChild(h('div',{className:'ws-card'},
-          h('a',{className:'ws-card-body',href:'article-editor.html?slug='+encodeURIComponent(a.slug),style:{display:'block',color:'inherit'}},
-            h('div',{className:'ws-card-title'},a.title),
-            h('div',{className:'ws-card-meta'},h('div',{style:{display:'flex',gap:'8px'}},builtin?Tag('Precargado','muted'):null,Tag((CATEGORY_META[a.category]||{}).label||a.category,'primary'),Tag((LEVEL_META[a.level]||{}).label||a.level,'muted')),h('span',{},a.readingMinutes+' min'))
-          ),
-          h('div',{style:{borderTop:'1px solid rgba(55,65,81,0.6)',padding:'4px 16px',display:'flex',justifyContent:'space-between'}},
-            h('a',{className:'btn btn-ghost',href:'article.html?slug='+encodeURIComponent(a.slug),style:{fontSize:'12px'}},'Ver publicado'),
-            h('button',{className:'btn btn-ghost',onClick:function(e){e.stopPropagation();e.preventDefault();if(confirm(builtin?'¿Ocultar este artículo precargado del repositorio? Podés reactivarlo más adelante si lo necesitás.':'¿Borrar este artículo?'))
-              {deleteCustomArticle(a.slug);refresh();}},style:{fontSize:'12px',color:'#ef4444'}},builtin?'Ocultar':'Borrar'))
-        ));
-      });
     }
+  }
+
+  function renderArticlesTab(articles) {
+    var content = document.getElementById('ws-dynamic-content');
+    if (!content) return;
+    content.innerHTML = '';
+    content.appendChild(h('div',{style:{marginBottom:'16px'}},h('button',{className:'ws-create-btn',onClick:function(){showNew=true;newName='';renderArticlesTab(articles);}},'+ Nuevo artículo')));
+    if (showNew) renderNewModal('artículo','ART',function(){createArticle();});
+    if (articles.length === 0) content.appendChild(h('p',{style:{color:'#8a8fa8',fontSize:'14px'}},'No hay artículos.'));
+    else articles.forEach(function(a){
+      var builtin = isBuiltInSlug(a.slug);
+      content.appendChild(h('div',{className:'ws-card'},
+        h('a',{className:'ws-card-body',href:'article-editor.html?slug='+encodeURIComponent(a.slug),style:{display:'block',color:'inherit'}},
+          h('div',{className:'ws-card-title'},a.title),
+          h('div',{className:'ws-card-meta'},h('div',{style:{display:'flex',gap:'8px'}},builtin?Tag('Precargado','muted'):null,Tag((CATEGORY_META[a.category]||{}).label||a.category,'primary'),Tag((LEVEL_META[a.level]||{}).label||a.level,'muted')),h('span',{},a.readingMinutes+' min'))
+        ),
+        h('div',{style:{borderTop:'1px solid rgba(55,65,81,0.6)',padding:'4px 16px',display:'flex',justifyContent:'space-between'}},
+          h('a',{className:'btn btn-ghost',href:'article.html?slug='+encodeURIComponent(a.slug),style:{fontSize:'12px'}},'Ver publicado'),
+          h('button',{className:'btn btn-ghost',onClick:function(e){
+            e.stopPropagation();e.preventDefault();
+            if (!confirm(builtin?'¿Ocultar este artículo precargado del repositorio? Podés reactivarlo más adelante si lo necesitás.':'¿Borrar este artículo?')) return;
+            deleteCustomArticle(a.slug).then(function(){ refresh(); }).catch(function(err){ alert('No se pudo borrar: '+(err.message||err)); });
+          },style:{fontSize:'12px',color:'#ef4444'}},builtin?'Ocultar':'Borrar'))
+      ));
+    });
   }
 
   function renderNewModal(label, tag, onCreate) {
