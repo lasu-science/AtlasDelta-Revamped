@@ -93,7 +93,7 @@ function ArticleEditorPage() {
         wrap.appendChild(h('div',{className:'ae-section-box'},
           h('div',{className:'ae-section-head'},
             h('input',{value:s.title,placeholder:'Título de la sección',onInput:function(e){s.title=e.target.value;save();}}),
-            h('select',{onChange:function(e){s.widget=e.target.value||undefined;save();}},
+            h('select',{onChange:function(e){if(e.target.value){s.widget=e.target.value;}else{delete s.widget;}save();}},
               widgetOptionsFor(s.widget).map(function(w){return h('option',{value:w,selected:(s.widget||'')===w||undefined},widgetLabel(w));})
             ),
             h('button',{className:'btn btn-ghost',title:'Subir sección',disabled:i===0||undefined,onClick:function(){moveSection(i,-1);}},'↑'),
