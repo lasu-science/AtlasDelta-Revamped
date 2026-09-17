@@ -25,8 +25,30 @@ function ArticleEditorPage() {
     root.appendChild(h('p',{style:{padding:'80px 24px',textAlign:'center',color:'#ef4444'}},'No se pudo cargar el artículo: '+(err.message||err)));
   });
 
+  // Etiquetas legibles para los widgets disponibles (opcional: si un widget
+  // nuevo no tiene entrada acá, se muestra directamente su clave).
+  var WIDGET_LABELS = { 'eng-trent1000-3d': 'Motor Trent 1000 (visor 3D)' };
+
   function buildEditor(article) {
-    var WIDGET_OPTIONS = ['','phys-projectile','phys-friction','phys-spring','phys-pendulum','phys-ohm','phys-wave','phys-snell','phys-energy','phys-doppler','math-derivative','math-eigen','eng-pid','eng-bode','eng-beam','chem-equilibrium','chem-ph','chem-lechatelier','phys-decay','phys-collision','math-newton-raphson'];
+    // La lista de widgets sale del registro real WIDGETS de shared.js (no de
+    // una lista fija acá), para no volver a desincronizarse la próxima vez
+    // que se agreguen o saquen widgets. Si una sección apunta a un widget que
+    // ya no existe (por ejemplo, uno de los widgets 2D viejos que se sacaron),
+    // se lo agrega igual a las opciones de ESA sección, marcado como
+    // "(eliminado)", para que el admin lo vea y decida qué poner en su lugar
+    // en vez de perderlo en silencio.
+    function widgetKeys() { return (typeof WIDGETS === 'object' && WIDGETS) ? Object.keys(WIDGETS) : []; }
+    function widgetOptionsFor(current) {
+      var opts = [''].concat(widgetKeys());
+      if (current && opts.indexOf(current) === -1) opts.push(current);
+      return opts;
+    }
+    function widgetLabel(w) {
+      if (!w) return '(sin widget)';
+      if (WIDGET_LABELS[w]) return WIDGET_LABELS[w];
+      if (widgetKeys().indexOf(w) === -1) return w + ' (eliminado — elegí otro)';
+      return w;
+    }
 
     var saveTimer = null;
     function save(flash) {
@@ -72,7 +94,7 @@ function ArticleEditorPage() {
           h('div',{className:'ae-section-head'},
             h('input',{value:s.title,placeholder:'Título de la sección',onInput:function(e){s.title=e.target.value;save();}}),
             h('select',{onChange:function(e){s.widget=e.target.value||undefined;save();}},
-              WIDGET_OPTIONS.map(function(w){return h('option',{value:w,selected:(s.widget||'')===w||undefined},w||'(sin widget)');})
+              widgetOptionsFor(s.widget).map(function(w){return h('option',{value:w,selected:(s.widget||'')===w||undefined},widgetLabel(w));})
             ),
             h('button',{className:'btn btn-ghost',title:'Subir sección',disabled:i===0||undefined,onClick:function(){moveSection(i,-1);}},'↑'),
             h('button',{className:'btn btn-ghost',title:'Bajar sección',disabled:i===article.sections.length-1||undefined,onClick:function(){moveSection(i,1);}},'↓'),
