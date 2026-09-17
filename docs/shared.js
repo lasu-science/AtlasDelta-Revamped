@@ -961,10 +961,15 @@ function buildTrent1000Scene(THREE) {
       roughness: o.roughness != null ? o.roughness : 0.4,
       emissive: o.emissive != null ? o.emissive : 0x000000,
       emissiveIntensity: o.emissiveIntensity || 0,
-      clippingPlanes: [clipPlane],
       side: THREE.FrontSide
     };
     if (!o.noBrush) params.roughnessMap = getBrushedMetalTexture(THREE);
+    // Solo las carcasas (góndola y carcasa del núcleo) llevan el plano de
+    // corte — todo lo demás (álabes, discos, ejes, combustor) se ve siempre
+    // completo, no importa cómo esté el slider de corte. DoubleSide en las
+    // carcasas hace que, al cortarlas, se vea la cara interior de la chapa
+    // en vez de quedar "huecas" (nada renderizado del lado de adentro).
+    if (o.clip) { params.clippingPlanes = [clipPlane]; params.side = THREE.DoubleSide; }
     return new THREE.MeshStandardMaterial(params);
   }
   // Perfil de ala simplificado (no es una NACA real, pero da la silueta
@@ -1014,7 +1019,7 @@ function buildTrent1000Scene(THREE) {
       dummy.quaternion.set(0, 0, 0, 1);
       dummy.rotateX((i / count) * Math.PI * 2 + (o.stagger || 0));
       dummy.translateY(hubR);
-      dummy.rotateZ(o.twist != null ? o.twist : 0.4);
+      dummy.rotateY(o.twist != null ? o.twist : 0.4);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
     }
@@ -1023,13 +1028,16 @@ function buildTrent1000Scene(THREE) {
   }
   // Álabes guía fijos (no giran) entre etapas de rotor — sin disco de buje,
   // más opacos/duller, para distinguirlos de los rotores a simple vista.
-  function statorRing(count, stageX, hubR, tipR, chord, thickness, color) {
-    return bladeRing(count, stageX, hubR, tipR, chord, thickness, color, { twist: -0.15, washout: 0.12, metalness: 0.45, roughness: 0.65 });
+  // Llevan la MISMA inclinación que el rotor de su sección pero de signo
+  // opuesto (así el flujo que sale "torcido" del rotor se endereza antes de
+  // entrar al siguiente rotor, como en un compresor/turbina real).
+  function statorRing(count, stageX, hubR, tipR, chord, thickness, color, rotorTwist, rotorWashout) {
+    return bladeRing(count, stageX, hubR, tipR, chord, thickness, color, { twist: -rotorTwist, washout: -(rotorWashout || 0), metalness: 0.5, roughness: 0.6 });
   }
-  function addStators(xs, hubs, tips, count, chord, thick, color) {
+  function addStators(xs, hubs, tips, count, chord, thick, color, rotorTwist, rotorWashout) {
     for (var idx = 0; idx < xs.length - 1; idx++) {
       var x = (xs[idx] + xs[idx + 1]) / 2, hubR = (hubs[idx] + hubs[idx + 1]) / 2, tipR = (tips[idx] + tips[idx + 1]) / 2;
-      group.add(statorRing(count, x, hubR, tipR, chord, thick, color));
+      group.add(statorRing(count, x, hubR, tipR, chord, thick, color, rotorTwist, rotorWashout));
     }
   }
   function hubDisk(stageX, r, width, color) {
@@ -1043,14 +1051,14 @@ function buildTrent1000Scene(THREE) {
   lathePiece([
     { r: 0.16, x: -0.25 }, { r: 0.62, x: -0.21 }, { r: 0.95, x: -0.10 }, { r: 1.045, x: 0.05 },
     { r: 1.05, x: 0.35 }, { r: 1.035, x: 0.85 }, { r: 1.0, x: 1.45 }, { r: 0.95, x: 1.85 }, { r: 0.90, x: 1.98 }
-  ], 0xaab4c4, { roughness: 0.28, metalness: 0.55 });
+  ], 0xaab4c4, { roughness: 0.28, metalness: 0.55, clip: true });
   lathePiece([
     { r: 0.64, x: 0.10 }, { r: 0.60, x: 0.22 }, { r: 0.50, x: 0.55 }, { r: 0.455, x: 0.92 },
     { r: 0.44, x: 1.00 }, { r: 0.355, x: 1.32 }, { r: 0.37, x: 1.38 }, { r: 0.38, x: 1.68 },
     { r: 0.365, x: 1.73 }, { r: 0.42, x: 1.90 }, { r: 0.47, x: 2.10 }, { r: 0.60, x: 2.55 }, { r: 0.55, x: 2.62 }
-  ], 0x5b6472, { roughness: 0.4, metalness: 0.5 });
+  ], 0x5b6472, { roughness: 0.4, metalness: 0.5, clip: true });
 
-  var spinner = new THREE.Mesh(new THREE.ConeGeometry(FAN_R * 0.28, 0.42, 32, 1, true), mat(0xd8dee8, { metalness: 0.85, roughness: 0.2 }));
+  var spinner = new THREE.Mesh(new THREE.ConeGeometry(FAN_R * 0.28, 0.42, 32), mat(0xd8dee8, { metalness: 0.85, roughness: 0.2 }));
   spinner.rotation.z = Math.PI / 2; spinner.position.x = -0.21;
   group.add(spinner);
 
@@ -1068,7 +1076,7 @@ function buildTrent1000Scene(THREE) {
     lpSpool.add(ring); lpSpool.add(hubDisk(x, hubR, 0.045, 0x8a6b45));
     lptStages.push(ring); lptXs.push(x); lptHubs.push(hubR); lptTips.push(tipR);
   }
-  addStators(lptXs, lptHubs, lptTips, 20, 0.05, 0.011, 0x8a94a6);
+  addStators(lptXs, lptHubs, lptTips, 20, 0.05, 0.011, 0x596273, -0.4, 0.3);
   var lpShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 2.75, 12), mat(0x9fb2c6, { metalness: 0.9, roughness: 0.25 }));
   lpShaft.rotation.z = Math.PI / 2; lpShaft.position.x = 1.35;
   lpSpool.add(lpShaft);
@@ -1085,7 +1093,7 @@ function buildTrent1000Scene(THREE) {
     ipSpool.add(ring2); ipSpool.add(hubDisk(x2, hubR2, 0.035, 0x6c7f99));
     ipcStages.push(ring2); ipcXs.push(x2); ipcHubs.push(hubR2); ipcTips.push(tipR2);
   }
-  addStators(ipcXs, ipcHubs, ipcTips, 22, 0.04, 0.009, 0x748199);
+  addStators(ipcXs, ipcHubs, ipcTips, 22, 0.04, 0.009, 0x596273, 0.5, 0.35);
   var iptRing = bladeRing(20, 1.9, FAN_R * 0.30, FAN_R * 0.39, 0.075, 0.015, 0xb08a5a, { twist: -0.4, washout: 0.25, metalness: 0.6, roughness: 0.5, emissive: 0x552200, emissiveIntensity: 0.08 });
   ipSpool.add(iptRing); ipSpool.add(hubDisk(1.9, FAN_R * 0.30, 0.05, 0x8a6b45));
   var ipShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.78, 12), mat(0x7d93ad, { metalness: 0.9, roughness: 0.25 }));
@@ -1104,7 +1112,7 @@ function buildTrent1000Scene(THREE) {
     hpSpool.add(ring3); hpSpool.add(hubDisk(x3, hubR3, 0.028, 0x556a85));
     hpcStages.push(ring3); hpcXs.push(x3); hpcHubs.push(hubR3); hpcTips.push(tipR3);
   }
-  addStators(hpcXs, hpcHubs, hpcTips, 24, 0.032, 0.007, 0x62748c);
+  addStators(hpcXs, hpcHubs, hpcTips, 24, 0.032, 0.007, 0x596273, 0.5, 0.3);
   var hptRing = bladeRing(18, 1.73, FAN_R * 0.26, FAN_R * 0.33, 0.06, 0.013, 0xc99a5a, { twist: -0.4, washout: 0.22, metalness: 0.55, roughness: 0.5, emissive: 0x7a2a00, emissiveIntensity: 0.12 });
   hpSpool.add(hptRing); hpSpool.add(hubDisk(1.73, FAN_R * 0.26, 0.045, 0x9a6b3a));
   var hpShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.85, 12), mat(0x5f7893, { metalness: 0.9, roughness: 0.25 }));
@@ -1135,7 +1143,7 @@ function buildTrent1000Scene(THREE) {
   group.add(flameLight);
 
   // Tobera de escape del núcleo
-  var nozzle = new THREE.Mesh(new THREE.ConeGeometry(FAN_R * 0.44, 0.5, 32, 1, true), mat(0x4a5160, { metalness: 0.7, roughness: 0.4 }));
+  var nozzle = new THREE.Mesh(new THREE.ConeGeometry(FAN_R * 0.44, 0.5, 32), mat(0x4a5160, { metalness: 0.7, roughness: 0.4 }));
   nozzle.rotation.z = -Math.PI / 2; nozzle.position.x = 2.85;
   group.add(nozzle);
 
