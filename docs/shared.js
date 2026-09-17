@@ -509,7 +509,8 @@ function getAllArticles() {
 function saveCustomArticle(article) {
   var db = getFirestoreDb();
   if (!db) return Promise.reject(new Error('No se pudo conectar con Firestore (revisá que el script y FIREBASE_CONFIG estén cargados).'));
-  return waitForFirebaseAuthReady().then(function(){
+  return waitForFirebaseAuthReady().then(function(user){
+    if (!user) return Promise.reject(new Error('No se pudo verificar tu sesión de Firebase. Si tenés un bloqueador de anuncios/rastreadores activo, puede estar impidiendo el login — desactivalo para este sitio e intentá de nuevo.'));
     return db.collection('articles').doc(article.slug).set(article);
   });
 }
@@ -518,7 +519,8 @@ function saveCustomArticle(article) {
 function deleteCustomArticle(slug) {
   var db = getFirestoreDb();
   if (!db) return Promise.reject(new Error('No se pudo conectar con Firestore (revisá que el script y FIREBASE_CONFIG estén cargados).'));
-  return waitForFirebaseAuthReady().then(function(){
+  return waitForFirebaseAuthReady().then(function(user){
+    if (!user) return Promise.reject(new Error('No se pudo verificar tu sesión de Firebase. Si tenés un bloqueador de anuncios/rastreadores activo, puede estar impidiendo el login — desactivalo para este sitio e intentá de nuevo.'));
     if (isBuiltInSlug(slug)) {
       return db.collection('articles').doc(slug).delete().then(function(){
         return db.collection('article_deletions').doc(slug).set({deleted:true});
@@ -578,526 +580,486 @@ function renderKatex(expr, dm) {
   return '<code style="color:#fbbf24">'+expr+'</code>';
 }
 
-// ── WIDGETS ────────────────────────────────────────────
+// ── WIDGETS 3D ───────────────────────────────────────────
+// Reemplaza a los widgets 2D anteriores (errores de escala y de
+// compatibilidad con pantallas chicas). Mismo contrato público que antes:
+// WIDGETS['clave'] sigue siendo una función que devuelve un <figure>, y
+// renderWidget(name) sigue funcionando igual para quien ya lo llame desde
+// otra página — no hace falta tocar nada fuera de este archivo.
+//
+// three.js se carga bajo demanda desde CDN la primera vez que un widget 3D
+// entra en pantalla (no pesa nada en páginas sin widgets), y cada widget se
+// pausa solo cuando sale del viewport (ahorra batería en celulares).
 
-// Calcula el máximo (o mínimo) de fn(params) muestreando toda la grilla de combinaciones
-// posibles de los sliders declarados en sliderDefs = {clave: {min, max}, ...}.
-// Se usa para "escala fija": en vez de congelar la vista actual, calculamos de una vez
-// el rango que abarca la curva más extrema posible en todo el dominio de parámetros.
-function maxOverGrid(sliderDefs, fn, steps) {
-  steps = steps || 16;
-  var keys = Object.keys(sliderDefs);
-  var best = -Infinity;
-  function rec(i, params) {
-    if (i === keys.length) { var v = fn(params); if (isFinite(v) && v > best) best = v; return; }
-    var k = keys[i], def = sliderDefs[k];
-    for (var s = 0; s <= steps; s++) {
-      params[k] = def.min + (def.max - def.min) * s / steps;
-      rec(i + 1, params);
+var THREE_CDN_URL = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+var _threeLoadPromise = null;
+function loadThree() {
+  if (window.THREE) return Promise.resolve(window.THREE);
+  if (_threeLoadPromise) return _threeLoadPromise;
+  _threeLoadPromise = new Promise(function(resolve, reject) {
+    var s = document.createElement('script');
+    s.src = THREE_CDN_URL;
+    s.onload = function() { resolve(window.THREE); };
+    s.onerror = function() { reject(new Error('No se pudo cargar three.js (revisá la conexión o algún bloqueador de scripts).')); };
+    document.head.appendChild(s);
+  });
+  return _threeLoadPromise;
+}
+
+// CSS propio de los widgets 3D, inyectado una sola vez. Vive acá (no en
+// shared.css) para que este archivo sea autosuficiente.
+var _widget3dStylesInjected = false;
+function ensureWidget3DStyles() {
+  if (_widget3dStylesInjected) return;
+  _widget3dStylesInjected = true;
+  var css =
+    '.widget3d-canvas-wrap{position:relative;touch-action:none;cursor:grab;' +
+      'background:radial-gradient(circle at 50% 35%,#131a28 0%,#080a10 78%);' +
+      'border-radius:8px;overflow:hidden}' +
+    '.widget3d-canvas-wrap:active{cursor:grabbing}' +
+    '.widget3d-canvas-wrap canvas{display:block;width:100%;height:100%}' +
+    '.widget3d-hint{position:absolute;left:8px;bottom:8px;font:10px JetBrains Mono,monospace;' +
+      'color:#8a8fa8;background:rgba(8,10,16,.55);padding:3px 7px;border-radius:5px;' +
+      'pointer-events:none;letter-spacing:.02em}' +
+    '.widget3d-caption{position:absolute;left:8px;top:8px;right:8px;max-width:min(420px,calc(100% - 16px));' +
+      'font:12px/1.45 Space Grotesk,sans-serif;color:#e2e8f0;background:rgba(8,10,16,.7);' +
+      'border:1px solid rgba(148,163,184,.18);padding:8px 10px;border-radius:7px}' +
+    '.widget3d-caption b{color:#22d3ee;display:block;font:11px JetBrains Mono,monospace;' +
+      'letter-spacing:.04em;margin-bottom:3px;text-transform:uppercase}' +
+    '.widget3d-steps{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}' +
+    '.widget3d-step-track{flex:1 1 160px;display:flex;gap:3px;min-width:110px}' +
+    '.widget3d-step-dot{flex:1;height:5px;border-radius:3px;background:rgba(148,163,184,.25);' +
+      'cursor:pointer;transition:background .2s}' +
+    '.widget3d-step-dot.active{background:#22d3ee}' +
+    '.widget3d-step-dot.done{background:rgba(34,211,238,.45)}' +
+    '.widget3d-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:8px}' +
+    '.widget3d-row label{display:flex;align-items:center;gap:6px;font:11px JetBrains Mono,monospace;color:#8a8fa8}' +
+    '.widget3d-row input[type=range]{width:120px}' +
+    '@media (max-width:640px){.widget3d-caption{font-size:11px}.widget3d-row input[type=range]{width:86px}' +
+      '.widget3d-hint{display:none}}';
+  var styleEl = document.createElement('style');
+  styleEl.id = 'widget3d-styles';
+  styleEl.textContent = css;
+  document.head.appendChild(styleEl);
+}
+
+// Controles de órbita mínimos (mouse + touch, con pellizco para zoom) vía
+// Pointer Events — evita depender del addon OrbitControls.js aparte.
+function createOrbitControls(dom, camera, target, opts) {
+  opts = opts || {};
+  var radius = opts.radius || 6, minR = opts.minRadius || 2, maxR = opts.maxRadius || 20;
+  var theta = opts.theta != null ? opts.theta : 0.7, phi = opts.phi != null ? opts.phi : 1.15;
+  var pointers = {};
+  var lastPinchDist = 0;
+  function clampPhi(p) { return Math.max(0.15, Math.min(Math.PI - 0.15, p)); }
+  function sync() {
+    var sp = Math.sin(phi), cp = Math.cos(phi);
+    camera.position.set(
+      target.x + radius * sp * Math.sin(theta),
+      target.y + radius * cp,
+      target.z + radius * sp * Math.cos(theta)
+    );
+    camera.lookAt(target);
+  }
+  function ids() { return Object.keys(pointers); }
+  function midDist() {
+    var k = ids(), a = pointers[k[0]], b = pointers[k[1]];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+  function onDown(e) {
+    if (dom.setPointerCapture) { try { dom.setPointerCapture(e.pointerId); } catch (err) {} }
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (ids().length === 2) lastPinchDist = midDist();
+  }
+  function onMove(e) {
+    if (!pointers[e.pointerId]) return;
+    var prev = pointers[e.pointerId];
+    var dx = e.clientX - prev.x, dy = e.clientY - prev.y;
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    var k = ids();
+    if (k.length === 1) {
+      theta -= dx * 0.006;
+      phi = clampPhi(phi - dy * 0.006);
+      sync();
+    } else if (k.length === 2) {
+      var d = midDist();
+      if (lastPinchDist > 0) radius = Math.max(minR, Math.min(maxR, radius * (lastPinchDist / d)));
+      lastPinchDist = d;
+      sync();
     }
+    e.preventDefault();
   }
-  rec(0, {});
-  return best;
+  function onUp(e) { delete pointers[e.pointerId]; if (ids().length < 2) lastPinchDist = 0; }
+  function onWheel(e) {
+    radius = Math.max(minR, Math.min(maxR, radius * (1 + (e.deltaY > 0 ? 0.12 : -0.12))));
+    sync();
+    e.preventDefault();
+  }
+  dom.style.touchAction = 'none';
+  dom.addEventListener('pointerdown', onDown);
+  dom.addEventListener('pointermove', onMove, { passive: false });
+  dom.addEventListener('pointerup', onUp);
+  dom.addEventListener('pointercancel', onUp);
+  dom.addEventListener('pointerleave', onUp);
+  dom.addEventListener('wheel', onWheel, { passive: false });
+  sync();
+  return {
+    update: sync,
+    getState: function () { return { theta: theta, phi: phi, radius: radius }; },
+    setAngles: function (t, p) { theta = t; phi = clampPhi(p); sync(); },
+    setRadius: function (r) { radius = Math.max(minR, Math.min(maxR, r)); sync(); },
+    dispose: function () {
+      dom.removeEventListener('pointerdown', onDown);
+      dom.removeEventListener('pointermove', onMove);
+      dom.removeEventListener('pointerup', onUp);
+      dom.removeEventListener('pointercancel', onUp);
+      dom.removeEventListener('pointerleave', onUp);
+      dom.removeEventListener('wheel', onWheel);
+    }
+  };
 }
 
-function drawAxes(ctx, pad, pw, ph, xMin, xMax, yMin, yMax, nTicks) {
-  nTicks = nTicks || 4;
-  ctx.strokeStyle = 'rgba(100,116,139,0.6)'; ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t+ph); ctx.lineTo(pad.l+pw, pad.t+ph);
-  ctx.stroke();
-  ctx.fillStyle = '#8a8fa8'; ctx.font = '9px JetBrains Mono';
-  function fmt(v) { var a = Math.abs(v); return a!==0 && a<0.01 ? v.toExponential(1) : (a>=100?v.toFixed(0):v.toFixed(2)); }
-  for (var i=0;i<=nTicks;i++) {
-    var xv = xMin + (xMax-xMin)*i/nTicks, sx = pad.l + pw*i/nTicks;
-    ctx.strokeStyle='rgba(100,116,139,0.6)';ctx.beginPath();ctx.moveTo(sx,pad.t+ph);ctx.lineTo(sx,pad.t+ph+4);ctx.stroke();
-    ctx.textAlign='center';ctx.fillText(fmt(xv), sx, pad.t+ph+14);
-    var yv = yMin + (yMax-yMin)*(nTicks-i)/nTicks, sy = pad.t + ph*i/nTicks;
-    ctx.beginPath();ctx.moveTo(pad.l-4,sy);ctx.lineTo(pad.l,sy);ctx.stroke();
-    ctx.textAlign='right';ctx.fillText(fmt(yv), pad.l-6, sy+3);
-  }
-  ctx.textAlign='start';
-}
-
-function WidgetFigure(title, sliders, drawFn, caption, height, animate) {
-  height = height || 260;
-  if (animate === undefined) animate = true;
+// Host genérico para widgets 3D. buildFn(THREE) arma la escena y devuelve
+// {group, camRadius, steps:[{label,caption,camera:{x,theta,phi,radius},focus:[...]}],
+//  update(dt,elapsed,speedFactor,stepIdx), setCutaway(t)}.
+function WidgetFigure3D(title, caption, buildFn, opts) {
+  opts = opts || {};
+  ensureWidget3DStyles();
+  var height = opts.height || 360;
   var fig = document.createElement('figure');
   fig.className = 'widget-figure';
-  if (title) {
-    var cap = document.createElement('figcaption');
-    cap.innerHTML = '<span>'+title+'</span>';
-    var controls = '<span class="widget-controls">';
-    if (animate) controls += '<button class="widget-pause">Pausar</button><button class="widget-reset">Reiniciar</button>';
-    controls += '<button class="widget-lock" title="Fijá la escala de los ejes para comparar cómo cambia la curva; liberala para que los ejes se ajusten automáticamente.">🔓 Escala libre</button>';
-    controls += '</span>';
-    cap.innerHTML += controls;
-    fig.appendChild(cap);
-  }
+
+  var cap = document.createElement('figcaption');
+  cap.innerHTML = '<span>' + title + '</span>' +
+    '<span class="widget-controls"><button class="widget-pause">Pausar giro</button>' +
+    '<button class="widget-reset">Reiniciar vista</button></span>';
+  fig.appendChild(cap);
+
   var body = document.createElement('div'); body.className = 'widget-body';
-  var wrap = document.createElement('div'); wrap.className = 'widget-canvas-wrap';
-  var canvas = document.createElement('canvas'); canvas.style.height = height+'px'; wrap.appendChild(canvas); body.appendChild(wrap);
-  var sliderDiv = document.createElement('div'); sliderDiv.className = 'widget-sliders';
-  var params = {};
-  var scale = {locked:false, range:null}; // widgets can opt in to reading/writing scale.range
-  sliders.forEach(function(s) {
-    params[s.key] = s.initial;
-    var lbl = document.createElement('label');
-    lbl.innerHTML = '<div class="slider-head"><span>'+s.label+'</span><span class="slider-val">'+s.initial+(s.unit||'')+'</span></div>';
-    var inp = document.createElement('input'); inp.type='range'; inp.min=s.min; inp.max=s.max; inp.step=s.step; inp.value=s.initial;
-    inp.addEventListener('input',function(){params[s.key]=Number(inp.value);lbl.querySelector('.slider-val').textContent=Number(inp.value)+(s.unit||'');if(!animate)tick(performance.now());});
-    lbl.appendChild(inp); sliderDiv.appendChild(lbl);
-  });
-  body.appendChild(sliderDiv); fig.appendChild(body);
-  if (caption) { var cd = document.createElement('div'); cd.className='widget-caption'; cd.textContent=caption; fig.appendChild(cd); }
-  var running = true, startT = performance.now(), elapsed = 0;
-  var resizeTries = 0;
-  function resize() {
-    var dpr = window.devicePixelRatio||1, rect = canvas.getBoundingClientRect();
-    if (rect.width === 0 && resizeTries < 20) {
-      // Container not laid out yet (e.g. still off-screen or mid-reflow); retry shortly.
-      resizeTries++;
-      setTimeout(resize, 60);
-      return;
-    }
-    canvas.width = Math.max(1, rect.width*dpr); canvas.height = Math.max(1, rect.height*dpr);
-    canvas.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
-  }
-  function tick(now) {
-    if (running) elapsed = (now-startT)/1000;
-    var ctx = canvas.getContext('2d'), rect = canvas.getBoundingClientRect();
-    ctx.clearRect(0,0,rect.width,rect.height);
-    try { drawFn(ctx, rect.width, rect.height, elapsed, params, scale); } catch(e) { console.error('Widget draw error:', e); }
-    if (animate) requestAnimationFrame(tick);
-  }
-  window.addEventListener('resize', resize);
-  setTimeout(function(){resize();requestAnimationFrame(tick);},50);
-  setTimeout(function(){
-    var pb = fig.querySelector('.widget-pause'), rb = fig.querySelector('.widget-reset'), lb = fig.querySelector('.widget-lock');
-    if (pb) pb.addEventListener('click',function(){running=!running;pb.textContent=running?'Pausar':'Reanudar';if(running){startT=performance.now()-elapsed*1000;requestAnimationFrame(tick);}});
-    if (rb) rb.addEventListener('click',function(){startT=performance.now();elapsed=0;running=true;if(pb)pb.textContent='Pausar';requestAnimationFrame(tick);});
-    if (lb) lb.addEventListener('click',function(){
-      scale.locked = !scale.locked;
-      lb.textContent = scale.locked ? '🔒 Escala fija' : '🔓 Escala libre';
-      if (!scale.locked) scale.range = null;
-      tick(performance.now());
+  var wrap = document.createElement('div'); wrap.className = 'widget-canvas-wrap widget3d-canvas-wrap';
+  wrap.style.height = height + 'px';
+  var overlay = document.createElement('div'); overlay.className = 'widget3d-caption';
+  overlay.innerHTML = '<b>Cargando modelo…</b>';
+  var hint = document.createElement('div'); hint.className = 'widget3d-hint';
+  hint.textContent = 'Arrastrá para rotar · rueda / pellizco para zoom';
+  wrap.appendChild(overlay); wrap.appendChild(hint);
+  body.appendChild(wrap); fig.appendChild(body);
+
+  var stepsBar = document.createElement('div'); stepsBar.className = 'widget3d-steps';
+  var prevBtn = document.createElement('button'); prevBtn.className = 'btn btn-outline'; prevBtn.textContent = '‹ Anterior';
+  var playBtn = document.createElement('button'); playBtn.className = 'btn btn-outline'; playBtn.textContent = '▶ Reproducir pasos';
+  var nextBtn = document.createElement('button'); nextBtn.className = 'btn btn-outline'; nextBtn.textContent = 'Siguiente ›';
+  var track = document.createElement('div'); track.className = 'widget3d-step-track';
+  stepsBar.appendChild(prevBtn); stepsBar.appendChild(track); stepsBar.appendChild(playBtn); stepsBar.appendChild(nextBtn);
+  fig.appendChild(stepsBar);
+
+  var row = document.createElement('div'); row.className = 'widget3d-row';
+  var cutLbl = document.createElement('label'); cutLbl.innerHTML = '<span>✂ Plano de corte</span>';
+  var cutInput = document.createElement('input'); cutInput.type = 'range'; cutInput.min = 0; cutInput.max = 100; cutInput.value = 70;
+  cutLbl.appendChild(cutInput); row.appendChild(cutLbl);
+  var speedLbl = document.createElement('label'); speedLbl.innerHTML = '<span>🐢 Velocidad</span>';
+  var speedInput = document.createElement('input'); speedInput.type = 'range'; speedInput.min = 5; speedInput.max = 100; speedInput.value = 35;
+  speedLbl.appendChild(speedInput); row.appendChild(speedLbl);
+  fig.appendChild(row);
+
+  if (caption) { var cd = document.createElement('div'); cd.className = 'widget-caption'; cd.textContent = caption; fig.appendChild(cd); }
+
+  var state = { stepIdx: 0, autoplay: false, running: true, camAnim: null };
+
+  loadThree().then(function (THREE) {
+    var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.localClippingEnabled = true;
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(38, 1, 0.05, 100);
+    var target = new THREE.Vector3(0, 0, 0);
+
+    scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x0a0d14, 1.15));
+    var key = new THREE.DirectionalLight(0xffffff, 1.4); key.position.set(4, 6, 5); scene.add(key);
+    var rim = new THREE.DirectionalLight(0x6ab7ff, 0.55); rim.position.set(-5, -2, -4); scene.add(rim);
+
+    var model = buildFn(THREE);
+    scene.add(model.group);
+
+    var camR = model.camRadius || 6;
+    var controls = createOrbitControls(wrap, camera, target, {
+      radius: camR, theta: 0.6, phi: 1.1, minRadius: camR * 0.32, maxRadius: camR * 2.4
     });
-  },100);
+    wrap.appendChild(renderer.domElement);
+
+    function resize() {
+      var rect = wrap.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, rect.width < 480 ? 1.5 : 2);
+      renderer.setPixelRatio(dpr);
+      renderer.setSize(rect.width, rect.height, false);
+      camera.aspect = rect.width / Math.max(1, rect.height);
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize', resize);
+    setTimeout(resize, 30);
+
+    var steps = model.steps || [];
+    steps.forEach(function (s, i) {
+      var dot = document.createElement('div'); dot.className = 'widget3d-step-dot'; dot.title = s.label;
+      dot.addEventListener('click', function () { stopAuto(); goToStep(i); });
+      track.appendChild(dot);
+    });
+    function refreshDots() {
+      Array.prototype.forEach.call(track.children, function (d, i) {
+        d.className = 'widget3d-step-dot' + (i === state.stepIdx ? ' active' : (i < state.stepIdx ? ' done' : ''));
+      });
+    }
+    function stopAuto() { state.autoplay = false; playBtn.textContent = '▶ Reproducir pasos'; }
+    function goToStep(i) {
+      i = Math.max(0, Math.min(steps.length - 1, i));
+      state.stepIdx = i; refreshDots();
+      var s = steps[i];
+      overlay.innerHTML = '<b>Paso ' + (i + 1) + '/' + steps.length + ' · ' + s.label + '</b>' + s.caption;
+      var from = controls.getState();
+      state.camAnim = { from: { theta: from.theta, phi: from.phi, radius: from.radius, x: target.x }, to: s.camera, t0: performance.now(), dur: 1400 };
+    }
+    prevBtn.addEventListener('click', function () { stopAuto(); goToStep(state.stepIdx - 1); });
+    nextBtn.addEventListener('click', function () { stopAuto(); goToStep(state.stepIdx + 1); });
+    playBtn.addEventListener('click', function () {
+      state.autoplay = !state.autoplay;
+      playBtn.textContent = state.autoplay ? '⏸ Pausar recorrido' : '▶ Reproducir pasos';
+    });
+    if (steps.length) goToStep(0);
+
+    var pauseBtn = fig.querySelector('.widget-pause'), resetBtn = fig.querySelector('.widget-reset');
+    pauseBtn.addEventListener('click', function () {
+      state.running = !state.running;
+      pauseBtn.textContent = state.running ? 'Pausar giro' : 'Reanudar giro';
+    });
+    resetBtn.addEventListener('click', function () { stopAuto(); goToStep(0); });
+
+    var visible = true;
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; }, { threshold: 0.05 }).observe(fig);
+    }
+
+    function ease(p) { return p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p; }
+
+    var last = performance.now(), stepHoldT = 0;
+    function frame(now) {
+      var dt = Math.min(0.05, (now - last) / 1000); last = now;
+      if (visible) {
+        if (state.running) model.update(dt, now / 1000, speedInput.value / 100, state.stepIdx);
+        if (model.setCutaway) model.setCutaway(cutInput.value / 100);
+        if (state.autoplay) {
+          stepHoldT += dt;
+          if (stepHoldT > 3.4) { stepHoldT = 0; goToStep((state.stepIdx + 1) % steps.length); }
+        }
+        if (state.camAnim) {
+          var p = Math.min(1, (now - state.camAnim.t0) / state.camAnim.dur), e = ease(p);
+          var f = state.camAnim.from, t = state.camAnim.to;
+          controls.setAngles(f.theta + (t.theta - f.theta) * e, f.phi + (t.phi - f.phi) * e);
+          controls.setRadius(f.radius + (t.radius - f.radius) * e);
+          target.x = f.x + (t.x - f.x) * e;
+          if (p >= 1) state.camAnim = null;
+        }
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }).catch(function (err) {
+    overlay.innerHTML = '<b>No se pudo cargar el visor 3D</b>' + (err && err.message ? err.message : 'Error desconocido');
+    console.error('Widget 3D:', err);
+  });
+
   return fig;
 }
 
 var WIDGETS = {};
 
-// Widget implementations
-WIDGETS['phys-projectile'] = function() {
-  var sliderDefs = {v0:{min:5,max:60}, ang:{min:5,max:85}, g:{min:1.6,max:25}};
-  function rangeFn(p) { var th=p.ang*Math.PI/180; return p.v0*p.v0*Math.sin(2*th)/p.g; }
-  return WidgetFigure('Tiro parabólico — y(x)', [
-    {key:'v0',label:'Velocidad inicial v₀',min:5,max:60,step:1,initial:25,unit:' m/s'},
-    {key:'ang',label:'Ángulo θ',min:5,max:85,step:1,initial:45,unit:'°'},
-    {key:'g',label:'Gravedad g',min:1.6,max:25,step:0.1,initial:9.81,unit:' m/s²'}
-  ], function(ctx,w,h,t,p,scale) {
-    var th=p.ang*Math.PI/180, vx=p.v0*Math.cos(th), vy=p.v0*Math.sin(th);
-    var tEnd=2*vy/p.g, xEnd=vx*tEnd, pad={l:50,r:30,t:20,b:40}, pw=w-pad.l-pad.r, ph=h-pad.t-pad.b;
-    var xEndView, yMaxView;
-    if (scale.locked) {
-      if (!scale.range) scale.range = {xEndMax: maxOverGrid(sliderDefs, rangeFn)};
-      xEndView = scale.range.xEndMax; yMaxView = xEndView*0.3;
-    } else {
-      xEndView = xEnd; yMaxView = xEnd*0.3;
-    }
-    drawAxes(ctx,pad,pw,ph,0,xEndView,0,yMaxView,4);
-    ctx.strokeStyle='#22d3ee';ctx.lineWidth=2;ctx.beginPath();
-    for(var i=0;i<=80;i++){var x=i/80*xEnd, tt=x/vx, yy=vy*tt-0.5*p.g*tt*tt;
-      var sx=pad.l+x/xEndView*pw, sy=pad.t+ph-yy/yMaxView*ph*0.7;
-      if(i===0)ctx.moveTo(sx,sy);else ctx.lineTo(sx,sy);}
-    ctx.stroke();
-    ctx.fillStyle='#e2e8f0';ctx.font='10px JetBrains Mono';
-    ctx.fillText('R='+xEnd.toFixed(1)+'m',pad.l+pw/2,pad.t+16);
-  },'R = v₀² sin(2θ)/g, máximo en θ = 45°. Con escala fija ves el alcance real comparado contra el máximo posible.',240,false);
-};
+// ── Motor Rolls-Royce Trent 1000 (turbofán de tres ejes, Boeing 787) ────
+// Datos reales del motor: bypass 10:1, relación de presión total 50:1,
+// fan de 20 álabes y Ø2.85 m, IPC 8 etapas, HPC 6 etapas, HPT 1 etapa,
+// IPT 1 etapa, LPT 6 etapas, longitud 4.74 m. Arquitectura de tres ejes
+// concéntricos independientes (LP, IP, HP) — la seña de identidad de los
+// motores Trent de Rolls-Royce frente a los diseños de dos ejes.
+// Simplificaciones deliberadas (por legibilidad y por rendimiento en
+// celulares): el número de álabes por etapa de compresor/turbina está
+// reducido frente al real (el del fan sí es el real, 20), no hay álabes
+// guía/estatores entre rotores, y el anidado de los tres ejes es un
+// esquema ilustrativo, no la geometría exacta de fabricación.
+function buildTrent1000Scene(THREE) {
+  var group = new THREE.Group();
+  var clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1.05);
+  var FAN_R = 1.0; // radio de punta del fan usado como unidad de referencia (real: 1.425 m)
 
-WIDGETS['phys-friction'] = function() {
-  return WidgetFigure('Bloque con fricción', [
-    {key:'ang',label:'Inclinación θ',min:0,max:60,step:1,initial:25,unit:'°'},
-    {key:'mu',label:'Coef. fricción μ',min:0,max:0.8,step:0.01,initial:0.25},
-    {key:'g',label:'Gravedad g',min:1,max:20,step:0.1,initial:9.81,unit:' m/s²'}
-  ], function(ctx,w,h,t,p) {
-    var th=p.ang*Math.PI/180, aSlide=p.g*(Math.sin(th)-p.mu*Math.cos(th)), a=aSlide>0?aSlide:0;
-    var Lmax=Math.min(w,h)*0.7, period=a>0?Math.sqrt(2*Lmax/a):4, tt=t%(period+0.6), s=a>0?Math.min(0.5*a*tt*tt,Lmax):0;
-    // Origen arriba-izquierda (punto alto); la rampa desciende hacia la derecha.
-    var ox=w*0.15, oy=h*0.15;
-    var baseX=ox+Lmax*Math.cos(th), baseY=oy+Lmax*Math.sin(th), cornerX=ox, cornerY=baseY;
-    // Triángulo cerrado (rampa) relleno
-    ctx.fillStyle='rgba(100,116,139,0.15)';
-    ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(baseX,baseY);ctx.lineTo(cornerX,cornerY);ctx.closePath();ctx.fill();
-    ctx.strokeStyle='rgba(180,200,220,0.9)';ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(cornerX,cornerY);ctx.lineTo(baseX,baseY);ctx.lineTo(ox,oy);ctx.stroke();
-    // Bloque: se desliza hacia la derecha y abajo, apoyado flush sobre la rampa
-    var bx=ox+s*Math.cos(th), by=oy+s*Math.sin(th);
-    ctx.save();
-    ctx.translate(bx,by);ctx.rotate(th);
-    ctx.fillStyle='rgba(34,211,238,0.9)';ctx.fillRect(-12,-20,24,20);
-    ctx.restore();
-    ctx.fillStyle='#e2e8f0';ctx.font='10px JetBrains Mono';
-    ctx.fillText('μ='+p.mu.toFixed(2)+' θ='+p.ang+'°',12,h-30);
-    ctx.fillStyle=a>0&&s>0.01?'#fbbf24':'#34d399';
-    ctx.fillText(a>0&&s>0.01?'Deslizando':'En reposo',12,h-14);
-  },'mg(sinθ − μcosθ). Si μ < tanθ, desliza.',240);
-};
-
-WIDGETS['phys-spring'] = function() {
-  return WidgetFigure('Oscilador masa-resorte', [
-    {key:'m',label:'Masa m',min:0.1,max:5,step:0.1,initial:1,unit:' kg'},
-    {key:'k',label:'Rigidez k',min:1,max:50,step:1,initial:10,unit:' N/m'},
-    {key:'A',label:'Amplitud A',min:10,max:80,step:1,initial:40,unit:' px'}
-  ], function(ctx,w,h,t,p) {
-    var omega=Math.sqrt(p.k/p.m), x=p.A*Math.cos(omega*t), cx=w/2, cy=h/2, wall=cx-100;
-    ctx.strokeStyle='rgba(150,170,200,0.6)';ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(wall,cy);ctx.lineTo(cx+x,cy);ctx.stroke();
-    ctx.fillStyle='rgba(34,211,238,0.9)';ctx.fillRect(cx+x-18,cy-18,36,36);
-    ctx.fillStyle='#e2e8f0';ctx.font='10px JetBrains Mono';
-    ctx.fillText('ω='+omega.toFixed(2)+' rad/s T='+(2*Math.PI/omega).toFixed(2)+'s',12,18);
-  },'x(t) = A cos(ωt), ω = √(k/m)',220);
-};
-
-WIDGETS['phys-pendulum'] = function() {
-  return WidgetFigure('Péndulo simple', [
-    {key:'L',label:'Longitud L',min:0.3,max:3,step:0.1,initial:1.2,unit:' m'},
-    {key:'ang',label:'Ángulo θ₀',min:5,max:60,step:1,initial:30,unit:'°'},
-    {key:'g',label:'Gravedad g',min:1,max:20,step:0.1,initial:9.81,unit:' m/s²'}
-  ], function(ctx,w,h,t,p) {
-    var omega=Math.sqrt(p.g/p.L), th0=p.ang*Math.PI/180, th=th0*Math.cos(omega*t);
-    var ox=w/2, oy=h*0.2, len=Math.min(w,h)*0.5, bx=ox+len*Math.sin(th), by=oy+len*Math.cos(th);
-    ctx.strokeStyle='rgba(180,200,220,0.7)';ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(bx,by);ctx.stroke();
-    ctx.fillStyle='rgba(251,191,36,0.9)';ctx.beginPath();ctx.arc(bx,by,16,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#e2e8f0';ctx.font='10px JetBrains Mono';
-    ctx.fillText('T='+(2*Math.PI/omega).toFixed(2)+'s',12,18);
-  },'T ≈ 2π√(L/g) para ángulos pequeños.',240);
-};
-
-WIDGETS['phys-ohm'] = function() {
-  return WidgetFigure('Ley de Ohm — V=IR', [
-    {key:'V',label:'Voltaje V',min:0.5,max:24,step:0.5,initial:12,unit:' V'},
-    {key:'R',label:'Resistencia R',min:1,max:1000,step:1,initial:100,unit:' Ω'}
-  ], function(ctx,w,h,t,p) {
-    var I=p.V/p.R, P=p.V*I;
-    ctx.fillStyle='#e2e8f0';ctx.font='16px Space Grotesk';ctx.textAlign='center';
-    ctx.fillText('I = '+I.toFixed(3)+' A',w/2,h/2-20);
-    ctx.fillText('P = '+P.toFixed(2)+' W',w/2,h/2+12);ctx.textAlign='start';
-  },'I=V/R, P=VI=V²/R=I²R',180,false);
-};
-
-WIDGETS['phys-wave'] = function() {
-  return WidgetFigure('Onda viajera', [
-    {key:'A',label:'Amplitud A',min:10,max:60,step:1,initial:30,unit:' px'},
-    {key:'f',label:'Frecuencia f',min:0.1,max:3,step:0.1,initial:1,unit:' Hz'},
-    {key:'lambda',label:'Long. onda λ',min:60,max:300,step:5,initial:150,unit:' px'}
-  ], function(ctx,w,h,t,p) {
-    var omega=2*Math.PI*p.f, k=2*Math.PI/p.lambda, pad={l:50,r:20,t:20,b:40}, pw=w-pad.l-pad.r, ph=h-pad.t-pad.b;
-    drawAxes(ctx,pad,pw,ph,0,w,-p.A,p.A,4);
-    ctx.strokeStyle='#22d3ee';ctx.lineWidth=2;ctx.beginPath();
-    for(var i=0;i<=pw;i+=2){var y=pad.t+ph/2-p.A*Math.sin(k*i-omega*t)/p.A*(ph/2-4);if(i===0)ctx.moveTo(pad.l+i,y);else ctx.lineTo(pad.l+i,y);}
-    ctx.stroke();
-    ctx.fillStyle='#e2e8f0';ctx.font='10px JetBrains Mono';
-    ctx.fillText('λ='+p.lambda+'px f='+p.f+'Hz v='+(p.lambda*p.f).toFixed(0)+'px/s',pad.l,14);
-  },'v = λf = ω/k',200);
-};
-
-WIDGETS['phys-snell'] = function() {
-  function arrowHead(ctx, fromX, fromY, toX, toY, color) {
-    var ang = Math.atan2(toY-fromY, toX-fromX);
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(toX, toY);
-    ctx.lineTo(toX-9*Math.cos(ang-0.4), toY-9*Math.sin(ang-0.4));
-    ctx.lineTo(toX-9*Math.cos(ang+0.4), toY-9*Math.sin(ang+0.4));
-    ctx.closePath(); ctx.fill();
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function mat(color, o) {
+    o = o || {};
+    return new THREE.MeshStandardMaterial({
+      color: color,
+      metalness: o.metalness != null ? o.metalness : 0.75,
+      roughness: o.roughness != null ? o.roughness : 0.4,
+      emissive: o.emissive != null ? o.emissive : 0x000000,
+      emissiveIntensity: o.emissiveIntensity || 0,
+      clippingPlanes: [clipPlane],
+      side: THREE.FrontSide
+    });
   }
-  return WidgetFigure('Ley de Snell', [
-    {key:'n1',label:'n₁ (medio superior)',min:1,max:3,step:0.01,initial:1},
-    {key:'n2',label:'n₂ (medio inferior)',min:1,max:3,step:0.01,initial:1.5},
-    {key:'th1',label:'θ₁ (incidencia)',min:5,max:85,step:1,initial:45,unit:'°'}
-  ], function(ctx,w,h,t,p) {
-    var cx=w/2, cy=h/2, l1=Math.min(w,h)*0.38;
-    // Medios con fondo distinto arriba/abajo de la interfase, para ubicar n₁ y n₂ de un vistazo
-    ctx.fillStyle='rgba(125,211,252,0.07)'; ctx.fillRect(0,0,w,cy);
-    ctx.fillStyle='rgba(192,132,252,0.09)'; ctx.fillRect(0,cy,w,h-cy);
-    ctx.strokeStyle='rgba(200,200,200,0.5)';ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(w,cy);ctx.stroke();
-    // Normal de referencia (línea punteada) para comparar ángulos
-    ctx.strokeStyle='rgba(150,150,150,0.5)';ctx.setLineDash([3,3]);ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(cx,cy-l1);ctx.lineTo(cx,cy+l1);ctx.stroke();ctx.setLineDash([]);
-
-    var th1r=p.th1*Math.PI/180, sinth2=p.n1*Math.sin(th1r)/p.n2, tir=sinth2>1;
-
-    // Rayo incidente: llega en ángulo θ₁ real respecto de la normal (ya no siempre vertical)
-    var ix=cx-l1*Math.sin(th1r), iy=cy-l1*Math.cos(th1r);
-    ctx.strokeStyle='#fbbf24';ctx.lineWidth=2.5;
-    ctx.beginPath();ctx.moveTo(ix,iy);ctx.lineTo(cx,cy);ctx.stroke();
-    arrowHead(ctx,ix,iy,cx,cy,'#fbbf24');
-
-    if (tir) {
-      // Reflexión total interna: toda la luz rebota al mismo medio, mismo ángulo que incidencia
-      var rx=cx+l1*Math.sin(th1r), ry=cy-l1*Math.cos(th1r);
-      ctx.strokeStyle='#ef4444';ctx.lineWidth=2.5;
-      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(rx,ry);ctx.stroke();
-      arrowHead(ctx,cx,cy,rx,ry,'#ef4444');
-      ctx.fillStyle='#ef4444';ctx.font='12px JetBrains Mono';ctx.textAlign='center';
-      ctx.fillText('¡Reflexión total interna! (θ₁ > ángulo crítico)',cx,16);ctx.textAlign='start';
-    } else {
-      var th2r=Math.asin(sinth2);
-      var fx=cx+l1*Math.sin(th2r), fy=cy+l1*Math.cos(th2r);
-      ctx.strokeStyle='#22d3ee';ctx.lineWidth=2.5;
-      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(fx,fy);ctx.stroke();
-      arrowHead(ctx,cx,cy,fx,fy,'#22d3ee');
-      // Reflexión parcial (siempre existe algo, se dibuja tenue para no confundir con la principal)
-      var rx=cx+l1*Math.sin(th1r), ry=cy-l1*Math.cos(th1r);
-      ctx.strokeStyle='rgba(251,191,36,0.3)';ctx.lineWidth=1.5;
-      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(rx,ry);ctx.stroke();
+  function ringSegment(x0, x1, r0, r1, color, o) {
+    var geo = new THREE.CylinderGeometry(r0, r1, x1 - x0, 40, 1, true);
+    var m = new THREE.Mesh(geo, mat(color, o));
+    m.rotation.z = Math.PI / 2; m.position.x = (x0 + x1) / 2;
+    group.add(m);
+    return m;
+  }
+  function bladeRing(count, stageX, hubR, tipR, chord, thickness, color, o) {
+    o = o || {};
+    var geo = new THREE.BoxGeometry(chord, tipR - hubR, thickness);
+    geo.translate(0, (tipR - hubR) / 2, 0);
+    var mesh = new THREE.InstancedMesh(geo, mat(color, o), count);
+    var dummy = new THREE.Object3D();
+    for (var i = 0; i < count; i++) {
+      dummy.position.set(stageX, 0, 0);
+      dummy.quaternion.set(0, 0, 0, 1);
+      dummy.rotateX((i / count) * Math.PI * 2 + (o.stagger || 0));
+      dummy.translateY(hubR);
+      dummy.rotateZ(o.twist != null ? o.twist : 0.4);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
     }
+    mesh.instanceMatrix.needsUpdate = true;
+    return mesh;
+  }
+  function hubDisk(stageX, r, width, color) {
+    var m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, width, 28), mat(color, { metalness: 0.7, roughness: 0.35 }));
+    m.rotation.z = Math.PI / 2; m.position.x = stageX;
+    return m;
+  }
 
-    ctx.fillStyle='#8a8fa8';ctx.font='10px JetBrains Mono';
-    ctx.fillText('n₁='+p.n1.toFixed(2),8,cy-8);
-    ctx.fillText('n₂='+p.n2.toFixed(2),8,cy+16);
-    ctx.fillStyle='#e2e8f0';
-    ctx.fillText('θ₂='+(tir?'—':(Math.asin(sinth2)*180/Math.PI).toFixed(1)+'°'),8,h-10);
-  },'n₁sinθ₁=n₂sinθ₂ · amarillo=incidente, celeste=refractado, rojo=reflexión total',240,false);
-};
+  // Góndola (conducto de bypass) y carcasas del núcleo
+  ringSegment(-0.22, 1.95, FAN_R * 1.04, FAN_R * 0.92, 0xaab4c4, { roughness: 0.3, metalness: 0.55 });
+  ringSegment(0.15, 0.95, FAN_R * 0.60, FAN_R * 0.46, 0x5b6472, { roughness: 0.45 });
+  ringSegment(0.95, 1.38, FAN_R * 0.46, FAN_R * 0.34, 0x6a7280, { roughness: 0.4 });
+  ringSegment(1.38, 1.68, FAN_R * 0.36, FAN_R * 0.36, 0x3a3f4a, { roughness: 0.55 });
+  ringSegment(1.68, 2.05, FAN_R * 0.34, FAN_R * 0.44, 0x6a7280, { roughness: 0.4 });
+  ringSegment(2.05, 2.62, FAN_R * 0.44, FAN_R * 0.58, 0x5b6472, { roughness: 0.45 });
 
-WIDGETS['phys-energy'] = function() {
-  return WidgetFigure('Energía cinética y potencial', [
-    {key:'m',label:'Masa m',min:0.1,max:10,step:0.1,initial:1,unit:' kg'},
-    {key:'h',label:'Altura h',min:1,max:50,step:0.5,initial:20,unit:' m'},
-    {key:'g',label:'Gravedad g',min:1,max:20,step:0.1,initial:9.81,unit:' m/s²'}
-  ], function(ctx,w,h,t,p) {
-    var v=Math.sqrt(2*p.g*p.h), U=p.m*p.g*p.h, K=0.5*p.m*v*v;
-    ctx.fillStyle='#e2e8f0';ctx.font='14px Space Grotesk';ctx.textAlign='center';
-    ctx.fillText('U='+U.toFixed(1)+' J',w/2,h/2-24);
-    ctx.fillText('K='+K.toFixed(1)+' J (impacto)',w/2,h/2+4);
-    ctx.fillText('v='+v.toFixed(1)+' m/s',w/2,h/2+32);ctx.textAlign='start';
-  },'Caída libre: U → K, conservación de energía.',180,false);
-};
+  var spinner = new THREE.Mesh(new THREE.ConeGeometry(FAN_R * 0.28, 0.42, 32, 1, true), mat(0xd8dee8, { metalness: 0.85, roughness: 0.2 }));
+  spinner.rotation.z = Math.PI / 2; spinner.position.x = -0.21;
+  group.add(spinner);
 
-WIDGETS['phys-doppler'] = function() {
-  return WidgetFigure('Efecto Doppler', [
-    {key:'fs',label:'Frec. fuente fₛ',min:100,max:1000,step:10,initial:440,unit:' Hz'},
-    {key:'vs',label:'Vel. fuente vₛ',min:-60,max:60,step:2,initial:20,unit:' m/s'}
-  ], function(ctx,w,h,t,p) {
-    var c=343, fo=p.fs*c/(c-p.vs);
-    ctx.fillStyle='#e2e8f0';ctx.font='14px Space Grotesk';ctx.textAlign='center';
-    ctx.fillText('fₒ = '+fo.toFixed(1)+' Hz',w/2,h/2-10);
-    ctx.fillText('Ratio: '+(fo/p.fs).toFixed(3),w/2,h/2+18);ctx.textAlign='start';
-  },'fₒ=fₛ·c/(c−vₛ)',180,false);
-};
+  // ── Eje LP: fan (20 álabes reales) + turbina de baja presión (6 etapas) ──
+  var lpSpool = new THREE.Group();
+  var fanRing = bladeRing(20, 0, FAN_R * 0.26, FAN_R, 0.16, 0.02, 0xc7d2e0, { twist: 0.55, metalness: 0.85, roughness: 0.25 });
+  var fanDisk = hubDisk(0, FAN_R * 0.26, 0.1, 0xc7d2e0);
+  lpSpool.add(fanRing); lpSpool.add(fanDisk);
+  var lptStages = [];
+  for (var i = 0; i < 6; i++) {
+    var t = i / 5, x = lerp(1.98, 2.55, t);
+    var tipR = lerp(FAN_R * 0.42, FAN_R * 0.57, t), hubR = lerp(FAN_R * 0.24, FAN_R * 0.30, t);
+    var ring = bladeRing(22, x, hubR, tipR, 0.07, 0.014, 0xb08a5a, { twist: -0.4, metalness: 0.6, roughness: 0.5, emissive: 0x552200, emissiveIntensity: 0.05 });
+    lpSpool.add(ring); lpSpool.add(hubDisk(x, hubR, 0.045, 0x8a6b45));
+    lptStages.push(ring);
+  }
+  var lpShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 2.75, 12), mat(0x9fb2c6, { metalness: 0.9, roughness: 0.25 }));
+  lpShaft.rotation.z = Math.PI / 2; lpShaft.position.x = 1.35;
+  lpSpool.add(lpShaft);
+  group.add(lpSpool);
 
-WIDGETS['math-derivative'] = function() {
-  return WidgetFigure('Derivada como pendiente', [
-    {key:'x0',label:'x₀',min:-2.2,max:2.2,step:0.05,initial:0.75}
-  ], function(ctx,w,h,t,p) {
-    var pad={l:50,r:20,t:20,b:40},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
-    var D=2.2;
-    function f(x){return x*x*x-3*x;}function fp(x){return 3*x*x-3;}
-    var yMax=Math.abs(f(D))*1.15;
-    function sx(x){return pad.l+(x+D)/(2*D)*pw;}function sy(y){return pad.t+ph/2-y/yMax*(ph/2);}
-    drawAxes(ctx,pad,pw,ph,-D,D,-yMax,yMax,4);
-    ctx.strokeStyle='#22d3ee';ctx.lineWidth=2;ctx.beginPath();
-    for(var i=0;i<=300;i++){var x=-D+i/300*2*D,y=f(x);if(i===0)ctx.moveTo(sx(x),sy(y));else ctx.lineTo(sx(x),sy(y));}
-    ctx.stroke();
-    var x0=p.x0,y0=f(x0),m=fp(x0);
-    ctx.strokeStyle='#fbbf24';ctx.lineWidth=1.5;ctx.setLineDash([4,2]);
-    ctx.beginPath();ctx.moveTo(sx(x0-0.8),sy(y0-m*0.8));ctx.lineTo(sx(x0+0.8),sy(y0+m*0.8));ctx.stroke();ctx.setLineDash([]);
-    ctx.fillStyle='#fbbf24';ctx.beginPath();ctx.arc(sx(x0),sy(y0),4,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#e2e8f0';ctx.font='10px JetBrains Mono';
-    ctx.fillText("f'("+x0.toFixed(2)+')='+m.toFixed(2),pad.l+8,pad.t+14);
-  },"f(x)=x³−3x, f'(x)=3x²−3",220,false);
-};
+  // ── Eje IP: compresor de presión intermedia (8 etapas) + IPT (1 etapa) ──
+  var ipSpool = new THREE.Group();
+  var ipcStages = [];
+  for (var j = 0; j < 8; j++) {
+    var t2 = j / 7, x2 = lerp(0.22, 0.92, t2);
+    var tipR2 = lerp(FAN_R * 0.56, FAN_R * 0.43, t2), hubR2 = lerp(FAN_R * 0.18, FAN_R * 0.30, t2);
+    var ring2 = bladeRing(24, x2, hubR2, tipR2, 0.055, 0.012, 0x8fa3bd, { twist: 0.5, metalness: 0.8, roughness: 0.3 });
+    ipSpool.add(ring2); ipSpool.add(hubDisk(x2, hubR2, 0.035, 0x6c7f99));
+    ipcStages.push(ring2);
+  }
+  var iptRing = bladeRing(20, 1.9, FAN_R * 0.30, FAN_R * 0.39, 0.075, 0.015, 0xb08a5a, { twist: -0.4, metalness: 0.6, roughness: 0.5, emissive: 0x552200, emissiveIntensity: 0.08 });
+  ipSpool.add(iptRing); ipSpool.add(hubDisk(1.9, FAN_R * 0.30, 0.05, 0x8a6b45));
+  var ipShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.78, 12), mat(0x7d93ad, { metalness: 0.9, roughness: 0.25 }));
+  ipShaft.rotation.z = Math.PI / 2; ipShaft.position.x = 1.01;
+  ipSpool.add(ipShaft);
+  group.add(ipSpool);
 
-WIDGETS['math-eigen'] = function() {
-  return WidgetFigure('Vectores propios en 2D', [
-    {key:'a11',label:'a₁₁',min:-3,max:3,step:0.1,initial:2},
-    {key:'a12',label:'a₁₂',min:-3,max:3,step:0.1,initial:1},
-    {key:'a21',label:'a₂₁',min:-3,max:3,step:0.1,initial:1},
-    {key:'a22',label:'a₂₂',min:-3,max:3,step:0.1,initial:2}
-  ], function(ctx,w,h,t,p) {
-    var tr=p.a11+p.a22, det=p.a11*p.a22-p.a12*p.a21, disc=tr*tr-4*det;
-    ctx.fillStyle='#e2e8f0';ctx.font='13px Space Grotesk';ctx.textAlign='center';
-    if(disc>=0){var l1=(tr+Math.sqrt(disc))/2,l2=(tr-Math.sqrt(disc))/2;ctx.fillText('λ₁='+l1.toFixed(2)+', λ₂='+l2.toFixed(2),w/2,h/2);}
-    else ctx.fillText('λ₁,₂='+(tr/2).toFixed(2)+'±'+Math.sqrt(-disc)/2+'i',w/2,h/2);
-    ctx.textAlign='start';
-  },'det(A−λI)=λ²−tr(A)λ+det(A)=0',180,false);
-};
+  // ── Eje HP: compresor de alta presión (6 etapas, el más rápido) + HPT (1 etapa) ──
+  var hpSpool = new THREE.Group();
+  var hpcStages = [];
+  for (var k = 0; k < 6; k++) {
+    var t3 = k / 5, x3 = lerp(0.98, 1.35, t3);
+    var tipR3 = lerp(FAN_R * 0.43, FAN_R * 0.32, t3), hubR3 = lerp(FAN_R * 0.30, FAN_R * 0.24, t3);
+    var ring3 = bladeRing(26, x3, hubR3, tipR3, 0.045, 0.01, 0x6f85a0, { twist: 0.5, metalness: 0.82, roughness: 0.28 });
+    hpSpool.add(ring3); hpSpool.add(hubDisk(x3, hubR3, 0.028, 0x556a85));
+    hpcStages.push(ring3);
+  }
+  var hptRing = bladeRing(18, 1.73, FAN_R * 0.26, FAN_R * 0.33, 0.06, 0.013, 0xc99a5a, { twist: -0.4, metalness: 0.55, roughness: 0.5, emissive: 0x7a2a00, emissiveIntensity: 0.12 });
+  hpSpool.add(hptRing); hpSpool.add(hubDisk(1.73, FAN_R * 0.26, 0.045, 0x9a6b3a));
+  var hpShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.85, 12), mat(0x5f7893, { metalness: 0.9, roughness: 0.25 }));
+  hpShaft.rotation.z = Math.PI / 2; hpShaft.position.x = 1.33;
+  hpSpool.add(hpShaft);
+  group.add(hpSpool);
 
-WIDGETS['eng-pid'] = function() {
-  return WidgetFigure('Respuesta PID al escalón', [
-    {key:'Kp',label:'Kp',min:0.1,max:5,step:0.1,initial:1.2},
-    {key:'Ki',label:'Ki',min:0,max:3,step:0.05,initial:0.5},
-    {key:'Kd',label:'Kd',min:0,max:2,step:0.05,initial:0.3}
-  ], function(ctx,w,h,t,p) {
-    var pad={l:50,r:20,t:20,b:40},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
-    drawAxes(ctx,pad,pw,ph,0,8,0,1.5,4);
-    // Simulación real de lazo cerrado: planta y''+y'=u (G=1/(s(s+1))) con control PID sobre el error.
-    var dt=0.005, N=1600, y=0, v=0, integral=0, prevE=1;
-    ctx.strokeStyle='#22d3ee';ctx.lineWidth=2;ctx.beginPath();
-    for(var i=0;i<=N;i++){
-      var ti=i*dt;
-      var e=1-y;
-      integral=Math.max(-20,Math.min(20,integral+e*dt));
-      var deriv=(e-prevE)/dt;
-      var u=p.Kp*e+p.Ki*integral+p.Kd*deriv;
-      var vdot=u-v; v+=vdot*dt; y+=v*dt;
-      prevE=e;
-      if (i%4===0) {
-        var sx=pad.l+ti/8*pw,sy=pad.t+ph-Math.min(1.5,Math.max(0,y))/1.5*ph;
-        if(i===0)ctx.moveTo(sx,sy);else ctx.lineTo(sx,sy);
-      }
+  // Cámara de combustión anular
+  var combMat = mat(0x2a2d33, { metalness: 0.3, roughness: 0.6, emissive: 0xff5a1a, emissiveIntensity: 0 });
+  var combustor = new THREE.Mesh(new THREE.TorusGeometry(FAN_R * 0.30, FAN_R * 0.075, 14, 36), combMat);
+  combustor.rotation.y = Math.PI / 2; combustor.position.x = 1.52;
+  group.add(combustor);
+
+  // Tobera de escape del núcleo
+  var nozzle = new THREE.Mesh(new THREE.ConeGeometry(FAN_R * 0.44, 0.5, 32, 1, true), mat(0x4a5160, { metalness: 0.7, roughness: 0.4 }));
+  nozzle.rotation.z = -Math.PI / 2; nozzle.position.x = 2.85;
+  group.add(nozzle);
+
+  var steps = [
+    { label: 'Admisión de aire', caption: 'El fan (20 álabes, Ø2.85 m reales) capta el flujo. Con el bypass 10:1 del Trent 1000, unos 9 de cada 10 kg de aire se derivan al conducto frío y solo 1 entra al núcleo.', camera: { x: -0.15, theta: 0.35, phi: 1.15, radius: 2.7 }, focus: [fanRing, fanDisk] },
+    { label: 'Compresor de presión intermedia (IPC · 8 etapas)', caption: 'El eje IP —independiente de los otros dos— comprime el aire del núcleo en 8 etapas progresivas antes de entrar al compresor de alta.', camera: { x: 0.55, theta: 0.9, phi: 1.0, radius: 1.85 }, focus: ipcStages },
+    { label: 'Compresor de alta presión (HPC · 6 etapas)', caption: 'El eje HP gira más rápido que el IP y el LP. Entre IPC y HPC se alcanza la relación de presión total del motor: 50:1.', camera: { x: 1.16, theta: 1.35, phi: 1.0, radius: 1.55 }, focus: hpcStages },
+    { label: 'Inyección de combustible', caption: 'En la cámara anular se atomiza queroseno Jet-A junto al aire ya comprimido a 50 atmósferas, listo para el encendido.', camera: { x: 1.5, theta: 1.75, phi: 1.15, radius: 1.3 }, focus: [combustor] },
+    { label: 'Combustión sostenida', caption: 'La llama se estabiliza en torno a 1800–2000 K. Ese calor es lo que expande los gases y les da la energía que después van a ceder las tres turbinas.', camera: { x: 1.55, theta: 2.05, phi: 1.2, radius: 1.15 }, focus: [combustor] },
+    { label: 'Turbina de alta presión (HPT · 1 etapa)', caption: 'Una sola etapa extrae energía suficiente para mover, por el eje HP, al compresor de alta presión.', camera: { x: 1.75, theta: 2.35, phi: 1.05, radius: 1.4 }, focus: [hptRing] },
+    { label: 'Turbina de presión intermedia (IPT · 1 etapa)', caption: 'Sigue extrayendo energía del gas para mover, por el eje IP, al compresor de presión intermedia.', camera: { x: 1.9, theta: 2.65, phi: 1.05, radius: 1.5 }, focus: [iptRing] },
+    { label: 'Turbina de baja presión (LPT · 6 etapas)', caption: 'Seis etapas —las más grandes de las tres turbinas— mueven el fan por el eje LP, el más largo de los tres.', camera: { x: 2.25, theta: 3.0, phi: 1.0, radius: 1.9 }, focus: lptStages },
+    { label: 'Punto de retroalimentación sostenida', caption: 'Se cierra el ciclo Brayton: la energía que cada turbina le devuelve a "su" compresor (o al fan) por su propio eje ya alcanza para sostener la rotación sin aporte externo. A partir de acá el motor se autosostiene en régimen estable.', camera: { x: 1.3, theta: 0.55, phi: 0.92, radius: 3.3 }, focus: [fanRing, fanDisk].concat(ipcStages, hpcStages, lptStages, [combustor]) },
+    { label: 'Escape', caption: 'Los gases del núcleo y el aire frío del bypass se expulsan hacia atrás; esa diferencia de cantidad de movimiento respecto del aire que entró es el empuje neto del motor.', camera: { x: 2.75, theta: 1.05, phi: 1.08, radius: 2.0 }, focus: [nozzle] }
+  ];
+
+  var highlightable = [].concat(lpSpool.children, ipSpool.children, hpSpool.children, [combustor, nozzle]);
+
+  return {
+    group: group,
+    camRadius: 3.2,
+    steps: steps,
+    setCutaway: function (t) { clipPlane.constant = lerp(FAN_R * 1.05, -FAN_R * 0.05, t); },
+    update: function (dt, elapsed, speedFactor, stepIdx) {
+      var s = speedFactor != null ? speedFactor : 0.4;
+      lpSpool.rotation.x += dt * 1.0 * s;
+      ipSpool.rotation.x += dt * 2.3 * s;
+      hpSpool.rotation.x += dt * 3.6 * s;
+
+      var ignited = stepIdx >= 3;
+      var flameTarget = ignited ? 0.85 + 0.3 * Math.sin(elapsed * 9) + 0.15 * Math.sin(elapsed * 17) : 0;
+      combMat.emissiveIntensity += (Math.max(0, flameTarget) - combMat.emissiveIntensity) * Math.min(1, dt * 4);
+
+      var focus = (steps[stepIdx] && steps[stepIdx].focus) || [];
+      var pulse = 0.35 + 0.2 * Math.sin(elapsed * 4);
+      highlightable.forEach(function (obj) {
+        var m = obj.material;
+        if (!m || m === combMat || m.emissive === undefined) return;
+        if (m.userData.baseEmissive == null) m.userData.baseEmissive = m.emissiveIntensity;
+        var isFocused = focus.indexOf(obj) !== -1;
+        m.emissiveIntensity = m.userData.baseEmissive + (isFocused ? pulse : 0);
+      });
     }
-    ctx.stroke();
-    ctx.fillStyle='#e2e8f0';ctx.font='10px JetBrains Mono';
-    ctx.fillText('Kp='+p.Kp+' Ki='+p.Ki+' Kd='+p.Kd,pad.l+8,pad.t+14);
-  },"Planta y''+y'=u con control PID en lazo cerrado — probá subir Kp o Kd",220,false);
+  };
+}
+
+WIDGETS['eng-trent1000-3d'] = function () {
+  return WidgetFigure3D(
+    'Rolls-Royce Trent 1000 — corte en 3D',
+    'Turbofán de tres ejes (LP/IP/HP independientes) · bypass 10:1 · relación de presión 50:1 · Boeing 787. Paso a paso desde la admisión hasta el régimen autosostenido.',
+    buildTrent1000Scene,
+    { height: 400 }
+  );
 };
 
-WIDGETS['eng-bode'] = function() {
-  return WidgetFigure('Diagrama de Bode', [
-    {key:'wn',label:'ωₙ',min:0.5,max:10,step:0.5,initial:3,unit:' rad/s'},
-    {key:'zeta',label:'ζ',min:0.05,max:1,step:0.05,initial:0.3}
-  ], function(ctx,w,h,t,p) {
-    var pad={l:55,r:20,t:20,b:40},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
-    ctx.strokeStyle='rgba(100,116,139,0.6)';ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+ph);ctx.lineTo(pad.l+pw,pad.t+ph);ctx.stroke();
-    ctx.fillStyle='#8a8fa8';ctx.font='9px JetBrains Mono';
-    [-40,-20,0,20].forEach(function(db){var sy=pad.t+ph-(db+40)/60*ph;ctx.beginPath();ctx.moveTo(pad.l-4,sy);ctx.lineTo(pad.l,sy);ctx.stroke();ctx.textAlign='right';ctx.fillText(db+'dB',pad.l-6,sy+3);});
-    [0.1,1,10,100].forEach(function(fr){var sx=pad.l+Math.log10(fr/0.1)/3*pw;ctx.beginPath();ctx.moveTo(sx,pad.t+ph);ctx.lineTo(sx,pad.t+ph+4);ctx.stroke();ctx.textAlign='center';ctx.fillText(fr+' rad/s',sx,pad.t+ph+14);});
-    ctx.textAlign='start';
-    ctx.strokeStyle='#22d3ee';ctx.lineWidth=2;ctx.beginPath();
-    for(var i=0;i<=400;i++){
-      var omega=0.1*Math.pow(10,3*i/400),r=omega/p.wn;
-      var mag=1/Math.sqrt((1-r*r)*(1-r*r)+4*p.zeta*p.zeta*r*r),db=20*Math.log10(mag);
-      var sx=pad.l+i/400*pw,sy=pad.t+ph-Math.max(0,Math.min(20,db)+40)/60*ph;
-      if(i===0)ctx.moveTo(sx,sy);else ctx.lineTo(sx,sy);
-    }
-    ctx.stroke();
-    ctx.fillStyle='#e2e8f0';ctx.font='10px JetBrains Mono';
-    ctx.fillText('ωₙ='+p.wn+' ζ='+p.zeta,12,18);
-  },'|G(jω)| para sistema de 2º orden',200,false);
-};
-
-WIDGETS['eng-beam'] = function() {
-  return WidgetFigure('Deflexión de viga', [
-    {key:'P',label:'Carga P',min:1,max:20,step:0.5,initial:5,unit:' kN'},
-    {key:'L',label:'Longitud L',min:1,max:5,step:0.1,initial:2,unit:' m'}
-  ], function(ctx,w,h,t,p) {
-    var pad={l:50,r:20,t:20,b:40},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,E=200e9,I=8e-6;
-    var P=p.P*1000,L=p.L,yTip=P*L*L*L/(3*E*I);
-    ctx.strokeStyle='rgba(180,200,220,0.8)';ctx.lineWidth=9;
-    ctx.beginPath();ctx.moveTo(pad.l,pad.t+ph);ctx.lineTo(pad.l+pw*0.8,pad.t+ph);ctx.stroke();
-    ctx.strokeStyle='#22d3ee';ctx.lineWidth=3;ctx.beginPath();
-    for(var i=0;i<=200;i++){
-      var xi=i/200*L,y=P/(6*E*I)*(xi*xi*xi-3*L*xi*xi);
-      var sx=pad.l+xi/L*pw*0.8,sy=pad.t+ph+y*ph*0.8;
-      if(i===0)ctx.moveTo(sx,sy);else ctx.lineTo(sx,sy);
-    }
-    ctx.stroke();
-    ctx.fillStyle='#e2e8f0';ctx.font='10px JetBrains Mono';
-    ctx.fillText('δ_max='+(yTip*1000).toFixed(2)+' mm P='+p.P+'kN L='+p.L+'m',12,18);
-  },'δ_max=PL³/(3EI). Exagerado visualmente.',200,false);
-};
-
-WIDGETS['chem-equilibrium'] = function() {
-  return WidgetFigure('Constante K', [{key:'logK',label:'log₁₀(K)',min:-3,max:3,step:0.05,initial:0}],
-    function(ctx,w,h,t,p) {
-      var K=Math.pow(10,p.logK);
-      ctx.fillStyle=K>1.01?'#34d399':K<0.99?'#ef4444':'#8a8fa8';ctx.font='22px Space Grotesk';ctx.textAlign='center';
-      ctx.fillText('K = '+(K>=100||K<0.01?K.toExponential(2):K.toFixed(3)),w/2,h/2-10);
-      ctx.fillText(K>1.01?'Favorece PRODUCTOS':K<0.99?'Favorece REACTIVOS':'Equilibrio neutro',w/2,h/2+24);
-      ctx.font='10px JetBrains Mono';ctx.fillStyle='#8a8fa8';
-      ctx.fillText('log₁₀(K) = '+p.logK.toFixed(2),w/2,h/2+48);
-      ctx.textAlign='start';
-    },'K>1→productos, K<1→reactivos · slider en escala logarítmica',180,false);
-};
-
-WIDGETS['chem-ph'] = function() {
-  return WidgetFigure('pH y pOH', [{key:'pH',label:'pH',min:0,max:14,step:0.1,initial:7}],
-    function(ctx,w,h,t,p) {
-      var pH=p.pH, pOH=14-pH, H=Math.pow(10,-pH), OH=Math.pow(10,-pOH);
-      ctx.fillStyle=pH<6.9?'#ef4444':pH>7.1?'#22d3ee':'#8a8fa8';ctx.font='24px Space Grotesk';ctx.textAlign='center';
-      ctx.fillText('pH = '+pH.toFixed(2),w/2,h/2-30);
-      ctx.fillText('pOH = '+pOH.toFixed(2),w/2,h/2-2);
-      ctx.font='11px JetBrains Mono';ctx.fillStyle='#8a8fa8';
-      ctx.fillText('[H⁺]='+H.toExponential(2)+' M   [OH⁻]='+OH.toExponential(2)+' M',w/2,h/2+26);
-      ctx.textAlign='start';
-    },'pH<7 ácido, pH=7 neutro, pH>7 básico',180,false);
-};
-
-WIDGETS['phys-decay'] = function() {
-  var sliderDefs = {N0:{min:10,max:500}, lambda:{min:0.01,max:0.5}};
-  return WidgetFigure('Decaimiento N(t)=N₀e^(−λt)', [
-    {key:'N0',label:'N₀',min:10,max:500,step:10,initial:200},
-    {key:'lambda',label:'λ',min:0.01,max:0.5,step:0.01,initial:0.1,unit:' s⁻¹'}
-  ], function(ctx,w,h,t,p,scale) {
-    var pad={l:50,r:20,t:20,b:40},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
-    var tMax, N0max;
-    if (scale.locked) {
-      if (!scale.range) scale.range = {tMax: 5/sliderDefs.lambda.min, N0max: sliderDefs.N0.max};
-      tMax = scale.range.tMax; N0max = scale.range.N0max;
-    } else { tMax = 5/p.lambda; N0max = p.N0; }
-    drawAxes(ctx,pad,pw,ph,0,tMax,0,N0max,4);
-    ctx.strokeStyle='#22d3ee';ctx.lineWidth=2;ctx.beginPath();
-    var first=true;
-    for(var i=0;i<=200;i++){var ti=i/200*tMax,N=p.N0*Math.exp(-p.lambda*ti);
-      var sx=pad.l+ti/tMax*pw,sy=pad.t+ph-Math.min(1,N/N0max)*ph;
-      if(sx<pad.l||sx>pad.l+pw)continue;
-      if(first){ctx.moveTo(sx,sy);first=false;}else ctx.lineTo(sx,sy);}
-    ctx.stroke();
-    ctx.fillStyle='#e2e8f0';ctx.font='10px JetBrains Mono';
-    ctx.fillText('T½='+(Math.log(2)/p.lambda).toFixed(1)+'s',pad.l+8,pad.t+14);
-  },'Vida media T½=ln(2)/λ · con escala fija ves N₀ y λ comparados contra sus extremos',220,false);
-};
-
-WIDGETS['phys-collision'] = function() {
-  return WidgetFigure('Colisión elástica 1D', [
-    {key:'m1',label:'m₁',min:0.5,max:5,step:0.1,initial:1,unit:' kg'},
-    {key:'m2',label:'m₂',min:0.5,max:5,step:0.1,initial:2,unit:' kg'},
-    {key:'v1',label:'v₁ inicial',min:1,max:10,step:0.2,initial:5,unit:' m/s'}
-  ], function(ctx,w,h,t,p) {
-    var v1f=(p.m1-p.m2)/(p.m1+p.m2)*p.v1, v2f=2*p.m1/(p.m1+p.m2)*p.v1;
-    ctx.fillStyle='#e2e8f0';ctx.font='13px Space Grotesk';ctx.textAlign='center';
-    ctx.fillText("v₁'="+v1f.toFixed(2)+' m/s',w/2,h/2-16);
-    ctx.fillText("v₂'="+v2f.toFixed(2)+' m/s',w/2,h/2+12);ctx.textAlign='start';
-  },"v₁'=(m₁−m₂)/(m₁+m₂)·v₁",180,false);
-};
-
-WIDGETS['math-newton-raphson'] = function() {
-  return WidgetFigure('Newton-Raphson', [{key:'x0',label:'x₀ inicial',min:-4,max:4,step:0.05,initial:2}],
-    function(ctx,w,h,t,p) {
-      var pad={l:50,r:20,t:20,b:40},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
-      function f(x){return x*x-2;}function fp(x){return 2*x;}
-      function sx(x){return pad.l+(x+3)/6*pw;}function sy(y){return pad.t+ph/2-y/ph*40;}
-      drawAxes(ctx,pad,pw,ph,-3,3,-(ph*ph/80),(ph*ph/80),4);
-      ctx.strokeStyle='#22d3ee';ctx.lineWidth=2;ctx.beginPath();
-      for(var i=0;i<=300;i++){var x=-3+i/300*6,y=f(x);if(i===0)ctx.moveTo(sx(x),sy(y));else ctx.lineTo(sx(x),sy(y));}
-      ctx.stroke();
-      var xn=p.x0;ctx.strokeStyle='#fbbf24';ctx.lineWidth=1;
-      for(var j=0;j<5;j++){var yn=f(xn),mn=fp(xn),xn1=xn-yn/mn;
-        ctx.beginPath();ctx.moveTo(sx(xn),sy(yn));ctx.lineTo(sx(xn1),sy(0));ctx.stroke();
-        ctx.fillStyle='#fbbf24';ctx.beginPath();ctx.arc(sx(xn),sy(yn),3,0,Math.PI*2);ctx.fill();xn=xn1;}
-      ctx.fillStyle='#22d3ee';ctx.beginPath();ctx.arc(sx(xn),sy(0),5,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#e2e8f0';ctx.font='10px JetBrains Mono';
-      ctx.fillText('Raíz ≈ '+xn.toFixed(6)+' (√2='+Math.sqrt(2).toFixed(6)+')',pad.l+8,pad.t+14);
-    },'f(x)=x²−2, buscando √2',220,false);
-};
-
-WIDGETS['chem-lechatelier'] = function() {
-  return WidgetFigure('Le Châtelier', [{key:'T',label:'Temperatura',min:200,max:800,step:10,initial:400,unit:' K'}],
-    function(ctx,w,h,t,p) {
-      var K=p.T<400?10:p.T>600?0.1:1;
-      ctx.fillStyle='#e2e8f0';ctx.font='13px Space Grotesk';ctx.textAlign='center';
-      ctx.fillText('K('+p.T+'K) = '+K.toFixed(2),w/2,h/2-8);
-      ctx.fillText(p.T<400?'Exotérmica→productos':p.T>600?'Endotérmica→reactivos':'ΔG°≈0',w/2,h/2+20);ctx.textAlign='start';
-    },'Aumentar T en reacción exotérmica → K disminuye.',160,false);
-};
 
 
 function renderWidget(name) {
