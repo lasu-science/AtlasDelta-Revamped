@@ -833,7 +833,7 @@ function WidgetFigure3D(title, caption, buildFn, opts) {
 
   var row = document.createElement('div'); row.className = 'widget3d-row';
   var cutLbl = document.createElement('label'); cutLbl.innerHTML = '<span>✂ Plano de corte</span>';
-  var cutInput = document.createElement('input'); cutInput.type = 'range'; cutInput.min = 0; cutInput.max = 100; cutInput.value = 70;
+  var cutInput = document.createElement('input'); cutInput.type = 'range'; cutInput.min = 0; cutInput.max = 100; cutInput.value = 100;
   cutLbl.appendChild(cutInput); row.appendChild(cutLbl);
   var speedLbl = document.createElement('label'); speedLbl.innerHTML = '<span>🐢 Velocidad</span>';
   var speedInput = document.createElement('input'); speedInput.type = 'range'; speedInput.min = 5; speedInput.max = 100; speedInput.value = 35;
@@ -1058,6 +1058,7 @@ function buildTrent1000Scene(THREE) {
   function addStators(xs, hubs, tips, count, chord, thick, color, rotorTwist, rotorWashout) {
     for (var idx = 0; idx < xs.length - 1; idx++) {
       var x = (xs[idx] + xs[idx + 1]) / 2, hubR = (hubs[idx] + hubs[idx + 1]) / 2, tipR = (tips[idx] + tips[idx + 1]) / 2;
+      tipR = hubR + (tipR - hubR) * 1.3; // álabes guía 30% más largos hacia afuera
       group.add(statorRing(count, x, hubR, tipR, chord, thick, color, rotorTwist, rotorWashout));
     }
   }
@@ -1073,30 +1074,41 @@ function buildTrent1000Scene(THREE) {
     { r: 0.16, x: -0.25 }, { r: 0.62, x: -0.21 }, { r: 0.95, x: -0.10 }, { r: 1.045, x: 0.05 },
     { r: 1.05, x: 0.35 }, { r: 1.035, x: 0.85 }, { r: 1.0, x: 1.45 }, { r: 0.95, x: 1.85 }, { r: 0.90, x: 1.98 }
   ], 0xaab4c4, { roughness: 0.28, metalness: 0.55, clip: true });
-  lathePiece([
+  var coreCasingPts = [
     { r: 0.64, x: 0.17 }, { r: 0.60, x: 0.22 }, { r: 0.50, x: 0.55 }, { r: 0.455, x: 0.92 },
     { r: 0.44, x: 1.00 }, { r: 0.355, x: 1.32 }, { r: 0.37, x: 1.38 }, { r: 0.38, x: 1.68 },
     { r: 0.365, x: 1.73 }, { r: 0.42, x: 1.90 }, { r: 0.47, x: 2.10 }, { r: 0.60, x: 2.55 }, { r: 0.55, x: 2.62 }
-  ], 0x5b6472, { roughness: 0.4, metalness: 0.5, clip: true });
+  ];
+  lathePiece(coreCasingPts, 0x5b6472, { roughness: 0.4, metalness: 0.5, clip: true });
+  // Segunda superficie, calada hacia adentro, para darle un espesor real a
+  // la carcasa del núcleo: antes era una sola chapa sin volumen y, al
+  // cortarla, quedaba "flotando" sin ningún borde sólido visible.
+  var CORE_CASING_THICKNESS = 0.035;
+  lathePiece(coreCasingPts.map(function (p) { return { r: Math.max(0.02, p.r - CORE_CASING_THICKNESS), x: p.x }; }),
+    0x4a5361, { roughness: 0.5, metalness: 0.45, clip: true });
 
-  // Abierto en la base (contra el cubo del fan, donde no se ve) para que no
-  // aparezca como una "tapa" flotante justo delante del fan; la punta sigue
-  // sólida porque un cono ya cierra solo en el vértice.
-  var spinner = new THREE.Mesh(new THREE.ConeGeometry(FAN_R * 0.28, 0.42, 32, 1, true), mat(0xd8dee8, { metalness: 0.85, roughness: 0.2 }));
-  spinner.rotation.z = Math.PI / 2; spinner.position.x = -0.21;
+  // El cono sigue abierto en la base (así no se ve tapado por dentro), pero
+  // ahora es más largo y su base entra bien adentro del disco del fan (en
+  // vez de terminar justo en el borde) para que no quede ningún hueco ni
+  // reborde visible entre el cono y el disco: se funden en un solo sólido.
+  var spinner = new THREE.Mesh(new THREE.ConeGeometry(FAN_R * 0.34, 0.57, 32, 1, true), mat(0xd8dee8, { metalness: 0.85, roughness: 0.2 }));
+  spinner.rotation.z = Math.PI / 2; spinner.position.x = -0.135;
   group.add(spinner);
 
   // ── Eje LP: fan (20 álabes reales) + turbina de baja presión (6 etapas) ──
   var lpSpool = new THREE.Group();
-  var fanRing = bladeRing(20, 0, FAN_R * 0.26, FAN_R, 0.16, 0.02, 0xc7d2e0, { twist: 0.95, washout: 0.75, metalness: 0.85, roughness: 0.25 });
-  var fanDisk = hubDisk(0, FAN_R * 0.26, 0.1, 0xc7d2e0);
+  var fanRing = bladeRing(20, 0, FAN_R * 0.26, FAN_R, 0.224, 0.02, 0xc7d2e0, { twist: 1.9, washout: 1.5, metalness: 0.85, roughness: 0.25 });
+  // Disco/adaptador más ancho y más grueso que el radio de raíz de los
+  // álabes (0.26) para que la superficie de soporte quede cubierta en vez
+  // de terminar justo en el borde de los álabes.
+  var fanDisk = hubDisk(0, FAN_R * 0.32, 0.16, 0xc7d2e0);
   lpSpool.add(fanRing); lpSpool.add(fanDisk);
   var lptStages = [];
   var lptXs = [], lptHubs = [], lptTips = [];
   for (var i = 0; i < 6; i++) {
     var t = i / 5, x = lerp(1.98, 2.55, t);
     var tipR = lerp(FAN_R * 0.42, FAN_R * 0.57, t), hubR = lerp(FAN_R * 0.24, FAN_R * 0.30, t);
-    var ring = bladeRing(22, x, hubR, tipR, 0.07, 0.014, 0xb08a5a, { twist: -0.4, washout: 0.3, metalness: 0.6, roughness: 0.5, emissive: 0x552200, emissiveIntensity: 0.05 });
+    var ring = bladeRing(22, x, hubR, tipR, 0.098, 0.014, 0xb08a5a, { twist: -0.4, washout: 0.3, metalness: 0.6, roughness: 0.5, emissive: 0x552200, emissiveIntensity: 0.05 });
     lpSpool.add(ring); lpSpool.add(hubDisk(x, hubR, 0.045, 0x8a6b45));
     lptStages.push(ring); lptXs.push(x); lptHubs.push(hubR); lptTips.push(tipR);
   }
@@ -1113,12 +1125,12 @@ function buildTrent1000Scene(THREE) {
   for (var j = 0; j < 8; j++) {
     var t2 = j / 7, x2 = lerp(0.22, 0.92, t2);
     var tipR2 = lerp(FAN_R * 0.56, FAN_R * 0.43, t2), hubR2 = lerp(FAN_R * 0.18, FAN_R * 0.30, t2);
-    var ring2 = bladeRing(24, x2, hubR2, tipR2, 0.055, 0.012, 0x8fa3bd, { twist: 0.8, washout: 0.35, metalness: 0.8, roughness: 0.3 });
+    var ring2 = bladeRing(24, x2, hubR2, tipR2, 0.077, 0.012, 0x8fa3bd, { twist: 0.8, washout: 0.35, metalness: 0.8, roughness: 0.3 });
     ipSpool.add(ring2); ipSpool.add(hubDisk(x2, hubR2, 0.035, 0x6c7f99));
     ipcStages.push(ring2); ipcXs.push(x2); ipcHubs.push(hubR2); ipcTips.push(tipR2);
   }
   addStators(ipcXs, ipcHubs, ipcTips, 22, 0.04, 0.009, 0x596273, 0.8, 0.35);
-  var iptRing = bladeRing(20, 1.9, FAN_R * 0.30, FAN_R * 0.39, 0.075, 0.015, 0xb08a5a, { twist: -0.4, washout: 0.25, metalness: 0.6, roughness: 0.5, emissive: 0x552200, emissiveIntensity: 0.08 });
+  var iptRing = bladeRing(20, 1.9, FAN_R * 0.30, FAN_R * 0.39, 0.105, 0.015, 0xb08a5a, { twist: -0.4, washout: 0.25, metalness: 0.6, roughness: 0.5, emissive: 0x552200, emissiveIntensity: 0.08 });
   ipSpool.add(iptRing); ipSpool.add(hubDisk(1.9, FAN_R * 0.30, 0.05, 0x8a6b45));
   var ipShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.78, 12), mat(0x7d93ad, { metalness: 0.9, roughness: 0.25 }));
   ipShaft.rotation.z = Math.PI / 2; ipShaft.position.x = 1.01;
@@ -1132,12 +1144,12 @@ function buildTrent1000Scene(THREE) {
   for (var k = 0; k < 6; k++) {
     var t3 = k / 5, x3 = lerp(0.98, 1.35, t3);
     var tipR3 = lerp(FAN_R * 0.43, FAN_R * 0.32, t3), hubR3 = lerp(FAN_R * 0.30, FAN_R * 0.24, t3);
-    var ring3 = bladeRing(26, x3, hubR3, tipR3, 0.045, 0.01, 0x6f85a0, { twist: 0.8, washout: 0.3, metalness: 0.82, roughness: 0.28 });
+    var ring3 = bladeRing(26, x3, hubR3, tipR3, 0.063, 0.01, 0x6f85a0, { twist: 0.8, washout: 0.3, metalness: 0.82, roughness: 0.28 });
     hpSpool.add(ring3); hpSpool.add(hubDisk(x3, hubR3, 0.028, 0x556a85));
     hpcStages.push(ring3); hpcXs.push(x3); hpcHubs.push(hubR3); hpcTips.push(tipR3);
   }
   addStators(hpcXs, hpcHubs, hpcTips, 24, 0.032, 0.007, 0x596273, 0.8, 0.3);
-  var hptRing = bladeRing(18, 1.73, FAN_R * 0.26, FAN_R * 0.33, 0.06, 0.013, 0xc99a5a, { twist: -0.4, washout: 0.22, metalness: 0.55, roughness: 0.5, emissive: 0x7a2a00, emissiveIntensity: 0.12 });
+  var hptRing = bladeRing(18, 1.73, FAN_R * 0.26, FAN_R * 0.33, 0.084, 0.013, 0xc99a5a, { twist: -0.4, washout: 0.22, metalness: 0.55, roughness: 0.5, emissive: 0x7a2a00, emissiveIntensity: 0.12 });
   hpSpool.add(hptRing); hpSpool.add(hubDisk(1.73, FAN_R * 0.26, 0.045, 0x9a6b3a));
   var hpShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.85, 12), mat(0x5f7893, { metalness: 0.9, roughness: 0.25 }));
   hpShaft.rotation.z = Math.PI / 2; hpShaft.position.x = 1.33;
@@ -1149,7 +1161,7 @@ function buildTrent1000Scene(THREE) {
   // la cámara de combustión (x=1.52, mitad del motor) y degradado a naranja
   // fuerte hasta el escape. Reemplazan a la vieja "dona" de la cámara de
   // combustión como representación visual de la temperatura del gas.
-  var COMBUSTOR_X = 1.52, FLOW_START_X = 0.05, FLOW_END_X = 2.85;
+  var COMBUSTOR_X = 1.52, FLOW_START_X = -0.35, FLOW_END_X = 3.05;
   function coreFlowRadius(x) {
     var pts = [
       { x: 0.05, r: 0.60 }, { x: 0.22, r: 0.58 }, { x: 0.92, r: 0.45 }, { x: 0.98, r: 0.44 },
@@ -1173,29 +1185,32 @@ function buildTrent1000Scene(THREE) {
   var streamlineMat = new THREE.MeshBasicMaterial({ vertexColors: true, map: flowTexture, transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
   var streamlineMeshes = [];
   var STREAM_SEGMENTS = 28;
-  [0.55, 0.85].forEach(function (radiusScale) {
-    for (var k = 0; k < 7; k++) {
-      var angle = (k / 7) * Math.PI * 2 + (radiusScale > 0.7 ? Math.PI / 7 : 0);
-      var pts = [];
-      for (var si = 0; si <= STREAM_SEGMENTS; si++) {
-        var x = lerp(FLOW_START_X, FLOW_END_X, si / STREAM_SEGMENTS);
-        var r = coreFlowRadius(x) * radiusScale;
-        pts.push(new THREE.Vector3(x, r * Math.cos(angle), r * Math.sin(angle)));
-      }
-      var curve = new THREE.CatmullRomCurve3(pts);
-      var geo = new THREE.TubeGeometry(curve, STREAM_SEGMENTS * 2, 0.006, 6, false);
-      var posAttr = geo.attributes.position;
-      var colors = new Float32Array(posAttr.count * 3);
-      for (var vi = 0; vi < posAttr.count; vi++) {
-        var col = flowColorAt(posAttr.getX(vi));
-        colors[vi * 3] = col.r; colors[vi * 3 + 1] = col.g; colors[vi * 3 + 2] = col.b;
-      }
-      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-      var streamMesh = new THREE.Mesh(geo, streamlineMat);
-      group.add(streamMesh);
-      streamlineMeshes.push(streamMesh);
+  // Más streamlines, cada una con ángulo y radio propios sacados al azar
+  // (sin ninguna grilla ni simetría alrededor del eje) y recorriendo toda
+  // la longitud del motor, de punta a punta.
+  var STREAM_COUNT = 42;
+  for (var streamIdx = 0; streamIdx < STREAM_COUNT; streamIdx++) {
+    var angle = Math.random() * Math.PI * 2;
+    var radiusScale = 0.35 + Math.random() * 0.6;
+    var pts = [];
+    for (var si = 0; si <= STREAM_SEGMENTS; si++) {
+      var x = lerp(FLOW_START_X, FLOW_END_X, si / STREAM_SEGMENTS);
+      var r = coreFlowRadius(x) * radiusScale;
+      pts.push(new THREE.Vector3(x, r * Math.cos(angle), r * Math.sin(angle)));
     }
-  });
+    var curve = new THREE.CatmullRomCurve3(pts);
+    var geo = new THREE.TubeGeometry(curve, STREAM_SEGMENTS * 2, 0.006, 6, false);
+    var posAttr = geo.attributes.position;
+    var colors = new Float32Array(posAttr.count * 3);
+    for (var vi = 0; vi < posAttr.count; vi++) {
+      var col = flowColorAt(posAttr.getX(vi));
+      colors[vi * 3] = col.r; colors[vi * 3 + 1] = col.g; colors[vi * 3 + 2] = col.b;
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    var streamMesh = new THREE.Mesh(geo, streamlineMat);
+    group.add(streamMesh);
+    streamlineMeshes.push(streamMesh);
+  }
 
   var flameLight = new THREE.PointLight(0xff8a3a, 0, FAN_R * 1.6, 2);
   flameLight.position.set(COMBUSTOR_X, 0, 0);
@@ -1244,8 +1259,7 @@ function buildTrent1000Scene(THREE) {
       ipSpool.rotation.x += dt * 2.3 * s;
       hpSpool.rotation.x += dt * 3.6 * s;
 
-      // El flujo de las streamlines también "arranca" junto con el motor.
-      flowTexture.offset.x -= dt * (0.12 + smoothedStepSpeed * 0.9);
+      // Las streamlines ahora quedan fijas (sin animación de flujo).
 
       var ignited = stepIdx >= 3;
       var flicker = 0.75 + 0.18 * Math.sin(elapsed * 9) + 0.09 * Math.sin(elapsed * 17.3) + 0.05 * Math.sin(elapsed * 31);
