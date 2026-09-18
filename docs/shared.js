@@ -719,6 +719,27 @@ function createOrbitControls(dom, camera, target, opts) {
   };
 }
 
+// Textura de "flujo" (una franja brillante que se repite y se desplaza) para
+// animar las streamlines de temperatura del núcleo. También generada por
+// canvas, sin archivos externos.
+var _flowTexture = null;
+function getFlowTexture(THREE) {
+  if (_flowTexture) return _flowTexture;
+  var c = document.createElement('canvas'); c.width = 64; c.height = 8;
+  var ctx = c.getContext('2d');
+  var grad = ctx.createLinearGradient(0, 0, 64, 0);
+  grad.addColorStop(0, 'rgba(255,255,255,0)');
+  grad.addColorStop(0.16, 'rgba(255,255,255,0.95)');
+  grad.addColorStop(0.42, 'rgba(255,255,255,0)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, 64, 8);
+  var tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(4, 1);
+  _flowTexture = tex;
+  return tex;
+}
+
 // Textura de metal cepillado generada por canvas (nada de archivos externos).
 // Se cachea: todos los widgets 3D comparten la misma instancia.
 var _brushedMetalTexture = null;
@@ -1053,18 +1074,21 @@ function buildTrent1000Scene(THREE) {
     { r: 1.05, x: 0.35 }, { r: 1.035, x: 0.85 }, { r: 1.0, x: 1.45 }, { r: 0.95, x: 1.85 }, { r: 0.90, x: 1.98 }
   ], 0xaab4c4, { roughness: 0.28, metalness: 0.55, clip: true });
   lathePiece([
-    { r: 0.64, x: 0.10 }, { r: 0.60, x: 0.22 }, { r: 0.50, x: 0.55 }, { r: 0.455, x: 0.92 },
+    { r: 0.64, x: 0.17 }, { r: 0.60, x: 0.22 }, { r: 0.50, x: 0.55 }, { r: 0.455, x: 0.92 },
     { r: 0.44, x: 1.00 }, { r: 0.355, x: 1.32 }, { r: 0.37, x: 1.38 }, { r: 0.38, x: 1.68 },
     { r: 0.365, x: 1.73 }, { r: 0.42, x: 1.90 }, { r: 0.47, x: 2.10 }, { r: 0.60, x: 2.55 }, { r: 0.55, x: 2.62 }
   ], 0x5b6472, { roughness: 0.4, metalness: 0.5, clip: true });
 
-  var spinner = new THREE.Mesh(new THREE.ConeGeometry(FAN_R * 0.28, 0.42, 32), mat(0xd8dee8, { metalness: 0.85, roughness: 0.2 }));
+  // Abierto en la base (contra el cubo del fan, donde no se ve) para que no
+  // aparezca como una "tapa" flotante justo delante del fan; la punta sigue
+  // sólida porque un cono ya cierra solo en el vértice.
+  var spinner = new THREE.Mesh(new THREE.ConeGeometry(FAN_R * 0.28, 0.42, 32, 1, true), mat(0xd8dee8, { metalness: 0.85, roughness: 0.2 }));
   spinner.rotation.z = Math.PI / 2; spinner.position.x = -0.21;
   group.add(spinner);
 
   // ── Eje LP: fan (20 álabes reales) + turbina de baja presión (6 etapas) ──
   var lpSpool = new THREE.Group();
-  var fanRing = bladeRing(20, 0, FAN_R * 0.26, FAN_R, 0.16, 0.02, 0xc7d2e0, { twist: 0.55, washout: 0.75, metalness: 0.85, roughness: 0.25 });
+  var fanRing = bladeRing(20, 0, FAN_R * 0.26, FAN_R, 0.16, 0.02, 0xc7d2e0, { twist: 0.95, washout: 0.75, metalness: 0.85, roughness: 0.25 });
   var fanDisk = hubDisk(0, FAN_R * 0.26, 0.1, 0xc7d2e0);
   lpSpool.add(fanRing); lpSpool.add(fanDisk);
   var lptStages = [];
@@ -1089,11 +1113,11 @@ function buildTrent1000Scene(THREE) {
   for (var j = 0; j < 8; j++) {
     var t2 = j / 7, x2 = lerp(0.22, 0.92, t2);
     var tipR2 = lerp(FAN_R * 0.56, FAN_R * 0.43, t2), hubR2 = lerp(FAN_R * 0.18, FAN_R * 0.30, t2);
-    var ring2 = bladeRing(24, x2, hubR2, tipR2, 0.055, 0.012, 0x8fa3bd, { twist: 0.5, washout: 0.35, metalness: 0.8, roughness: 0.3 });
+    var ring2 = bladeRing(24, x2, hubR2, tipR2, 0.055, 0.012, 0x8fa3bd, { twist: 0.8, washout: 0.35, metalness: 0.8, roughness: 0.3 });
     ipSpool.add(ring2); ipSpool.add(hubDisk(x2, hubR2, 0.035, 0x6c7f99));
     ipcStages.push(ring2); ipcXs.push(x2); ipcHubs.push(hubR2); ipcTips.push(tipR2);
   }
-  addStators(ipcXs, ipcHubs, ipcTips, 22, 0.04, 0.009, 0x596273, 0.5, 0.35);
+  addStators(ipcXs, ipcHubs, ipcTips, 22, 0.04, 0.009, 0x596273, 0.8, 0.35);
   var iptRing = bladeRing(20, 1.9, FAN_R * 0.30, FAN_R * 0.39, 0.075, 0.015, 0xb08a5a, { twist: -0.4, washout: 0.25, metalness: 0.6, roughness: 0.5, emissive: 0x552200, emissiveIntensity: 0.08 });
   ipSpool.add(iptRing); ipSpool.add(hubDisk(1.9, FAN_R * 0.30, 0.05, 0x8a6b45));
   var ipShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.78, 12), mat(0x7d93ad, { metalness: 0.9, roughness: 0.25 }));
@@ -1108,11 +1132,11 @@ function buildTrent1000Scene(THREE) {
   for (var k = 0; k < 6; k++) {
     var t3 = k / 5, x3 = lerp(0.98, 1.35, t3);
     var tipR3 = lerp(FAN_R * 0.43, FAN_R * 0.32, t3), hubR3 = lerp(FAN_R * 0.30, FAN_R * 0.24, t3);
-    var ring3 = bladeRing(26, x3, hubR3, tipR3, 0.045, 0.01, 0x6f85a0, { twist: 0.5, washout: 0.3, metalness: 0.82, roughness: 0.28 });
+    var ring3 = bladeRing(26, x3, hubR3, tipR3, 0.045, 0.01, 0x6f85a0, { twist: 0.8, washout: 0.3, metalness: 0.82, roughness: 0.28 });
     hpSpool.add(ring3); hpSpool.add(hubDisk(x3, hubR3, 0.028, 0x556a85));
     hpcStages.push(ring3); hpcXs.push(x3); hpcHubs.push(hubR3); hpcTips.push(tipR3);
   }
-  addStators(hpcXs, hpcHubs, hpcTips, 24, 0.032, 0.007, 0x596273, 0.5, 0.3);
+  addStators(hpcXs, hpcHubs, hpcTips, 24, 0.032, 0.007, 0x596273, 0.8, 0.3);
   var hptRing = bladeRing(18, 1.73, FAN_R * 0.26, FAN_R * 0.33, 0.06, 0.013, 0xc99a5a, { twist: -0.4, washout: 0.22, metalness: 0.55, roughness: 0.5, emissive: 0x7a2a00, emissiveIntensity: 0.12 });
   hpSpool.add(hptRing); hpSpool.add(hubDisk(1.73, FAN_R * 0.26, 0.045, 0x9a6b3a));
   var hpShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.85, 12), mat(0x5f7893, { metalness: 0.9, roughness: 0.25 }));
@@ -1120,26 +1144,61 @@ function buildTrent1000Scene(THREE) {
   hpSpool.add(hpShaft);
   group.add(hpSpool);
 
-  // Cámara de combustión anular — capas superpuestas (núcleo + halo) con
-  // blending aditivo y una luz puntual que se enciende con la ignición, para
-  // que la llama además ilumine de verdad a la turbina de al lado.
-  var combMat = mat(0x2a2d33, { metalness: 0.3, roughness: 0.6, emissive: 0xff5a1a, emissiveIntensity: 0, noBrush: true });
-  var combustor = new THREE.Mesh(new THREE.TorusGeometry(FAN_R * 0.30, FAN_R * 0.075, 14, 36), combMat);
-  combustor.rotation.y = Math.PI / 2; combustor.position.x = 1.52;
-  group.add(combustor);
-
-  var flameCoreMat = new THREE.MeshBasicMaterial({ color: 0xffcf7a, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-  var flameCore = new THREE.Mesh(new THREE.TorusGeometry(FAN_R * 0.30, FAN_R * 0.045, 10, 32), flameCoreMat);
-  flameCore.rotation.y = Math.PI / 2; flameCore.position.x = 1.52;
-  group.add(flameCore);
-
-  var flameGlowMat = new THREE.MeshBasicMaterial({ color: 0xff6a2a, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-  var flameGlow = new THREE.Mesh(new THREE.TorusGeometry(FAN_R * 0.30, FAN_R * 0.11, 10, 32), flameGlowMat);
-  flameGlow.rotation.y = Math.PI / 2; flameGlow.position.x = 1.52;
-  group.add(flameGlow);
+  // Streamlines del flujo del núcleo: celeste claro en la admisión, degradado
+  // a celeste oscuro a medida que se comprime, salto directo a rojo justo en
+  // la cámara de combustión (x=1.52, mitad del motor) y degradado a naranja
+  // fuerte hasta el escape. Reemplazan a la vieja "dona" de la cámara de
+  // combustión como representación visual de la temperatura del gas.
+  var COMBUSTOR_X = 1.52, FLOW_START_X = 0.05, FLOW_END_X = 2.85;
+  function coreFlowRadius(x) {
+    var pts = [
+      { x: 0.05, r: 0.60 }, { x: 0.22, r: 0.58 }, { x: 0.92, r: 0.45 }, { x: 0.98, r: 0.44 },
+      { x: 1.35, r: 0.32 }, { x: COMBUSTOR_X, r: 0.30 }, { x: 1.73, r: 0.32 }, { x: 1.9, r: 0.38 },
+      { x: 1.98, r: 0.41 }, { x: 2.55, r: 0.55 }, { x: FLOW_END_X, r: 0.50 }
+    ];
+    for (var i = 0; i < pts.length - 1; i++) {
+      if (x >= pts[i].x && x <= pts[i + 1].x) return lerp(pts[i].r, pts[i + 1].r, (x - pts[i].x) / (pts[i + 1].x - pts[i].x));
+    }
+    return x < pts[0].x ? pts[0].r : pts[pts.length - 1].r;
+  }
+  var flowLightBlue = new THREE.Color(0xbfe8ff), flowDarkBlue = new THREE.Color(0x0b3d66);
+  var flowRed = new THREE.Color(0xff2a1a), flowOrange = new THREE.Color(0xff8a1a);
+  function flowColorAt(x) {
+    var c = new THREE.Color();
+    if (x < COMBUSTOR_X) c.copy(flowLightBlue).lerp(flowDarkBlue, THREE.MathUtils.clamp((x - FLOW_START_X) / (COMBUSTOR_X - FLOW_START_X), 0, 1));
+    else c.copy(flowRed).lerp(flowOrange, THREE.MathUtils.clamp((x - COMBUSTOR_X) / (FLOW_END_X - COMBUSTOR_X), 0, 1));
+    return c;
+  }
+  var flowTexture = getFlowTexture(THREE);
+  var streamlineMat = new THREE.MeshBasicMaterial({ vertexColors: true, map: flowTexture, transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+  var streamlineMeshes = [];
+  var STREAM_SEGMENTS = 28;
+  [0.55, 0.85].forEach(function (radiusScale) {
+    for (var k = 0; k < 7; k++) {
+      var angle = (k / 7) * Math.PI * 2 + (radiusScale > 0.7 ? Math.PI / 7 : 0);
+      var pts = [];
+      for (var si = 0; si <= STREAM_SEGMENTS; si++) {
+        var x = lerp(FLOW_START_X, FLOW_END_X, si / STREAM_SEGMENTS);
+        var r = coreFlowRadius(x) * radiusScale;
+        pts.push(new THREE.Vector3(x, r * Math.cos(angle), r * Math.sin(angle)));
+      }
+      var curve = new THREE.CatmullRomCurve3(pts);
+      var geo = new THREE.TubeGeometry(curve, STREAM_SEGMENTS * 2, 0.006, 6, false);
+      var posAttr = geo.attributes.position;
+      var colors = new Float32Array(posAttr.count * 3);
+      for (var vi = 0; vi < posAttr.count; vi++) {
+        var col = flowColorAt(posAttr.getX(vi));
+        colors[vi * 3] = col.r; colors[vi * 3 + 1] = col.g; colors[vi * 3 + 2] = col.b;
+      }
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      var streamMesh = new THREE.Mesh(geo, streamlineMat);
+      group.add(streamMesh);
+      streamlineMeshes.push(streamMesh);
+    }
+  });
 
   var flameLight = new THREE.PointLight(0xff8a3a, 0, FAN_R * 1.6, 2);
-  flameLight.position.set(1.52, 0, 0);
+  flameLight.position.set(COMBUSTOR_X, 0, 0);
   group.add(flameLight);
 
   // Tobera de escape del núcleo
@@ -1151,16 +1210,22 @@ function buildTrent1000Scene(THREE) {
     { label: 'Admisión de aire', caption: 'El fan (20 álabes, Ø2.85 m reales) capta el flujo. Con el bypass 10:1 del Trent 1000, unos 9 de cada 10 kg de aire se derivan al conducto frío y solo 1 entra al núcleo.', camera: { x: -0.15, theta: 0.35, phi: 1.15, radius: 2.7 }, focus: [fanRing, fanDisk] },
     { label: 'Compresor de presión intermedia (IPC · 8 etapas)', caption: 'El eje IP —independiente de los otros dos— comprime el aire del núcleo en 8 etapas progresivas antes de entrar al compresor de alta.', camera: { x: 0.55, theta: 0.9, phi: 1.0, radius: 1.85 }, focus: ipcStages },
     { label: 'Compresor de alta presión (HPC · 6 etapas)', caption: 'El eje HP gira más rápido que el IP y el LP. Entre IPC y HPC se alcanza la relación de presión total del motor: 50:1.', camera: { x: 1.16, theta: 1.35, phi: 1.0, radius: 1.55 }, focus: hpcStages },
-    { label: 'Inyección de combustible', caption: 'En la cámara anular se atomiza queroseno Jet-A junto al aire ya comprimido a 50 atmósferas, listo para el encendido.', camera: { x: 1.5, theta: 1.75, phi: 1.15, radius: 1.3 }, focus: [combustor] },
-    { label: 'Combustión sostenida', caption: 'La llama se estabiliza en torno a 1800–2000 K. Ese calor es lo que expande los gases y les da la energía que después van a ceder las tres turbinas.', camera: { x: 1.55, theta: 2.05, phi: 1.2, radius: 1.15 }, focus: [combustor] },
+    { label: 'Inyección de combustible', caption: 'En la cámara anular se atomiza queroseno Jet-A junto al aire ya comprimido a 50 atmósferas, listo para el encendido.', camera: { x: 1.5, theta: 1.75, phi: 1.15, radius: 1.3 }, focus: [] },
+    { label: 'Combustión sostenida', caption: 'La llama se estabiliza en torno a 1800–2000 K. Ese calor es lo que expande los gases y les da la energía que después van a ceder las tres turbinas.', camera: { x: 1.55, theta: 2.05, phi: 1.2, radius: 1.15 }, focus: [] },
     { label: 'Turbina de alta presión (HPT · 1 etapa)', caption: 'Una sola etapa extrae energía suficiente para mover, por el eje HP, al compresor de alta presión.', camera: { x: 1.75, theta: 2.35, phi: 1.05, radius: 1.4 }, focus: [hptRing] },
     { label: 'Turbina de presión intermedia (IPT · 1 etapa)', caption: 'Sigue extrayendo energía del gas para mover, por el eje IP, al compresor de presión intermedia.', camera: { x: 1.9, theta: 2.65, phi: 1.05, radius: 1.5 }, focus: [iptRing] },
     { label: 'Turbina de baja presión (LPT · 6 etapas)', caption: 'Seis etapas —las más grandes de las tres turbinas— mueven el fan por el eje LP, el más largo de los tres.', camera: { x: 2.25, theta: 3.0, phi: 1.0, radius: 1.9 }, focus: lptStages },
-    { label: 'Punto de retroalimentación sostenida', caption: 'Se cierra el ciclo Brayton: la energía que cada turbina le devuelve a "su" compresor (o al fan) por su propio eje ya alcanza para sostener la rotación sin aporte externo. A partir de acá el motor se autosostiene en régimen estable.', camera: { x: 1.3, theta: 0.55, phi: 0.92, radius: 3.3 }, focus: [fanRing, fanDisk].concat(ipcStages, hpcStages, lptStages, [combustor]) },
+    { label: 'Punto de retroalimentación sostenida', caption: 'Se cierra el ciclo Brayton: la energía que cada turbina le devuelve a "su" compresor (o al fan) por su propio eje ya alcanza para sostener la rotación sin aporte externo. A partir de acá el motor se autosostiene en régimen estable.', camera: { x: 1.3, theta: 0.55, phi: 0.92, radius: 3.3 }, focus: [fanRing, fanDisk].concat(ipcStages, hpcStages, lptStages) },
     { label: 'Escape', caption: 'Los gases del núcleo y el aire frío del bypass se expulsan hacia atrás; esa diferencia de cantidad de movimiento respecto del aire que entró es el empuje neto del motor.', camera: { x: 2.75, theta: 1.05, phi: 1.08, radius: 2.0 }, focus: [nozzle] }
   ];
 
-  var highlightable = [].concat(lpSpool.children, ipSpool.children, hpSpool.children, [combustor, nozzle]);
+  var highlightable = [].concat(lpSpool.children, ipSpool.children, hpSpool.children, [nozzle]);
+
+  // Objetivo de % de velocidad de giro por paso (0 = quieto, 1 = 100%).
+  // Índices de paso (0-based): 0 Admisión, 1 IPC, 2 HPC, 3 Inyección,
+  // 4 Combustión, 5 HPT, 6 IPT, 7 LPT, 8 Retroalimentación, 9 Escape.
+  var stepSpeedTargets = [0, 0.10, 0.40, 0.43, 0.47, 0.50, 0.67, 0.83, 1.00, 1.00];
+  var smoothedStepSpeed = 0;
 
   return {
     group: group,
@@ -1168,25 +1233,30 @@ function buildTrent1000Scene(THREE) {
     steps: steps,
     setCutaway: function (t) { clipPlane.constant = lerp(FAN_R * 1.05, -FAN_R * 0.05, t); },
     update: function (dt, elapsed, speedFactor, stepIdx) {
-      var s = speedFactor != null ? speedFactor : 0.4;
+      // La velocidad "real" del motor la marca el paso del recorrido (arranca
+      // en 0% y llega a 100% en la retroalimentación sostenida); el slider
+      // de velocidad sigue funcionando como un multiplicador de reproducción
+      // encima de eso. La rampa entre pasos es suave (no salto brusco).
+      var target = stepSpeedTargets[stepIdx] != null ? stepSpeedTargets[stepIdx] : 1;
+      smoothedStepSpeed += (target - smoothedStepSpeed) * Math.min(1, dt * 0.9);
+      var s = (speedFactor != null ? speedFactor : 0.4) * smoothedStepSpeed;
       lpSpool.rotation.x += dt * 1.0 * s;
       ipSpool.rotation.x += dt * 2.3 * s;
       hpSpool.rotation.x += dt * 3.6 * s;
 
+      // El flujo de las streamlines también "arranca" junto con el motor.
+      flowTexture.offset.x -= dt * (0.12 + smoothedStepSpeed * 0.9);
+
       var ignited = stepIdx >= 3;
       var flicker = 0.75 + 0.18 * Math.sin(elapsed * 9) + 0.09 * Math.sin(elapsed * 17.3) + 0.05 * Math.sin(elapsed * 31);
       var flameTarget = ignited ? Math.max(0, flicker) : 0;
-      var kAtt = Math.min(1, dt * 4);
-      combMat.emissiveIntensity += (flameTarget * 1.15 - combMat.emissiveIntensity) * kAtt;
-      flameCoreMat.opacity += (flameTarget * 0.85 - flameCoreMat.opacity) * kAtt;
-      flameGlowMat.opacity += (flameTarget * 0.4 - flameGlowMat.opacity) * kAtt;
-      flameLight.intensity += (flameTarget * 2.4 - flameLight.intensity) * kAtt;
+      flameLight.intensity += (flameTarget * 2.4 - flameLight.intensity) * Math.min(1, dt * 4);
 
       var focus = (steps[stepIdx] && steps[stepIdx].focus) || [];
       var pulse = 0.35 + 0.2 * Math.sin(elapsed * 4);
       highlightable.forEach(function (obj) {
         var m = obj.material;
-        if (!m || m === combMat || m.emissive === undefined) return;
+        if (!m || m.emissive === undefined) return;
         if (m.userData.baseEmissive == null) m.userData.baseEmissive = m.emissiveIntensity;
         var isFocused = focus.indexOf(obj) !== -1;
         m.emissiveIntensity = m.userData.baseEmissive + (isFocused ? pulse : 0);
